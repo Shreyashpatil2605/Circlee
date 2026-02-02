@@ -15,7 +15,7 @@ export const getPosts = asyncHandler(async (req, res) => {
       path: "comments",
       populate: {
         path: "user",
-        select: "username firstname lastname profilePicture",
+        select: "username firstName lastName profilePicture",
       },
     });
   res.status(200).json({ posts });
@@ -44,7 +44,7 @@ const postPopulate = [
     path: "comments",
     populate: {
       path: "user",
-      select: "username firstname lastname profilePicture",
+      select: "username firstName lastName profilePicture",
     },
   },
 ];
@@ -61,7 +61,7 @@ export const getUsersPosts = asyncHandler(async (req, res) => {
       path: "comments",
       populate: {
         path: "user",
-        select: "username firstname lastname profilePicture",
+        select: "username firstName lastName profilePicture",
       },
     });
   res.status(200).json({ posts });
