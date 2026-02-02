@@ -5,11 +5,12 @@ import {
   getPost,
   getPosts,
   getUsersPosts,
-} from "../controllers/post.controller";
+  likePost,
+} from "../controllers/post.controller.js";
 import { protectRoute } from "../middleware/auth.middleware.js";
 import upload from "../middleware/upload.middleware.js";
 
-const router = expree.Router();
+const router = express.Router();
 // public routes
 router.get("/", getPosts);
 router.get("/:postId", getPost);

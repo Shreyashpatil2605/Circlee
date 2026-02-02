@@ -1,7 +1,7 @@
 import asyncHandler from "express-async-handler";
-import Post from "../models/post.model";
+import Post from "../models/post.model.js";
 import { populate } from "dotenv";
-import User from "../models/user.model";
+import User from "../models/user.model.js";
 import { getAuth } from "@clerk/express";
 import Notification from "../models/notification.model.js";
 import Comment from "../models/comment.model.js";

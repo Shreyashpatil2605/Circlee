@@ -6,16 +6,20 @@ import cors from "cors";
 import userRoutes from "./routes/user.route.js";
 import postRoutes from "./routes/post.route.js";
 import commentRoutes from "./routes/comment.route.js";
+import notificationRoutes from "./routes/notification.route.js"
+import { arcjetMiddware } from "./middleware/arcjet.middleware.js";
 const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(clerkMiddleware());
+app.use(arcjetMiddware)
 app.get("/", (req, res) => {
   res.send("Hello From the server,");
 });
 app.use("/api/users", userRoutes);
 app.use("/api/postRoutes", postRoutes);
 app.use("/api/comments", commentRoutes);
+app.use("/api/Notification", notificationRoutes);
 
 app.use((err, req, res, next) => {
   console.error("Unhandled error", err);
