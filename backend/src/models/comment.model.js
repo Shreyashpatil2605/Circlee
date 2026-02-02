@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-const commentSchema = new mongoose.Schema.ObjectId(
+const commentSchema = new mongoose.Schema(
   {
     user: {
       type: mongoose.Schema.Types.ObjectId,

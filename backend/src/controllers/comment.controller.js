@@ -1,8 +1,8 @@
 import asyncHandler from "express-async-handler";
-import Comment from "../models/comment.model";
+import Comment from "../models/comment.model.js";
 import { getAuth } from "@clerk/express";
-import User from "../models/user.model";
-import Post from "../models/post.model";
+import User from "../models/user.model.js";
+import Post from "../models/post.model.js";
 
 // getComments
 export const getComments = asyncHandler(async (req, res) => {
