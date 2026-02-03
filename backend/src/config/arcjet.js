@@ -1,6 +1,5 @@
-import arcjet, { shield } from "@arcjet/next";
-import { NextResponse } from "next/server";
-import { ENV } from "../config/env";
+import arcjet, { shield, tokenBucket, detectBot } from "@arcjet/node";
+import { ENV } from "../config/env.js";
 
 export const aj = arcjet({
   key: ENV.ARCJET_KEY,
@@ -10,8 +9,12 @@ export const aj = arcjet({
     // DRY_RUN mode logs only. Use "LIVE" to block
     shield({
       mode: "LIVE",
+    }),
+    detectBot({
+      mode: "LIVE",
       allow: ["CATEGORY:SEARCH_ENGINE"],
     }),
+
     tokenBucket({
       mode: "LIVE",
       refillRate: 10, //tokens added per interval
@@ -20,5 +23,3 @@ export const aj = arcjet({
     }),
   ],
 });
-
-
