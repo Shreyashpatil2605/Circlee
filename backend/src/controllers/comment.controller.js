@@ -40,7 +40,7 @@ export const createComment = asyncHandler(async (req, res) => {
       comments: comment._id,
     },
   });
-  //create notification if not commenting onm own post
+  //create notification if not commenting on own post
   if (post.user.toString() !== user._id.toString()) {
     await Notification.create({
       from: user.id,
@@ -79,6 +79,5 @@ export const deleteComment = asyncHandler(async (req, res) => {
 
   //delete the commet
   await Comment.findByIdAndDelete(commentId);
-
   res.status(200).json({ message: "Comment Deleted Successfully" });
 });

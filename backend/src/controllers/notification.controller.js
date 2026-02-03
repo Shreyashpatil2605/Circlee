@@ -3,6 +3,7 @@ import User from "../models/user.model.js";
 import Notifiacation from "../models/notification.model.js";
 import asyncHandler from "express-async-handler";
 
+// getNotification
 export const getNotification = asyncHandler(async (req, res) => {
   const { userId } = getAuth(req);
   const user = await User.findOne({ clerkId: userId });
@@ -16,7 +17,8 @@ export const getNotification = asyncHandler(async (req, res) => {
   res.status(200).json({ notifications });
 });
 
-export const deleteNotification = asyncHandler(async (res, req) => {
+// deleteNotification
+export const deleteNotification = asyncHandler(async (req, res) => {
   const { userId } = getAuth(req);
   const { notificationId } = req.params;
   const user = await User.findOne({ clerkId: userId });
