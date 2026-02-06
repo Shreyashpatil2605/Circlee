@@ -6,7 +6,7 @@ import SignOutButton from '@/components/SignOutButton'
 const HomeScreen = () => {
   return (
     <SafeAreaView>
-      <Text>HomeeScreen
+      <Text>HomeScreen
       </Text>
       <SignOutButton/>
     </SafeAreaView>
