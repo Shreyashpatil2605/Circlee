@@ -4,8 +4,7 @@ import React from 'react'
 const NotificationScreen = () => {
   return (
     <View>
-      <Text>Notifications
-Screen
+      <Text>Notifications Screen
       </Text>
     </View>
   )

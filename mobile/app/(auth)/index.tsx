@@ -41,7 +41,6 @@ export default function Index() {
               )}
             </TouchableOpacity>
 
-
             {/* Apple Icon */}
              <TouchableOpacity
               className="flex-row items-center justify-center bg-white border border-gray-300 rounded-full py-3 px-6"

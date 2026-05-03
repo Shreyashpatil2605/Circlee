@@ -70,14 +70,13 @@ export const deleteComment = asyncHandler(async (req, res) => {
   }
 
   //remove comment from the past
-
   await Post.findByIdAndUpdate(comment.post, {
     $pull: {
       comments: commentId,
     },
   });
 
-  //delete the commet
+  //delete the comment
   await Comment.findByIdAndDelete(commentId);
   res.status(200).json({ message: "Comment Deleted Successfully" });
 });

@@ -21,8 +21,7 @@ const MessageScreen = () => {
   const insets = useSafeAreaInsets();
   const [searchText, setSearchText] = useState("");
   const [conversationList, setConversationList] = useState(CONVERSATIONS);
-  const [selectedConversation, setSelectedConversation] =
-    useState<ConversationType | null>(null);
+  const [selectedConversation, setSelectedConversation] = useState<ConversationType | null>(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [newMeassage, setNewMessage] = useState("");
 
@@ -48,7 +47,7 @@ const MessageScreen = () => {
     );
   };
 
-  const openCoversation = (conversation: ConversationType) => {
+ const openCoversation = (conversation: ConversationType) => {
     setSelectedConversation(conversation);
     setIsChatOpen(true);
   };
@@ -58,6 +57,7 @@ const MessageScreen = () => {
     setSelectedConversation(null);
     setNewMessage("");
   };
+  
   const sendMessage = () => {
     if (newMeassage.trim() && selectedConversation) {
       setConversationList((prev) =>
@@ -101,8 +101,7 @@ const MessageScreen = () => {
       <ScrollView
         className="flex-1"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 100 + insets.bottom }}
-      >
+        contentContainerStyle={{ paddingBottom: 100 + insets.bottom }}>
         {conversationList.map((conversation) => (
           <TouchableOpacity
             key={conversation.id}

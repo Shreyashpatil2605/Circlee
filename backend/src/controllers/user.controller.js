@@ -17,7 +17,7 @@ export const getUserProfile = asyncHandler(async (req, res) => {
 // updateProfile
 export const updateProfile = asyncHandler(async (req, res) => {
   const { userId } = getAuth(req);
-  const user = await User.findByIdAndUpdate({ clerkId: userId }, req.body, {
+  const user = await User.findOneAndUpdate({ clerkId: userId }, req.body, {
     new: true,
   });
   if (!user) {
@@ -49,8 +49,7 @@ export const syncUser = asyncHandler(async (req, res) => {
 // getCurrentUser
 export const getCurrentUser = asyncHandler(async (req, res) => {
   const { userId } = getAuth(req);
-  const user = await User.findOne({ userName });
-
+  const user = await User.findOne({ clerkId: userId });
   if (!user) {
     return res.status(404).json({ message: "User not found" });
   }
@@ -69,7 +68,7 @@ export const followUser = asyncHandler(async (req, res) => {
   if (!currentUser || !targetUser) {
     return res.status(404).json({ message: "User not found" });
   }
-  const isFollowing = currentUser.following.includes(targetUser);
+  const isFollowing = currentUser.following.includes(targetUser._id);
   if (isFollowing) {
     //unfollow
     await User.findByIdAndUpdate(currentUser._id, {
@@ -83,7 +82,7 @@ export const followUser = asyncHandler(async (req, res) => {
     await User.findByIdAndUpdate(currentUser._id, {
       $push: { following: targetUserId },
     });
-    await User.findByIdAndUpdate(currentUser._id, {
+    await User.findByIdAndUpdate(targetUser._id, {
       $push: { followers: currentUser._id },
     });
     await Notifiacation.create({
