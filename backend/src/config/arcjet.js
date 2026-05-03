@@ -11,8 +11,8 @@ export const aj = arcjet({
       mode: "LIVE",
     }),
     detectBot({
-      mode: "LIVE",
-      allow: ["CATEGORY:SEARCH_ENGINE"],
+      mode: "DRY_RUN",
+      
     }),
 
     tokenBucket({
