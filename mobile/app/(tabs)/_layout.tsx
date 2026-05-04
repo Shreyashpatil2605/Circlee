@@ -1,11 +1,9 @@
-import { View, Text } from "react-native";
-import React from "react";
 import { Redirect, Tabs } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "@clerk/clerk-expo";
 
-const _layout = () => {
+const Tabslayout = () => {
   const insets = useSafeAreaInsets();
   const { isSignedIn } = useAuth();
   if (!isSignedIn) return <Redirect href="/(auth)" />;
@@ -20,10 +18,6 @@ const _layout = () => {
           borderTopColor: "#E1E8ED",
           height: 50 + insets.bottom,
           paddingTop: 8,
-        },
-        tabBarLabelStyle: {
-          fontSize: 13,
-          fontWeight: "500",
         },
         headerShown: false,
       }}
@@ -77,4 +71,4 @@ const _layout = () => {
   );
 };
 
-export default _layout;
+export default Tabslayout;
