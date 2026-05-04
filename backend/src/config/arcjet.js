@@ -12,7 +12,7 @@ export const aj = arcjet({
     }),
     detectBot({
       mode: "DRY_RUN",
-      
+      allow: ["CATEGORY:SEARCH_ENGINE"],
     }),
 
     tokenBucket({
