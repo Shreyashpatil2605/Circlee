@@ -1,4 +1,4 @@
-import { useApiClient, userapi } from "@/utils/api";
+import { useApiClient, userApi } from "@/utils/api";
 import { useAuth } from "@clerk/clerk-expo";
 import { useMutation } from "@tanstack/react-query";
 import { useEffect } from "react";
@@ -9,16 +9,15 @@ export const useUserSync = () => {
 
   const syncUserMutation = useMutation({
     // so here we are saving the user in the mongoDB
-    mutationFn: () => userapi.syncUser(api),
+    mutationFn: () => userApi.syncUser(api),
     onSuccess: (response: any) =>
       console.log("User Synced Successfully:", response.data.user),
-    onError: (error:any) => {console.log("User Synced failed: ", error)
-          console.log("Status:", error?.response?.status);
-            console.log("Data:", error?.response?.data);
-            console.log("Message:", error?.message);
-    }
-    
-    ,
+    onError: (error: any) => {
+      console.log("User Synced failed: ", error);
+      console.log("Status:", error?.response?.status);
+      console.log("Data:", error?.response?.data);
+      console.log("Message:", error?.message);
+    },
   });
   //AutoSync user When signed in
   useEffect(() => {
