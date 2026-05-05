@@ -39,10 +39,10 @@ export const syncUser = asyncHandler(async (req, res) => {
     email: clerkUser.emailAddresses[0].emailAddress,
     firstName: clerkUser.firstName || "",
     lastName: clerkUser.lastName || "",
-    username: clerkUser.emailAddresses[0].emailAddress.split("@")[0],
+    userName: clerkUser.emailAddresses[0].emailAddress.split("@")[0],
     profilePicture: clerkUser.imageUrl || "",
   };
-  const user = User.create(userData);
+  const user = await User.create(userData);
   res.status(201).json({ user, message: "User Created Successfully" });
 });
 

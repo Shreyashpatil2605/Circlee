@@ -6,7 +6,7 @@ const userSchema = new mongoose.Schema(
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
     userName: { type: String, required: true, unique: true },
-    profileImage: { type: String, default: "" },
+    profilePicture: { type: String, default: "" },
     bannerImage: { type: String, default: "" },
     bio: { type: String, default: "", maxlength: 160 },
     location: { type: String, default: "" },
