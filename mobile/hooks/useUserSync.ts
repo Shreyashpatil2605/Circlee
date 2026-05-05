@@ -11,12 +11,9 @@ export const useUserSync = () => {
     // so here we are saving the user in the mongoDB
     mutationFn: () => userApi.syncUser(api),
     onSuccess: (response: any) =>
-      console.log("User Synced Successfully:", response.data.user),
+      console.log("User Synced Successfully:", response.data),
     onError: (error: any) => {
       console.log("User Synced failed: ", error);
-      console.log("Status:", error?.response?.status);
-      console.log("Data:", error?.response?.data);
-      console.log("Message:", error?.message);
     },
   });
   //AutoSync user When signed in
