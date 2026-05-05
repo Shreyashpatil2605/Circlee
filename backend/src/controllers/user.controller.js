@@ -11,7 +11,7 @@ export const getUserProfile = asyncHandler(async (req, res) => {
     res.status(404);
     throw new Error("User not found");
   }
-  res.json(user);
+  res.status(200).json({ user });
 });
 
 // updateProfile
@@ -21,8 +21,7 @@ export const updateProfile = asyncHandler(async (req, res) => {
     new: true,
   });
   if (!user) {
-    res.status(404);
-    throw new Error("User not found");
+    return res.status(404).json({ error: "User not found" });
   }
   res.status(200).json({ user });
 });
@@ -32,7 +31,7 @@ export const syncUser = asyncHandler(async (req, res) => {
   const existingUser = await User.findOne({ clerkId: userId });
   //Check if user already exist in mongodb
   if (existingUser) {
-    res.status(200).json({ message: "User is Already Existed" });
+    return res.status(200).json({ message: "User is Already Existed" });
   }
   const clerkUser = await clerkClient.users.getUser(userId);
   const userData = {
@@ -44,7 +43,7 @@ export const syncUser = asyncHandler(async (req, res) => {
     profilePicture: clerkUser.imageUrl || "",
   };
   const user = User.create(userData);
-  res.status(200).json({ user, message: "User Created Successfully" });
+  res.status(201).json({ user, message: "User Created Successfully" });
 });
 
 // getCurrentUser
@@ -69,13 +68,13 @@ export const followUser = asyncHandler(async (req, res) => {
   if (!currentUser || !targetUser) {
     return res.status(404).json({ message: "User not found" });
   }
-  const isFollowing = currentUser.following.includes(targetUser._id);
+  const isFollowing = currentUser.following.includes(targetUserId);
   if (isFollowing) {
     //unfollow
     await User.findByIdAndUpdate(currentUser._id, {
       $pull: { following: targetUserId },
     });
-    await User.findByIdAndUpdate(targetUser._id, {
+    await User.findByIdAndUpdate(targetUserId, {
       $pull: { followers: currentUser._id },
     });
   } else {
@@ -83,7 +82,7 @@ export const followUser = asyncHandler(async (req, res) => {
     await User.findByIdAndUpdate(currentUser._id, {
       $push: { following: targetUserId },
     });
-    await User.findByIdAndUpdate(targetUser._id, {
+    await User.findByIdAndUpdate(targetUserId, {
       $push: { followers: currentUser._id },
     });
     await Notifiacation.create({
@@ -93,6 +92,6 @@ export const followUser = asyncHandler(async (req, res) => {
     });
   }
   res.status(200).json({
-      message: isFollowing ? "User unfollowed you" : "User is following you",
-    });
+    message: isFollowing ? "User unfollowed you" : "User is following you",
+  });
 });
