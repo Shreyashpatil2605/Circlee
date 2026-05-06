@@ -14,6 +14,10 @@ export const useUserSync = () => {
       console.log("User Synced Successfully:", response.data.user),
     onError: (error: any) => {
       console.log("User Synced failed: ", error);
+        console.log("Status:", error?.response?.status);
+  console.log("Data:", error?.response?.data);
+  console.log("Message:", error?.message);
+
     },
   });
   //AutoSync user When signed in
