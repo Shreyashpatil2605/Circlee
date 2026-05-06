@@ -11,7 +11,7 @@ export const aj = arcjet({
       mode: "LIVE",
     }),
     detectBot({
-      mode: "DRY_RUN",
+      mode: "LIVE",
       allow: ["CATEGORY:SEARCH_ENGINE"],
     }),
 
