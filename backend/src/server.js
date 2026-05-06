@@ -17,9 +17,9 @@ app.get("/", (req, res) => {
   res.send("Hello From the server,");
 });
 app.use("/api/users", userRoutes);
-app.use("/api/postRoutes", postRoutes);
+app.use("/api/posts", postRoutes);
 app.use("/api/comments", commentRoutes);
-app.use("/api/Notification", notificationRoutes);
+app.use("/api/notification", notificationRoutes);
 
 app.use((err, req, res, next) => {
   console.error("Unhandled error", err);
