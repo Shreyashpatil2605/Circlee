@@ -154,6 +154,9 @@ export const deletePost = asyncHandler(async (req, res) => {
   const user = await User.findOne({ clerkId: userId });
   const post = await Post.findById(postId);
 
+  if (!user || !post)
+    return res.status(404).json({ error: "User or post are not found" });
+
   if (post.user.toString() !== user._id.toString()) {
     return res.status(404).json({ error: "You cannot delete other's posts" });
   }
