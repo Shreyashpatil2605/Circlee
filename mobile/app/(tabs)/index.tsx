@@ -4,10 +4,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import SignOutButton from "@/components/SignOutButton";
 import { useUserSync } from "@/hooks/useUserSync";
 import PostComposer from "@/components/PostComposer";
+import PostsList from "@/components/PostsList";
 
 const HomeScreen = () => {
   useUserSync();
-
   return (
     <SafeAreaView className="flex-1 bg-white">
       <View className="flex-row justify-between items-center px-4 py-3 border-b border-gray-100">
@@ -23,7 +23,8 @@ const HomeScreen = () => {
         className="flex-1"
         contentContainerStyle={{ paddingBottom: 80 }}
       >
-        <PostComposer/>
+        <PostComposer />
+        <PostsList />
       </ScrollView>
     </SafeAreaView>
   );
