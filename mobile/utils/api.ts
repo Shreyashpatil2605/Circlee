@@ -1,7 +1,7 @@
 import { useAuth } from "@clerk/clerk-expo";
 import axios, { AxiosInstance } from "axios";
-// const API_BASE_URL = "https://circlee-two.vercel.app/api";
-const API_BASE_URL = "http://172.17.230.108:5001/api";
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "https://circlee-two.vercel.app/api";
+// const API_BASE_URL = "http://192.168.1.8:5001/api";
 
 export const createApiClient = (
   getToken: () => Promise<string | null>,
@@ -45,7 +45,7 @@ export const postApi = {
   deletePost: (api: AxiosInstance, postId: string) =>
     api.delete(`/posts/${postId}`),
 };
-export const commnetApi = {
+export const commentApi = {
   createComment: (api: AxiosInstance, postId: string, content: string) =>
-    api.post(`/commments/post/${postId}`, { content }),
+    api.post(`/comments/post/${postId}`, { content }),
 };
