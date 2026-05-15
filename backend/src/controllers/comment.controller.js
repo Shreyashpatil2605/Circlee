@@ -17,7 +17,7 @@ export const getComments = asyncHandler(async (req, res) => {
 export const createComment = asyncHandler(async (req, res) => {
   const { userId } = getAuth(req);
   const { postId } = req.params;
-  const content = req.body;
+  const { content } = req.body;
 
   if (!content || content.trim() === "") {
     return res.status(400).json("Their must be some content nedded!");
