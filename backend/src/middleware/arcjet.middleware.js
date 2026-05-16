@@ -2,7 +2,7 @@ import { aj } from "../config/arcjet.js";
 export const arcjetMiddware = async (req, res, next) => {
   try {
     const decision = await aj.protect(req, {
-      requsted: 1,
+      requested: 1,
     });
     //handle denied request
     if (decision.isDenied()) {
@@ -25,7 +25,7 @@ export const arcjetMiddware = async (req, res, next) => {
     }
     //check for spoofed boot
     if (
-      decision.result.some(
+      decision.results?.some(
         (result) => result.reason.isBot() && result.reason.isSpoofed(),
       )
     ) {

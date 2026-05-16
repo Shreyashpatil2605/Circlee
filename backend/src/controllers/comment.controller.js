@@ -3,6 +3,7 @@ import Comment from "../models/comment.model.js";
 import { getAuth } from "@clerk/express";
 import User from "../models/user.model.js";
 import Post from "../models/post.model.js";
+import Notification from "../models/notification.model.js";
 
 // getComments
 export const getComments = asyncHandler(async (req, res) => {
@@ -43,8 +44,8 @@ export const createComment = asyncHandler(async (req, res) => {
   //create notification if not commenting on own post
   if (post.user.toString() !== user._id.toString()) {
     await Notification.create({
-      from: user.id,
-      to: post.id,
+      from: user._id,
+      to: post.user,
       type: "comment",
       post: postId,
       comment: comment._id,
@@ -59,11 +60,13 @@ export const deleteComment = asyncHandler(async (req, res) => {
   const { userId } = getAuth(req);
   const { commentId } = req.params;
 
-  const user = await User.findById({ clerkId: userId });
+  const user = await User.findOne({
+    clerkId: userId,
+  });
   const comment = await Comment.findById(commentId);
 
   if (!user || !comment) {
-    res.status(404).status({ error: "User or Comment are not found" });
+    res.status(404).json({ error: "User or Comment are not found" });
   }
   if (comment.user.toString() !== user._id.toString()) {
     res.status(403).status({ error: "You cannot delete your own Comments" });
