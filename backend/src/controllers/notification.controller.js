@@ -1,6 +1,6 @@
 import { getAuth } from "@clerk/express";
 import User from "../models/user.model.js";
-import Notifiacation from "../models/notification.model.js";
+import Notification from "../models/notification.model.js";
 import asyncHandler from "express-async-handler";
 
 // getNotification
@@ -9,7 +9,7 @@ export const getNotification = asyncHandler(async (req, res) => {
   const user = await User.findOne({ clerkId: userId });
   if (!user) return res.status(404).json({ error: "User Not found" });
 
-  const notifications = await Notifiacation.find({ to: user._id })
+  const notifications = await Notification.find({ to: user._id })
     .sort({ createdAt: -1 })
     .populate("from", "username firstName lastName profilePicture")
     .populate("post", "content image")
@@ -23,7 +23,7 @@ export const deleteNotification = asyncHandler(async (req, res) => {
   const { notificationId } = req.params;
   const user = await User.findOne({ clerkId: userId });
   if (!user) return res.status(404).json({ error: "User not Found" });
-  const notification = await Notifiacation.findOneAndDelete({
+  const notification = await Notification.findOneAndDelete({
     _id: notificationId,
     to: user._id,
   });

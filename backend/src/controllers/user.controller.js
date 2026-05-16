@@ -1,7 +1,7 @@
 import asyncHandler from "express-async-handler";
 import User from "../models/user.model.js";
 import { clerkClient, getAuth } from "@clerk/express";
-import Notifiacation from "../models/notification.model.js";
+import Notification from "../models/notification.model.js";
 
 // getUserProfile
 export const getUserProfile = asyncHandler(async (req, res) => {
@@ -85,7 +85,7 @@ export const followUser = asyncHandler(async (req, res) => {
     await User.findByIdAndUpdate(targetUserId, {
       $push: { followers: currentUser._id },
     });
-    await Notifiacation.create({
+    await Notification.create({
       from: currentUser._id,
       to: targetUserId,
       type: "follow",
