@@ -155,7 +155,7 @@ const MessageScreen = () => {
         presentationStyle="pageSheet"
       >
         {selectedConversation && (
-          <SafeAreaView className="flex-1">
+          <SafeAreaView className="flex-1" edges={["top"]}>
             {/* Chat header */}
             <View className="flex-row items-center px-4 py-3 border-b border-gray-100">
               <TouchableOpacity onPress={closeChatModal} className="mr-3">
