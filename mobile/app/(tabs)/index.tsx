@@ -20,7 +20,7 @@ const HomeScreen = () => {
 
   useUserSync();
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
       <View className="flex-row justify-between items-center px-4 py-3 border-b border-gray-100">
         <Image
           source={require("../../assets/images/color-adjustment.png")}

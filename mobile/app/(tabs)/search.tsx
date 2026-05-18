@@ -20,7 +20,7 @@ const TREADING_TOPICS = [
 
 const searchScreen = () => {
   return (
-    <SafeAreaView className="flex-1 bg-white" >
+    <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
       {/* Header */}
       <View className="px-1 py-0.7  border-grey-100">
         <View className="flex-row items-center bg-grey-100 rounded-full px-4 py-3">

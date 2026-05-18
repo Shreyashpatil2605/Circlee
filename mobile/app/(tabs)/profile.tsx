@@ -1,4 +1,12 @@
-import { View, Text, ScrollView, Image, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  Image,
+  TouchableOpacity,
+  ActivityIndicator,
+  RefreshControl,
+} from "react-native";
 import React from "react";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import {
@@ -10,10 +18,11 @@ import { Feather } from "@expo/vector-icons";
 import { format } from "date-fns";
 import { usePosts } from "@/hooks/usePosts";
 import PostsList from "@/components/PostsList";
+import { useProfile } from "@/hooks/useProfile";
+import EditProfileModel from "@/components/EditProfileModel";
 
 const ProfileScreen = () => {
   const { currentUser, isLoading } = useCurrentUser();
-
   const insets = useSafeAreaInsets();
   const {
     posts: userPosts,
@@ -21,17 +30,37 @@ const ProfileScreen = () => {
     isLoading: isRefetching,
   } = usePosts(currentUser?.username);
 
+  const {
+    isEditModelVisible,
+    formData,
+    openEditModel,
+    closeEditModel,
+    saveProfile,
+    updateFormField,
+    isUpdating,
+    refetch: refetchProfile,
+  } = useProfile();
+
+  if (isLoading) {
+    return (
+      <View className="flex-1 bg-white itmes-center justify-center">
+        <ActivityIndicator size="large" color="#1DA1F2"></ActivityIndicator>
+      </View>
+    );
+  }
+
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
       {/* header */}
       <View className="flex-row items-center justify-between px-4 py-3 border-b border-gray-100">
         <View>
           <Text className="font-bold text-xl">
             {currentUser.firstName} {currentUser.lastName}
           </Text>
-          <Text className="text-gray-500 text-sm">{userPosts.length} Posts</Text>
+          <Text className="text-gray-500 text-sm">
+            {userPosts.length} Posts
+          </Text>
         </View>
-
         <SignOutButton />
       </View>
 
@@ -40,6 +69,16 @@ const ProfileScreen = () => {
         className="flex-1"
         contentContainerStyle={{ paddingBottom: 100 + insets.bottom }}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={() => {
+              refetchProfile();
+              refetchPosts();
+            }}
+            tintColor="#1DA1F2"
+          />
+        }
       >
         {/* bannerImage */}
         <Image
@@ -59,7 +98,10 @@ const ProfileScreen = () => {
               source={{ uri: currentUser.profilePicture }}
               className="w-32 h-32 rounded-full border-4 border-white"
             />
-            <TouchableOpacity className="border border-gray-300 px-6 py-2 rounded-full">
+            <TouchableOpacity
+              className="border border-gray-300 px-6 py-2 rounded-full"
+              onPress={openEditModel}
+            >
               <Text className="font-semibold text-gray-900">Edit Profile</Text>
             </TouchableOpacity>
           </View>
@@ -74,10 +116,8 @@ const ProfileScreen = () => {
             </View>
 
             {/* {currentUser.username} */}
-            <Text className="">
-              @{currentUser.username}
-              {currentUser.bio}
-            </Text>
+            <Text className="text-gray-500 mb-2">@{currentUser.username}</Text>
+            <Text className="text-gray-900 mb-3">{currentUser.bio}</Text>
 
             {/* location */}
             <View className="flex-row items-center mb-2">
@@ -117,8 +157,16 @@ const ProfileScreen = () => {
             </View>
           </View>
         </View>
-        <PostsList username= {currentUser?.username}/>
+        <PostsList username={currentUser?.username} />
       </ScrollView>
+      <EditProfileModel
+        isVisible={isEditModelVisible}
+        onClose={closeEditModel}
+        formData={formData}
+        saveProfile={saveProfile}
+        updateFormField={updateFormField}
+        isUpdating={isUpdating}
+      />
     </SafeAreaView>
   );
 };
