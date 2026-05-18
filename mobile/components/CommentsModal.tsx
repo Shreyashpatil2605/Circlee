@@ -35,11 +35,13 @@ const CommentsModal = ({ selectedPost, onClose }: CommentsModalProp) => {
       animationType="slide"
       presentationStyle="pageSheet"
     >
-      <View className="flew-row items-center justify-between px-4 py-3 border-b border-gray-100">
+      <View className="flex-row items-center justify-between px-4 py-3 border-b border-gray-100">
         <TouchableOpacity onPress={handleClose}>
           <Text className="text-blue-500 text-lg">Close</Text>
         </TouchableOpacity>
-        <Text className="text-lg font-semibold">Comments</Text>
+        <View className="flex-col">
+          <Text className="text-lg font-semibold">Comments</Text>
+        </View>
         <View className="w-12" />
       </View>
       {selectedPost && (
