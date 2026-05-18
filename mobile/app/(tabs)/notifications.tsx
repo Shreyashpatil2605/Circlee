@@ -4,6 +4,7 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import React from "react";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -53,12 +54,19 @@ const NotificationScreen = () => {
         </TouchableOpacity>
       </View>
       {/* content */}
-
       {/* contentContainerStyle={{ paddingBottom: 100 + insets.bottom} adds extra bottom spacing inside a scrollable container. Usually used with: ScrollView, FlatList in React Native */}
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ paddingBottom: 100 + insets.bottom }}
         showsVerticalScrollIndicator={false}
+        // Add the loading scrteen at the top of the screem so that we can get the refresh like thing....
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={refetch}
+            tintColor={"#1DA1F2"}
+          />
+        }
       >
         {isLoading ? (
           <View className="flex-1  items-center justify-center p-8">

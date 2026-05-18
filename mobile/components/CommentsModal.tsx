@@ -3,7 +3,6 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { Post } from "@/types";
 import { Text } from "@react-navigation/elements";
 import {
-  ActionSheetIOS,
   ActivityIndicator,
   Image,
   Modal,
@@ -74,7 +73,6 @@ const CommentsModal = ({ selectedPost, onClose }: CommentsModalProp) => {
                   />
                 )}
               </View>
-
               {/* Comments list */}
             </View>
           </View>
