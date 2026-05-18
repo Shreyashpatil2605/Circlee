@@ -19,6 +19,6 @@ router.get("/user/:username", getUsersPosts);
 // protected routes: u should be autheticated to use these routes
 router.post("/", protectRoute, upload.single("image"), createPost);
 router.post("/:postId/like", protectRoute, likePost);
-router.post("/:postId", protectRoute, deletePost);
+router.delete("/:postId", protectRoute, deletePost);
 
 export default router;
