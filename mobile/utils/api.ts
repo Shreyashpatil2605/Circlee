@@ -1,7 +1,7 @@
 import { useAuth } from "@clerk/clerk-expo";
 import axios, { AxiosInstance } from "axios";
-// const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "https://circlee-two.vercel.app/api";
-const API_BASE_URL = "http://192.168.1.8:5001/api";
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
+// const API_BASE_URL = "http://192.168.1.8:5001/api";
 
 export const createApiClient = (
   getToken: () => Promise<string | null>,
