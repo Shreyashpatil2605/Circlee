@@ -35,7 +35,7 @@ export const getPost = asyncHandler(async (req, res) => {
       },
     });
   if (!post) return res.status(404).json({ error: "Post not found" });
-  res.send(200).json({ post });
+  res.status(200).json({ post });
 });
 
 // postPopulate
@@ -160,7 +160,6 @@ export const deletePost = asyncHandler(async (req, res) => {
   if (post.user.toString() !== user._id.toString()) {
     return res.status(403).json({ error: "You cannot delete other's posts" });
   }
-   
 
   await Comment.deleteMany({ post: postId });
   await Post.findByIdAndDelete(postId);

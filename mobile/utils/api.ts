@@ -1,7 +1,7 @@
 import { useAuth } from "@clerk/clerk-expo";
 import axios, { AxiosInstance } from "axios";
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
-// const API_BASE_URL = "http://192.168.1.8:5001/api";
+// const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
+const API_BASE_URL = "http://192.168.1.8:5001/api";
 
 export const createApiClient = (
   getToken: () => Promise<string | null>,
@@ -27,6 +27,12 @@ export const userApi = {
   getCurrentUser: (api: AxiosInstance) => api.get("/users/me"),
   updateProfile: (api: AxiosInstance, data: any) =>
     api.put("/users/profile", data),
+  followUser: (api: AxiosInstance, targetUserId: string) =>
+    api.post(`/users/follow/${targetUserId}`),
+  getFollowers: (api: AxiosInstance, userId: string) =>
+    api.get(`/users/${userId}/followers`),
+  getFollowing: (api: AxiosInstance, userId: string) =>
+    api.get(`/users/${userId}/following`),
 };
 
 export const postApi = {
@@ -48,4 +54,16 @@ export const postApi = {
 export const commentApi = {
   createComment: (api: AxiosInstance, postId: string, content: string) =>
     api.post(`/comments/post/${postId}`, { content }),
+  deleteComment: (api: AxiosInstance, commentId: string) =>
+    api.delete(`/comments/${commentId}`),
+};
+
+export const messageApi = {
+  getOrCreateConversation: (api: AxiosInstance, participantId: string) =>
+    api.post("/messages/conversation", { participantId }),
+  getConversations: (api: AxiosInstance) => api.get("/messages/conversations"),
+  sendMessage: (api: AxiosInstance, conversationId: string, content: string) =>
+    api.post(`/messages/${conversationId}`, { content }),
+  getMessages: (api: AxiosInstance, conversationId: string) =>
+    api.get(`/messages/${conversationId}`),
 };

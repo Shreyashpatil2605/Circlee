@@ -6,8 +6,10 @@ import {
   ActivityIndicator,
   ScrollView,
   TextInput,
+  Image,
 } from "react-native";
 import React from "react";
+import { Feather } from "@expo/vector-icons";
 
 interface EditProfileModelProps {
   isVisible: boolean;
@@ -17,10 +19,13 @@ interface EditProfileModelProps {
     lastName: string;
     bio: string;
     location: string;
+    profilePicture: string;
+    bannerImage: string;
   };
   saveProfile: () => void;
   updateFormField: (field: string, value: string) => void;
   isUpdating: boolean;
+  pickImage: (imageType: "profilePicture" | "bannerImage") => void;
 }
 
 const EditProfileModel = ({
@@ -30,6 +35,7 @@ const EditProfileModel = ({
   updateFormField,
   isUpdating,
   onClose,
+  pickImage,
 }: EditProfileModelProps) => {
   const handleSave = () => {
     saveProfile();
@@ -61,6 +67,59 @@ const EditProfileModel = ({
       </View>
       <ScrollView className="flex-1 px-4 py-8">
         <View className="space-y-4">
+          {/* Banner Image */}
+          <View className="mb-4">
+            <Text className="text-gray-500 text-sm mb-2">Banner Image</Text>
+            <TouchableOpacity
+              onPress={() => pickImage("bannerImage")}
+              className="w-full h-32 bg-gray-200 rounded-lg overflow-hidden"
+            >
+              {formData.bannerImage ? (
+                <>
+                  <Image
+                    source={{ uri: formData.bannerImage }}
+                    className="w-full h-full"
+                    resizeMode="cover"
+                  />
+                  <View className="absolute inset-0 bg-black bg-opacity-30 items-center justify-center">
+                    <Feather name="camera" size={24} color="white" />
+                  </View>
+                </>
+              ) : (
+                <View className="flex-1 items-center justify-center">
+                  <Feather name="image" size={24} color="#999" />
+                  <Text className="text-gray-500 text-sm mt-2">Add Banner</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
+
+          {/* Profile Picture */}
+          <View className="mb-4">
+            <Text className="text-gray-500 text-sm mb-2">Profile Picture</Text>
+            <TouchableOpacity
+              onPress={() => pickImage("profilePicture")}
+              className="w-24 h-24 bg-gray-200 rounded-full overflow-hidden self-center"
+            >
+              {formData.profilePicture ? (
+                <>
+                  <Image
+                    source={{ uri: formData.profilePicture }}
+                    className="w-full h-full"
+                    resizeMode="cover"
+                  />
+                  <View className="absolute inset-0 bg-black bg-opacity-30 items-center justify-center">
+                    <Feather name="camera" size={18} color="white" />
+                  </View>
+                </>
+              ) : (
+                <View className="flex-1 items-center justify-center">
+                  <Feather name="user" size={20} color="#999" />
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
+
           <View className="space-y-4">
             {/* firstName */}
             <View className="mb-2">

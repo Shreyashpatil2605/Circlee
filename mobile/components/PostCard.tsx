@@ -3,6 +3,7 @@ import React from "react";
 import { Post, User } from "@/types";
 import { formatDate, formatNumber } from "@/utils/formatters";
 import { AntDesign, Feather } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 
 interface PostCardProps {
   post: Post;
@@ -20,6 +21,7 @@ const PostCard = ({
   onComment,
   post,
 }: PostCardProps) => {
+  const router = useRouter();
   const isOwnPost = post.user._id === currentUser._id;
 
   const handleDelete = () => {
@@ -33,17 +35,30 @@ const PostCard = ({
     ]);
   };
 
+  const handleUserPress = () => {
+    if (post.user.username === currentUser.username) {
+      router.push("/(tabs)/profile");
+    } else {
+      router.push(`/${post.user.username}`);
+    }
+  };
+
   return (
     <View className="border-b  border-gray-100 bg-white">
       <View className="flex-row p-4">
-        <Image
-          source={{ uri: post.user.profilePicture || "" }}
-          className="w-12 h-12 rounded-full mr-3"
-        />
+        <TouchableOpacity onPress={handleUserPress}>
+          <Image
+            source={{ uri: post.user.profilePicture || "" }}
+            className="w-12 h-12 rounded-full mr-3"
+          />
+        </TouchableOpacity>
 
         <View className="flex-1">
           <View className="flex-row items-center justify-between mb-1">
-            <View className="flex-row items-center">
+            <TouchableOpacity
+              className="flex-row items-center flex-1"
+              onPress={handleUserPress}
+            >
               <Text className="font-bold text-gray-900 mr-1">
                 {post.user.firstName} {post.user.lastName}
               </Text>
@@ -51,7 +66,7 @@ const PostCard = ({
               <Text className="font-bold ml-5">
                 .{formatDate(post.createdAt)}
               </Text>
-            </View>
+            </TouchableOpacity>
             {isOwnPost && (
               <TouchableOpacity onPress={handleDelete}>
                 <Feather name="trash" size={20} color="#67786" />

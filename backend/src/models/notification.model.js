@@ -24,10 +24,10 @@ const notificationSchema = new mongoose.Schema(
     comment: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Comment",
-      default: "null",
+      default: null,
     },
   },
-  { timestamp: true }
+  { timestamps: true },
 );
 const Notification = mongoose.model("Notification", notificationSchema);
 export default Notification;

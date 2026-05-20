@@ -12,6 +12,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Feather } from "@expo/vector-icons";
 
 interface CommentsModalProp {
   selectedPost: Post;
@@ -19,7 +20,7 @@ interface CommentsModalProp {
 }
 
 const CommentsModal = ({ selectedPost, onClose }: CommentsModalProp) => {
-  const { commentText, setCommentText, createComment, isCreatingComment } =
+  const { commentText, setCommentText, createComment, deleteComment, isCreatingComment, isDeletingComment } =
     useComments();
 
   const { currentUser } = useCurrentUser();
@@ -90,13 +91,27 @@ const CommentsModal = ({ selectedPost, onClose }: CommentsModalProp) => {
                 />
 
                 <View className="flex-1">
-                  <View className="flex-row items-center mb-1">
-                    <Text className="font-bold text-gray-900">
-                      {comment.user.firstName} {comment.user.lastName}
-                    </Text>
-                    <Text className="text-gray-500 text-sm ml-1">
-                      @{comment.user.username}
-                    </Text>
+                  <View className="flex-row items-center justify-between mb-1">
+                    <View className="flex-row items-center flex-1">
+                      <Text className="font-bold text-gray-900">
+                        {comment.user.firstName} {comment.user.lastName}
+                      </Text>
+                      <Text className="text-gray-500 text-sm ml-1">
+                        @{comment.user.username}
+                      </Text>
+                    </View>
+                    {currentUser?._id === comment.user._id && (
+                      <TouchableOpacity
+                        onPress={() => deleteComment(comment._id)}
+                        disabled={isDeletingComment}
+                      >
+                        <Feather
+                          name="trash-2"
+                          size={18}
+                          color={isDeletingComment ? "#999" : "#EF4444"}
+                        />
+                      </TouchableOpacity>
+                    )}
                   </View>
                   <Text className="text-gray-500 text-base leading-5 mb-2">
                     {" "}
