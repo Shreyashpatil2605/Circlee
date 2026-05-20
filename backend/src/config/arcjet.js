@@ -10,10 +10,11 @@ export const aj = arcjet({
     shield({
       mode: "LIVE",
     }),
-    detectBot({
-      mode: "DRY_RUN",
-      allow: ["CATEGORY:SEARCH_ENGINE"],
-    }),
+    // Bot detection disabled for mobile app compatibility
+    // detectBot({
+    //   mode: "DRY_RUN",
+    //   allow: ["CATEGORY:SEARCH_ENGINE"],
+    // }),
 
     tokenBucket({
       mode: "LIVE",

@@ -7,7 +7,7 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from "react-native";
-import React from "react";
+import React, { useState } from "react";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import {
   SafeAreaView,
@@ -20,10 +20,14 @@ import { usePosts } from "@/hooks/usePosts";
 import PostsList from "@/components/PostsList";
 import { useProfile } from "@/hooks/useProfile";
 import EditProfileModel from "@/components/EditProfileModel";
+import { FollowListModal } from "@/components/FollowListModal";
 
 const ProfileScreen = () => {
   const { currentUser, isLoading } = useCurrentUser();
   const insets = useSafeAreaInsets();
+  const [followersModalVisible, setFollowersModalVisible] = useState(false);
+  const [followingModalVisible, setFollowingModalVisible] = useState(false);
+
   const {
     posts: userPosts,
     refetch: refetchPosts,
@@ -39,6 +43,7 @@ const ProfileScreen = () => {
     updateFormField,
     isUpdating,
     refetch: refetchProfile,
+    pickImage,
   } = useProfile();
 
   if (isLoading) {
@@ -136,20 +141,23 @@ const ProfileScreen = () => {
 
             {/* following */}
             <View className="flex-row">
-              <TouchableOpacity className="mr-6">
+              <TouchableOpacity
+                className="mr-6"
+                onPress={() => setFollowingModalVisible(true)}
+              >
                 <Text className="text-gray-900">
                   <Text className="font-bold">
-                    {currentUser.following?.length}
+                    {currentUser.following?.length || 0}
                   </Text>
                   <Text className="text-gray-500"> Following</Text>
                 </Text>
               </TouchableOpacity>
 
               {/* followers */}
-              <TouchableOpacity>
+              <TouchableOpacity onPress={() => setFollowersModalVisible(true)}>
                 <Text className="text-gray-900">
                   <Text className="font-bold">
-                    {currentUser.followers?.length}
+                    {currentUser.followers?.length || 0}
                   </Text>
                   <Text className="text-gray-500"> Followers</Text>
                 </Text>
@@ -166,6 +174,21 @@ const ProfileScreen = () => {
         saveProfile={saveProfile}
         updateFormField={updateFormField}
         isUpdating={isUpdating}
+        pickImage={pickImage}
+      />
+
+      {/* Follow List Modals */}
+      <FollowListModal
+        visible={followersModalVisible}
+        onClose={() => setFollowersModalVisible(false)}
+        userId={currentUser?._id}
+        type="followers"
+      />
+      <FollowListModal
+        visible={followingModalVisible}
+        onClose={() => setFollowingModalVisible(false)}
+        userId={currentUser?._id}
+        type="following"
       />
     </SafeAreaView>
   );

@@ -31,6 +31,21 @@ export const useComments = () => {
     },
   });
 
+  const deleteCommentMutation = useMutation({
+    mutationFn: async (commentId: string) => {
+      const response = await commentApi.deleteComment(api, commentId);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+    },
+    onError: (error: any) => {
+      Alert.alert("Error", "Failed to delete comment. Try again.");
+      console.log(error.response?.data);
+      console.log(error.response?.status);
+    },
+  });
+
   const createComment = (postId: string) => {
     if (!commentText.trim()) {
       Alert.alert("Empty Comment", "Please write something before posting");
@@ -38,10 +53,28 @@ export const useComments = () => {
     }
     createCommentMutation.mutate({ postId, content: commentText.trim() });
   };
+
+  const deleteComment = (commentId: string) => {
+    Alert.alert(
+      "Delete Comment",
+      "Are you sure you want to delete this comment?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          onPress: () => deleteCommentMutation.mutate(commentId),
+          style: "destructive",
+        },
+      ]
+    );
+  };
+
   return {
     commentText,
     setCommentText,
     createComment,
+    deleteComment,
     isCreatingComment: createCommentMutation.isPending,
+    isDeletingComment: deleteCommentMutation.isPending,
   };
 };

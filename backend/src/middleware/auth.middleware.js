@@ -1,8 +1,9 @@
 export const protectRoute = async (req, res, next) => {
-  if (!req.auth().isAuthenticated) {
+  const auth = req.auth;
+  if (!auth || !auth.userId) {
     return res
-      .status(400)
-      .json({ message: "Unauthorized - you must be locked in" });
+      .status(401)
+      .json({ message: "Unauthorized - you must be logged in" });
   }
   next();
 };
