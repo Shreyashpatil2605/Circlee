@@ -41,17 +41,34 @@ const EditProfileModel = ({
     saveProfile();
     onClose();
   };
+  const [mode, setMode] = React.useState<"light" | "dark">("light");
+
+  const isDark = mode === "dark";
+
   return (
     <Modal
       visible={isVisible}
       animationType="slide"
       presentationStyle="pageSheet"
     >
-      <View className="flex-row items-center justify-between px-4 py-3 border-b border-gray-100 ">
+      <View
+        className={`flex-row items-center justify-between px-4 py-3 border-b ${isDark ? "border-gray-800" : "border-gray-100"}`}
+        style={{ backgroundColor: isDark ? "#0B1220" : "#FFFFFF" }}
+      >
         <TouchableOpacity onPress={onClose}>
           <Text className="text-blue-500 text-lg">Cancel</Text>
         </TouchableOpacity>
         <Text className="text-lg font-semibold ">Edit Profile</Text>
+
+        <TouchableOpacity
+          onPress={() => setMode(isDark ? "light" : "dark")}
+          disabled={isUpdating}
+          className="border border-gray-300 px-3 py-2 rounded-lg"
+        >
+          <Text className={isDark ? "text-gray-200" : "text-gray-800"}>
+            {isDark ? "Light" : "Dark"}
+          </Text>
+        </TouchableOpacity>
 
         <TouchableOpacity
           onPress={saveProfile}
