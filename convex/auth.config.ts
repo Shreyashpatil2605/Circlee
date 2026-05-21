@@ -1,8 +1,8 @@
-import { defineAuth } from "@convex-dev/auth/server";
-import { password } from "@convex-dev/auth/providers/Password";
-
-const MyAuth = defineAuth({
-  providers: [password],
-});
-
-export default MyAuth;
+export default {
+  providers: [
+    {
+      domain: "https://proud-impala-27.clerk.accounts.dev",
+      applicationID: "convex",
+    },
+  ],
+};
