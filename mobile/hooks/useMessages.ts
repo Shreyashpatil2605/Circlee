@@ -1,113 +1,78 @@
-import { messageApi, useApiClient } from "@/utils/api";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Alert } from "react-native";
+import { useQuery, useMutation } from "convex/react";
+// @ts-ignore
+import { api } from "../../convex/_generated/api";
 
 export const useMessages = (conversationId: string) => {
-  const api = useApiClient();
-  const queryClient = useQueryClient();
   const [messageText, setMessageText] = useState("");
+  const [isSending, setIsSending] = useState(false);
 
-  // Query for fetching messages
-  const {
-    data: messages = [],
-    isLoading: isLoadingMessages,
-    error: messagesError,
-    refetch: refetchMessages,
-  } = useQuery({
-    queryKey: ["messages", conversationId],
-    queryFn: async () => {
-      const response = await messageApi.getMessages(api, conversationId);
-      return response.data.messages;
-    },
-    enabled: !!conversationId,
-    refetchInterval: 3000, // Poll every 3 seconds for new messages
-  });
+  const messages = useQuery(
+    api.messages.getMessages,
+    conversationId ? { conversationId: conversationId as any } : "skip"
+  );
 
-  // Mutation for sending messages
-  const sendMessageMutation = useMutation({
-    mutationFn: async (content: string) => {
-      const response = await messageApi.sendMessage(api, conversationId, content);
-      return response.data;
-    },
-    onSuccess: () => {
-      setMessageText("");
-      queryClient.invalidateQueries({ queryKey: ["messages", conversationId] });
-      queryClient.invalidateQueries({ queryKey: ["conversations"] });
-    },
-    onError: (error: any) => {
-      Alert.alert(
-        "Error",
-        error.response?.data?.error ||
-          "Failed to send message. Try again."
-      );
-      console.log(error.response?.data);
-    },
-  });
+  const sendMessageMutation = useMutation(api.messages.sendMessage);
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     if (!messageText.trim()) {
       Alert.alert("Empty Message", "Please write something before sending");
       return;
     }
-    sendMessageMutation.mutate(messageText.trim());
+    
+    setIsSending(true);
+    try {
+      await sendMessageMutation({
+        conversationId: conversationId as any,
+        content: messageText.trim(),
+      });
+      setMessageText("");
+    } catch (error: any) {
+      Alert.alert("Error", error.message || "Failed to send message. Try again.");
+      console.log(error);
+    } finally {
+      setIsSending(false);
+    }
   };
 
   return {
-    messages,
-    isLoadingMessages,
-    messagesError,
+    messages: messages || [],
+    isLoadingMessages: messages === undefined && conversationId !== "",
+    messagesError: null,
     messageText,
     setMessageText,
     sendMessage,
-    isSending: sendMessageMutation.isPending,
-    refetchMessages,
+    isSending,
+    refetchMessages: () => {}, 
   };
 };
 
 export const useConversations = () => {
-  const api = useApiClient();
-  const queryClient = useQueryClient();
+  const [isCreating, setIsCreating] = useState(false);
+  const conversations = useQuery(api.messages.getConversations);
+  const getOrCreateConversationMutation = useMutation(api.messages.getOrCreateConversation);
 
-  const {
-    data: conversations = [],
-    isLoading,
-    error,
-    refetch,
-  } = useQuery({
-    queryKey: ["conversations"],
-    queryFn: async () => {
-      const response = await messageApi.getConversations(api);
-      return response.data.conversations;
-    },
-    refetchInterval: 5000, // Poll every 5 seconds
-  });
-
-  const getOrCreateConversationMutation = useMutation({
-    mutationFn: async (participantId: string) => {
-      const response = await messageApi.getOrCreateConversation(
-        api,
-        participantId,
-      );
-      return response.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["conversations"] });
-    },
-    onError: (error: any) => {
-      const errorMessage = error.response?.data?.error ||
-        "Failed to create conversation";
-      Alert.alert("Cannot Message", errorMessage);
-      console.log(error.response?.data);
-    },
-  });
+  const getOrCreateConversation = async (participantId: string) => {
+    setIsCreating(true);
+    try {
+      const id = await getOrCreateConversationMutation({ participantId });
+      return { conversation: { _id: id } };
+    } catch (error: any) {
+      Alert.alert("Cannot Message", error.message || "Failed to create conversation");
+      console.log(error);
+      throw error;
+    } finally {
+      setIsCreating(false);
+    }
+  };
 
   return {
-    conversations,
-    isLoading,
-    error,
-    refetch,
-    getOrCreateConversation: getOrCreateConversationMutation.mutate,
-    isCreating: getOrCreateConversationMutation.isPending,
+    conversations: conversations || [],
+    isLoading: conversations === undefined,
+    error: null,
+    refetch: () => {}, 
+    getOrCreateConversation,
+    isCreating,
   };
 };
