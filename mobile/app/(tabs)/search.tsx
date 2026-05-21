@@ -32,7 +32,7 @@ const searchScreen = () => {
           />
         </View>
       </View>
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+      <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
         <View className="p-4">
           <Text className="text-xl font-bold text-gray-500 mb-4 ">
             Treading for you

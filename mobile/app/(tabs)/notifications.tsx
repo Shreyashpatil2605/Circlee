@@ -57,7 +57,7 @@ const NotificationScreen = () => {
       {/* contentContainerStyle={{ paddingBottom: 100 + insets.bottom} adds extra bottom spacing inside a scrollable container. Usually used with: ScrollView, FlatList in React Native */}
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ paddingBottom: 100 + insets.bottom }}
+        contentContainerStyle={{ paddingBottom: 120 + insets.bottom }}
         showsVerticalScrollIndicator={false}
         // Add the loading scrteen at the top of the screem so that we can get the refresh like thing....
         refreshControl={
