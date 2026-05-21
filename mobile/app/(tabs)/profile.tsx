@@ -72,7 +72,7 @@ const ProfileScreen = () => {
       {/* ScrollView */}
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ paddingBottom: 100 + insets.bottom }}
+        contentContainerStyle={{ paddingBottom: 120 + insets.bottom }}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl

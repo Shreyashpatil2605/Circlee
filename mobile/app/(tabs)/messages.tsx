@@ -28,8 +28,11 @@ const MessageScreen = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const { currentUser } = useCurrentUser();
 
-  const { conversations, isLoading: isLoadingConversations, refetch } =
-    useConversations();
+  const {
+    conversations,
+    isLoading: isLoadingConversations,
+    refetch,
+  } = useConversations();
 
   const {
     messages,
@@ -123,6 +126,7 @@ const MessageScreen = () => {
             </TouchableOpacity>
           )}
           scrollEnabled
+          contentContainerStyle={{ paddingBottom: 100 }}
         />
       )}
 
@@ -163,8 +167,7 @@ const MessageScreen = () => {
                 data={messages}
                 keyExtractor={(item) => item._id}
                 renderItem={({ item: message }) => {
-                  const isOwnMessage =
-                    message.sender._id === currentUser?._id;
+                  const isOwnMessage = message.sender._id === currentUser?._id;
                   return (
                     <View
                       className={`px-4 py-2 flex-row ${isOwnMessage ? "justify-end" : "justify-start"}`}

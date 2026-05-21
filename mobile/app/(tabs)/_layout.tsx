@@ -1,73 +1,56 @@
-import { Redirect, Tabs } from "expo-router";
-import { Feather } from "@expo/vector-icons";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Redirect } from "expo-router";
+import React, { useState } from "react";
+import { View } from "react-native";
 import { useAuth } from "@clerk/clerk-expo";
+import { GlassBottomTabBar, TabBarItem } from "@/components/GlassBottomTabBar";
+import HomeScreen from "./index";
+import SearchScreen from "./search";
+import MessagesScreen from "./messages";
+import NotificationsScreen from "./notifications";
+import ProfileScreen from "./profile";
+
+const TAB_ITEMS: TabBarItem[] = [
+  { name: "home", icon: "home", label: "Home" },
+  { name: "search", icon: "search", label: "Search" },
+  { name: "messages", icon: "mail", label: "Messages" },
+  { name: "notifications", icon: "bell", label: "Notifications" },
+  { name: "profile", icon: "user", label: "Profile" },
+];
 
 const Tabslayout = () => {
-  const insets = useSafeAreaInsets();
   const { isSignedIn } = useAuth();
+  const [activeTab, setActiveTab] = useState(0);
+
   if (!isSignedIn) return <Redirect href="/(auth)" />;
+
+  const renderScreen = () => {
+    switch (activeTab) {
+      case 0:
+        return <HomeScreen />;
+      case 1:
+        return <SearchScreen />;
+      case 2:
+        return <MessagesScreen />;
+      case 3:
+        return <NotificationsScreen />;
+      case 4:
+        return <ProfileScreen />;
+      default:
+        return <HomeScreen />;
+    }
+  };
+
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: "#3B9797",
-        tabBarInactiveTintColor: "#000000",
-        tabBarStyle: {
-          backgroundColor: "#fff",
-          borderTopWidth: 1,
-          borderTopColor: "#E1E8ED",
-          height: 50 + insets.bottom,
-          paddingTop: 8,
-        },
-        headerShown: false,
-      }}
-    >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: "",
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="home" size={size} color={color} />
-          ),
-        }}
+    <View style={{ flex: 1 }}>
+      {renderScreen()}
+      <GlassBottomTabBar
+        items={TAB_ITEMS}
+        activeIndex={activeTab}
+        onTabPress={setActiveTab}
+        tintColor="#FF3B30"
+        inactiveTintColor="rgba(255, 255, 255, 0.6)"
       />
-      <Tabs.Screen
-        name="search"
-        options={{
-          title: "",
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="search" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="messages"
-        options={{
-          title: "",
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="mail" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="notifications"
-        options={{
-          title: "",
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="bell" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: "",
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="user" size={size} color={color} />
-          ),
-        }}
-      />
-    </Tabs>
+    </View>
   );
 };
 
