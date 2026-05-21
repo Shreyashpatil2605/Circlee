@@ -47,8 +47,8 @@ const Tabslayout = () => {
         items={TAB_ITEMS}
         activeIndex={activeTab}
         onTabPress={setActiveTab}
-        tintColor="#FF3B30"
-        inactiveTintColor="rgba(255, 255, 255, 0.6)"
+        tintColor="#0F172A"
+        inactiveTintColor="#94A3B8"
       />
     </View>
   );

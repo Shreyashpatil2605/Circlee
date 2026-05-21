@@ -28,26 +28,81 @@ interface GlassBottomTabBarProps extends ViewProps {
 }
 
 /**
- * GlassBottomTabBar - Premium glassmorphic bottom navigation
- *
- * Features:
- * - Frosted glass blur effect (98% opacity)
- * - Translucent white gradient overlay
- * - Floating pill-shaped design
- * - Soft platform shadows
- * - Rounded corners (24px)
- * - Subtle white highlight border
- * - Glowing active tab indicator
- * - Smooth animations
- * - iOS/Android optimized
+ * TabBarButton - Custom sub-component that handles micro-animations for each tab
+ */
+const TabBarButton: React.FC<{
+  item: TabBarItem;
+  isActive: boolean;
+  onPress: () => void;
+  tintColor: string;
+  inactiveTintColor: string;
+}> = ({ item, isActive, onPress, tintColor, inactiveTintColor }) => {
+  const scaleValue = React.useRef(new Animated.Value(isActive ? 1 : 0.85)).current;
+  const opacityValue = React.useRef(new Animated.Value(isActive ? 1 : 0)).current;
+
+  React.useEffect(() => {
+    Animated.parallel([
+      Animated.spring(scaleValue, {
+        toValue: isActive ? 1 : 0.88,
+        useNativeDriver: true,
+        friction: 6,
+        tension: 80,
+      }),
+      Animated.timing(opacityValue, {
+        toValue: isActive ? 1 : 0,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [isActive]);
+
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      style={styles.tabItemContainer}
+      activeOpacity={0.7}
+    >
+      <View style={styles.iconBubble}>
+        {/* Subtle monochromatic pill background - animated */}
+        <Animated.View
+          style={[
+            styles.activePillBackground,
+            {
+              opacity: opacityValue,
+              transform: [{ scale: scaleValue }],
+            },
+          ]}
+        />
+
+        {/* Icon - animated scale */}
+        <Animated.View style={{ transform: [{ scale: scaleValue }], alignItems: "center", justifyContent: "center" }}>
+          <Feather
+            name={item.icon as any}
+            size={22}
+            color={isActive ? tintColor : inactiveTintColor}
+            style={styles.icon}
+          />
+        </Animated.View>
+      </View>
+
+      {/* Notification Dot */}
+      {item.badge !== undefined && item.badge > 0 && (
+        <View style={styles.notificationDot} />
+      )}
+    </TouchableOpacity>
+  );
+};
+
+/**
+ * GlassBottomTabBar - Premium Apple-like minimalist glassmorphic bottom navigation
  */
 export const GlassBottomTabBar: React.FC<GlassBottomTabBarProps> = ({
   items,
   activeIndex,
   onTabPress,
-  tintColor = "#FF3B30",
-  inactiveTintColor = "rgba(255, 255, 255, 0.6)",
-  blurIntensity = 98,
+  tintColor = "#0F172A", // Charcoal/slate black for clean premium look
+  inactiveTintColor = "#94A3B8", // Soft slate gray
+  blurIntensity = 75, // Sleek, semi-transparent blur
   style,
   ...props
 }) => {
@@ -56,74 +111,23 @@ export const GlassBottomTabBar: React.FC<GlassBottomTabBarProps> = ({
       {/* Frosted Glass Blur Effect */}
       <BlurView intensity={blurIntensity} style={styles.blurContainer}>
         <LinearGradient
-          colors={["rgba(255, 255, 255, 0.18)", "rgba(255, 255, 255, 0.12)"]}
+          colors={["rgba(255, 255, 255, 0.8)", "rgba(255, 255, 255, 0.55)"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
           style={styles.gradient}
         >
-          {/* Subtle White Highlight Border (Top) */}
-          <View style={styles.highlightBorder} />
-
           {/* Tab Items Container */}
           <View style={styles.tabsWrapper}>
-            {items.map((item, index) => {
-              const isActive = index === activeIndex;
-
-              return (
-                <TouchableOpacity
-                  key={item.name}
-                  onPress={() => onTabPress(index)}
-                  style={styles.tabItemContainer}
-                  activeOpacity={0.7}
-                >
-                  {/* Active Tab Background Glow */}
-                  {isActive && (
-                    <>
-                      {/* Glow Layer */}
-                      <View
-                        style={[
-                          styles.activeGlowLayer,
-                          {
-                            backgroundColor: tintColor,
-                          },
-                        ]}
-                      />
-                      {/* Background Layer */}
-                      <View
-                        style={[
-                          styles.activeBackgroundLayer,
-                          {
-                            borderColor: "rgba(255, 255, 255, 0.4)",
-                          },
-                        ]}
-                      />
-                    </>
-                  )}
-
-                  {/* Icon */}
-                  <Feather
-                    name={item.icon as any}
-                    size={24}
-                    color={isActive ? tintColor : inactiveTintColor}
-                    style={styles.icon}
-                  />
-
-                  {/* Badge Indicator */}
-                  {item.badge !== undefined && item.badge > 0 && (
-                    <View
-                      style={[
-                        styles.badge,
-                        {
-                          backgroundColor: tintColor,
-                        },
-                      ]}
-                    >
-                      {item.badge <= 99 && <></>}
-                    </View>
-                  )}
-                </TouchableOpacity>
-              );
-            })}
+            {items.map((item, index) => (
+              <TabBarButton
+                key={item.name}
+                item={item}
+                isActive={index === activeIndex}
+                onPress={() => onTabPress(index)}
+                tintColor={tintColor}
+                inactiveTintColor={inactiveTintColor}
+              />
+            ))}
           </View>
         </LinearGradient>
       </BlurView>
@@ -147,15 +151,17 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: 24,
     overflow: "hidden",
+    borderWidth: 0.5,
+    borderColor: "rgba(0, 0, 0, 0.06)",
     ...Platform.select({
       ios: {
-        shadowColor: "rgba(0, 0, 0, 0.35)",
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.4,
-        shadowRadius: 20,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.04,
+        shadowRadius: 16,
       },
       android: {
-        elevation: 24,
+        elevation: 6,
       },
     }),
   },
@@ -164,12 +170,6 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     justifyContent: "flex-start",
     overflow: "hidden",
-  },
-  highlightBorder: {
-    height: 1,
-    backgroundColor: "rgba(255, 255, 255, 0.4)",
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
   },
   tabsWrapper: {
     flex: 1,
@@ -186,37 +186,37 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     position: "relative",
   },
-  activeGlowLayer: {
-    position: "absolute",
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    opacity: 0.15,
-    zIndex: 0,
+  iconBubble: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
   },
-  activeBackgroundLayer: {
+  activePillBackground: {
     position: "absolute",
-    width: 50,
-    height: 50,
-    borderRadius: 16,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    borderWidth: 1,
-    zIndex: 1,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 24,
+    backgroundColor: "rgba(15, 23, 42, 0.06)", // Soft charcoal pill
   },
   icon: {
-    zIndex: 2,
-    marginBottom: 2,
+    marginBottom: 0,
   },
-  badge: {
+  notificationDot: {
     position: "absolute",
-    top: -4,
-    right: -4,
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: "#FF3B30",
-    zIndex: 3,
-    borderWidth: 2,
-    borderColor: "rgba(0, 0, 0, 0.1)",
+    top: 8,
+    right: 8,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#EF4444", // Clean iOS system red
+    borderWidth: 1.5,
+    borderColor: "#FFF",
+    zIndex: 4,
   },
 });
+

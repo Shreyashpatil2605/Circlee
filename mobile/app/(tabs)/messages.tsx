@@ -55,7 +55,7 @@ const MessageScreen = () => {
   };
 
   const filteredConversations = conversations.filter(
-    (conv) =>
+    (conv: any) =>
       conv.otherUser?.firstName
         .toLowerCase()
         .includes(searchText.toLowerCase()) ||
