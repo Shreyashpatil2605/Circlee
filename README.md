@@ -1,4 +1,4 @@
-# Circlee (X-Clone)
+# Circlee 
 
 A real-time, cross-platform social media application built with React Native, inspired by X (formerly Twitter). 
 
