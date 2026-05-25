@@ -6,6 +6,7 @@ import { useUserSync } from "@/hooks/useUserSync";
 import PostComposer from "@/components/PostComposer";
 import PostsList from "@/components/PostsList";
 import { usePosts } from "@/hooks/usePosts";
+import { BlurView } from "expo-blur";
 
 const HomeScreen = () => {
   const [isRefetching, setisRefectching] = useState(false);
@@ -20,24 +21,25 @@ const HomeScreen = () => {
 
   useUserSync();
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
-      <View className="flex-row justify-between items-center px-4 py-3 border-b border-gray-100">
+    <SafeAreaView className="flex-1 bg-dark-bg" edges={["top"]}>
+      <BlurView intensity={20} tint="dark" className="flex-row justify-between items-center px-4 py-3 border-b border-white/10 z-10">
         <Image
           source={require("../../assets/images/color-adjustment.png")}
           className="size-10"
+          style={{ tintColor: '#9D00FF' }}
         />
-        <Text className="text-xl font-bold text-gray-900"> Home</Text>
+        <Text className="text-xl font-bold text-white" style={{ textShadowColor: '#9D00FF', textShadowRadius: 10 }}>Home</Text>
         <SignOutButton />
-      </View>
+      </BlurView>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        className="flex-1"
+        className="flex-1 mt-2"
         contentContainerStyle={{ paddingBottom: 100 }}
         refreshControl={
           <RefreshControl
             refreshing={isRefetching}
             onRefresh={handlePulltoRefresh}
-            tintColor={"#1DA1F2"}
+            tintColor={"#9D00FF"}
           />
         }
       >

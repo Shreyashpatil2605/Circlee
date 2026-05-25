@@ -17,6 +17,7 @@ import { Feather } from "@expo/vector-icons";
 import NoNotificationsFound from "@/components/NoNotificationsFound";
 import { Notification } from "@/types";
 import NotificationCard from "@/components/NotificationCard";
+import { BlurView } from "expo-blur";
 
 const NotificationScreen = () => {
   const {
@@ -32,10 +33,10 @@ const NotificationScreen = () => {
 
   if (error) {
     return (
-      <View className="flex-1 items-center justify-center">
-        <Text className="text-base-900 mb-4">Failed to load Notifications</Text>
+      <View className="flex-1 items-center justify-center bg-dark-bg">
+        <Text className="text-gray-400 mb-4">Failed to load Notifications</Text>
         <TouchableOpacity
-          className="bg-blue-500 px-4 py-2 rounded-lg"
+          className="bg-neon-purple px-4 py-2 rounded-lg"
           onPress={() => refetch()}
         >
           <Text className="text-white font-semibold">Retry</Text>
@@ -45,34 +46,31 @@ const NotificationScreen = () => {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
+    <SafeAreaView className="flex-1 bg-dark-bg" edges={["top"]}>
       {/* header */}
-      <View className="flex-row items-center justify-between px-4 py-3 border-b border-gray-100">
-        <Text className="text-xl font-bold text-gray-900"> Notifications</Text>
+      <BlurView intensity={20} tint="dark" className="flex-row items-center justify-between px-4 py-3 border-b border-white/10">
+        <Text className="text-xl font-bold text-white" style={{ textShadowColor: '#9D00FF', textShadowRadius: 10 }}>Notifications</Text>
         <TouchableOpacity>
-          <Feather name="settings" size={24} color="#657786" />
+          <Feather name="settings" size={24} color="#9D00FF" />
         </TouchableOpacity>
-      </View>
+      </BlurView>
       {/* content */}
-      {/* contentContainerStyle={{ paddingBottom: 100 + insets.bottom} adds extra bottom spacing inside a scrollable container. Usually used with: ScrollView, FlatList in React Native */}
       <ScrollView
-        className="flex-1"
+        className="flex-1 mt-2"
         contentContainerStyle={{ paddingBottom: 120 + insets.bottom }}
         showsVerticalScrollIndicator={false}
-        // Add the loading scrteen at the top of the screem so that we can get the refresh like thing....
         refreshControl={
           <RefreshControl
             refreshing={isRefetching}
             onRefresh={refetch}
-            tintColor={"#1DA1F2"}
+            tintColor={"#9D00FF"}
           />
         }
       >
         {isLoading ? (
           <View className="flex-1  items-center justify-center p-8">
-            {/* ActivityIndicator spinning loading circle */}
-            <ActivityIndicator size="large" color="#1DA1F2" />
-            <Text className="text-gray-500 mt-4">Loading notifications...</Text>
+            <ActivityIndicator size="large" color="#9D00FF" />
+            <Text className="text-gray-400 mt-4">Loading notifications...</Text>
           </View>
         ) : notifications.length === 0 ? (
           <NoNotificationsFound />

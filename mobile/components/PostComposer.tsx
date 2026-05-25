@@ -13,6 +13,7 @@ import { useCreatePost } from "@/hooks/useCreatePost";
 import { useUser } from "@clerk/clerk-expo";
 import { Feather } from "@expo/vector-icons";
 import { getCameraPermissionsAsync } from "expo-image-picker";
+import { BlurView } from "expo-blur";
 
 const PostComposer = () => {
   const {
@@ -28,83 +29,86 @@ const PostComposer = () => {
   const { user } = useUser();
 
   return (
-    <View className="border-b border-gray-100 p-4 bg-white">
-      {/*Whats Happeing  making */}
-      <View className="flex-row">
-        <Image
-          source={{ uri: user?.imageUrl }}
-          className="w-12 h-12 rounded-full mr-3"
-        />
-        <View className="flex-1">
-          <TextInput
-            className="text-gray-900 text-lg"
-            placeholder="Whats happening?"
-            placeholderTextColor="#657786"
-            multiline
-            value={content}
-            onChangeText={setContent}
-            maxLength={200}
+    <View className="mb-2 mx-2 rounded-2xl overflow-hidden border border-white/10">
+      <BlurView intensity={30} tint="dark" className="p-4">
+        {/*Whats Happeing  making */}
+        <View className="flex-row">
+          <Image
+            source={{ uri: user?.imageUrl }}
+            className="w-12 h-12 rounded-full mr-3 border border-neon-purple/50"
           />
-        </View>
-      </View>
-
-      {/*Selecting the image */}
-      {selectedImage && (
-        <View className="mt-3 ml-3">
-          <View className="relative">
-            <Image
-              source={{ uri: selectedImage }}
-              className="w-full h-48 rounded-2xl"
+          <View className="flex-1">
+            <TextInput
+              className="text-white text-lg"
+              placeholder="What's happening?"
+              placeholderTextColor="#A0AEC0"
+              multiline
+              value={content}
+              onChangeText={setContent}
+              maxLength={200}
             />
+          </View>
+        </View>
+
+        {/*Selecting the image */}
+        {selectedImage && (
+          <View className="mt-3 ml-3">
+            <View className="relative">
+              <Image
+                source={{ uri: selectedImage }}
+                className="w-full h-48 rounded-2xl border border-white/5"
+              />
+              <TouchableOpacity
+                className="absolute top-2 right-2 w-8 h-8 bg-black/60 rounded-full items-center justify-center"
+                onPress={removeImage}
+              >
+                <Feather name="x" size={16} color="white" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+        {/*Image picker icon and the camera icon  */}
+        <View className="flex-row justify-between items-center mt-3">
+          <View className="flex-row">
+            <TouchableOpacity className="mr-4" onPress={pickImageFromGallery}>
+              <Feather name="image" size={20} color="#9D00FF" />
+            </TouchableOpacity>
+            <TouchableOpacity className="mr-4" onPress={takePhoto}>
+              <Feather name="camera" size={20} color="#9D00FF" />
+            </TouchableOpacity>
+          </View>
+
+          <View className="flex-row items-center">
+            {content.length > 0 && (
+              <Text
+                className={`text-sm mr-3 ${
+                  content.length > 260 ? "text-red-500" : "text-gray-400"
+                }`}
+              >
+                {280 - content.length}
+              </Text>
+            )}
+
             <TouchableOpacity
-              className="absolute top-2 right-2 w-8 h-8 bg-black bg-opacity-60 rounded-full items-center justify-center"
-              onPress={removeImage}
+              className={`px-6 py-2 rounded-full ${
+                content.trim() || selectedImage ? "bg-neon-purple" : "bg-white/10"
+              }`}
+              style={content.trim() || selectedImage ? { shadowColor: '#9D00FF', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.8, shadowRadius: 10, elevation: 5 } : {}}
+              onPress={createPost}
+              disabled={isCreating || !(content.trim() || selectedImage)}
             >
-              <Feather name="x" size={16} color="white" />
+              {isCreating ? (
+                <ActivityIndicator size="small" color="white" />
+              ) : (
+                <Text
+                  className={`font-semibold ${content.trim() || selectedImage ? "text-white" : "text-gray-500"}`}>
+                  Post
+                </Text>
+              )}
             </TouchableOpacity>
           </View>
         </View>
-      )}
-      {/*Image picker icon and the camera icon  */}
-      <View className="flex-row justify-between items-center mt-3">
-        <View className="flex-row">
-          <TouchableOpacity className="mr-4" onPress={pickImageFromGallery}>
-            <Feather name="image" size={20} color="#1DA1F2" />
-          </TouchableOpacity>
-          <TouchableOpacity className="mr-4" onPress={takePhoto}>
-            <Feather name="camera" size={20} color="#1DA1F2" />
-          </TouchableOpacity>
-        </View>
-
-        <View className="flex-row items-center">
-          {content.length > 0 && (
-            <Text
-              className={`text-sm mr-3 ${
-                content.length > 260 ? "text-red-500" : "text-gray-500"
-              }`}
-            >
-              {280 - content.length}
-            </Text>
-          )}
-
-          <TouchableOpacity
-            className={`px-6 py-2 rounded-full ${
-              content.trim() || selectedImage ? "bg-blue-500" : "bg-gray-300"
-            }`}
-            onPress={createPost}
-            disabled={isCreating || !(content.trim() || selectedImage)}
-          >
-            {isCreating ? (
-              <ActivityIndicator size="small" color="white" />
-            ) : (
-              <Text
-                className={`font-semibold ${content.trim() || selectedImage ? "text-white" : "text-gray-500"}`}>
-                Post
-              </Text>
-            )}
-          </TouchableOpacity>
-        </View>
-      </View>
+      </BlurView>
     </View>
   );
 };
