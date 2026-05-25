@@ -24,6 +24,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useFollowUser } from "@/hooks/useFollowUser";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useConversations } from "@/hooks/useMessages";
+import { BlurView } from "expo-blur";
 
 const UserProfileScreen = () => {
   const { username } = useLocalSearchParams();
@@ -117,19 +118,20 @@ const UserProfileScreen = () => {
 
   if (profileLoading) {
     return (
-      <View className="flex-1 bg-white items-center justify-center">
-        <ActivityIndicator size="large" color="#1DA1F2" />
+      <View className="flex-1 bg-dark-bg items-center justify-center">
+        <ActivityIndicator size="large" color="#9D00FF" />
       </View>
     );
   }
 
   if (!user) {
     return (
-      <View className="flex-1 bg-white items-center justify-center">
-        <Text className="text-gray-500">User not found</Text>
+      <View className="flex-1 bg-dark-bg items-center justify-center">
+        <Text className="text-gray-400">User not found</Text>
         <TouchableOpacity
           onPress={() => router.back()}
-          className="mt-4 px-6 py-2 bg-blue-500 rounded-full"
+          className="mt-4 px-6 py-2 bg-neon-purple rounded-full"
+          style={{ shadowColor: '#9D00FF', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.6, shadowRadius: 10 }}
         >
           <Text className="text-white font-semibold">Go Back</Text>
         </TouchableOpacity>
@@ -138,17 +140,17 @@ const UserProfileScreen = () => {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
+    <SafeAreaView className="flex-1 bg-dark-bg" edges={["top"]}>
       {/* Header */}
-      <View className="flex-row items-center px-4 py-3 border-b border-gray-100">
+      <BlurView intensity={20} tint="dark" className="flex-row items-center px-4 py-3 border-b border-white/10">
         <TouchableOpacity onPress={() => router.back()}>
-          <Feather name="arrow-left" size={24} color="#000" />
+          <Feather name="arrow-left" size={24} color="#9D00FF" />
         </TouchableOpacity>
         <View className="ml-4">
-          <Text className="font-bold text-xl">{user.firstName} {user.lastName}</Text>
-          <Text className="text-gray-500 text-sm">{userPosts.length} Posts</Text>
+          <Text className="font-bold text-xl text-white">{user.firstName} {user.lastName}</Text>
+          <Text className="text-gray-400 text-sm">{userPosts.length} Posts</Text>
         </View>
-      </View>
+      </BlurView>
 
       {/* ScrollView */}
       <ScrollView
@@ -159,7 +161,7 @@ const UserProfileScreen = () => {
           <RefreshControl
             refreshing={isRefetching}
             onRefresh={() => refetchPosts()}
-            tintColor="#1DA1F2"
+            tintColor="#9D00FF"
           />
         }
       >
@@ -175,27 +177,29 @@ const UserProfileScreen = () => {
         />
 
         {/* Profile Section */}
-        <View className="px-4 pb-4 border-b border-gray-100">
+        <View className="px-4 pb-4 border-b border-white/10">
           <View className="flex-row justify-between items-end -mt-16 mb-4">
             <Image
               source={{ uri: user.profilePicture }}
-              className="w-32 h-32 rounded-full border-4 border-white"
+              className="w-32 h-32 rounded-full border-4 border-black"
+              style={{ shadowColor: '#9D00FF', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.5, shadowRadius: 12 }}
             />
             {!isOwnProfile && (
               <View className="flex-row gap-2">
                 <TouchableOpacity
                   className={`px-6 py-2 rounded-full ${
                     isFollowing
-                      ? "border border-gray-300"
-                      : "bg-blue-500"
+                      ? "border border-white/20"
+                      : "bg-neon-purple"
                   }`}
+                  style={!isFollowing ? { shadowColor: '#9D00FF', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.6, shadowRadius: 10 } : {}}
                   onPress={handleFollow}
                   disabled={isFollowPending}
                 >
                   <Text
                     className={`font-semibold ${
                       isFollowing
-                        ? "text-gray-900"
+                        ? "text-white"
                         : "text-white"
                     }`}
                   >
@@ -210,7 +214,8 @@ const UserProfileScreen = () => {
                 {/* Message Button - Only show if users mutually follow */}
                 {isFollowing && user?.followers?.includes(currentUser?._id) && (
                   <TouchableOpacity
-                    className="px-6 py-2 rounded-full bg-blue-500"
+                    className="px-6 py-2 rounded-full bg-neon-purple"
+                    style={{ shadowColor: '#9D00FF', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.6, shadowRadius: 10 }}
                     onPress={handleMessage}
                     disabled={isCreatingConversation}
                   >
@@ -228,25 +233,25 @@ const UserProfileScreen = () => {
           {/* User Info */}
           <View className="mb-4">
             <View className="flex-row items-center mb-1">
-              <Text className="font-bold text-xl mr-1">
+              <Text className="font-bold text-xl mr-1 text-white">
                 {user.firstName} {user.lastName}
               </Text>
-              <Feather name="check-circle" size={20} color="#1DA1F2" />
+              <Feather name="check-circle" size={20} color="#9D00FF" />
             </View>
 
-            <Text className="text-gray-500 mb-2">@{user.username}</Text>
-            <Text className="text-gray-900 mb-3">{user.bio}</Text>
+            <Text className="text-gray-400 mb-2">@{user.username}</Text>
+            <Text className="text-gray-300 mb-3">{user.bio}</Text>
 
             {user.location && (
               <View className="flex-row items-center mb-2">
-                <Feather name="map-pin" size={16} color="#657786" />
-                <Text className="ml-2">{user.location}</Text>
+                <Feather name="map-pin" size={16} color="#9D00FF" />
+                <Text className="ml-2 text-gray-400">{user.location}</Text>
               </View>
             )}
 
             <View className="flex-row items-center mb-2">
-              <Feather name="calendar" size={16} color="#657786" />
-              <Text className="ml-2">
+              <Feather name="calendar" size={16} color="#9D00FF" />
+              <Text className="ml-2 text-gray-400">
                 Joined {format(new Date(user.createdAt), "MMMM yyyy")}
               </Text>
             </View>
@@ -257,20 +262,20 @@ const UserProfileScreen = () => {
                 className="mr-6"
                 onPress={() => setFollowingModalVisible(true)}
               >
-                <Text className="text-gray-900">
+                <Text className="text-white">
                   <Text className="font-bold">
                     {user.following?.length || 0}
                   </Text>
-                  <Text className="text-gray-500"> Following</Text>
+                  <Text className="text-gray-400"> Following</Text>
                 </Text>
               </TouchableOpacity>
 
               <TouchableOpacity onPress={() => setFollowersModalVisible(true)}>
-                <Text className="text-gray-900">
+                <Text className="text-white">
                   <Text className="font-bold">
                     {user.followers?.length || 0}
                   </Text>
-                  <Text className="text-gray-500"> Followers</Text>
+                  <Text className="text-gray-400"> Followers</Text>
                 </Text>
               </TouchableOpacity>
             </View>
@@ -299,3 +304,4 @@ const UserProfileScreen = () => {
 };
 
 export default UserProfileScreen;
+

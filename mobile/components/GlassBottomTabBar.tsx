@@ -152,12 +152,12 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     overflow: "hidden",
     borderWidth: 0.5,
-    borderColor: "rgba(0, 0, 0, 0.06)",
+    borderColor: "rgba(255, 255, 255, 0.1)",
     ...Platform.select({
       ios: {
-        shadowColor: "#000",
+        shadowColor: "#9D00FF",
         shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.04,
+        shadowOpacity: 0.2,
         shadowRadius: 16,
       },
       android: {
@@ -201,7 +201,7 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     borderRadius: 24,
-    backgroundColor: "rgba(15, 23, 42, 0.06)", // Soft charcoal pill
+    backgroundColor: "rgba(157, 0, 255, 0.15)", // Soft neon purple pill
   },
   icon: {
     marginBottom: 0,
@@ -213,9 +213,9 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: "#EF4444", // Clean iOS system red
+    backgroundColor: "#9D00FF", // Neon purple dot
     borderWidth: 1.5,
-    borderColor: "#FFF",
+    borderColor: "#000",
     zIndex: 4,
   },
 });

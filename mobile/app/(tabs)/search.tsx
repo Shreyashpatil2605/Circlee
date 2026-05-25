@@ -8,6 +8,7 @@ import {
 import React from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
+import { BlurView } from "expo-blur";
 //todo: add serch feature
 
 const TREADING_TOPICS = [
@@ -20,33 +21,33 @@ const TREADING_TOPICS = [
 
 const searchScreen = () => {
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
+    <SafeAreaView className="flex-1 bg-dark-bg" edges={["top"]}>
       {/* Header */}
-      <View className="px-1 py-0.7  border-grey-100">
-        <View className="flex-row items-center bg-grey-100 rounded-full px-4 py-3">
-          <Feather name="search" size={20} color="#657786" />
+      <View className="px-3 py-2">
+        <View className="flex-row items-center bg-white/5 rounded-full px-4 py-3 border border-white/10">
+          <Feather name="search" size={20} color="#9D00FF" />
           <TextInput
             placeholder="Search Circlee"
-            className="flex-1 ml-2 text-base"
-            placeholderTextColor="#657786"
+            className="flex-1 ml-2 text-base text-white"
+            placeholderTextColor="#A0AEC0"
           />
         </View>
       </View>
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
         <View className="p-4">
-          <Text className="text-xl font-bold text-gray-500 mb-4 ">
-            Treading for you
+          <Text className="text-xl font-bold text-white mb-4" style={{ textShadowColor: '#9D00FF', textShadowRadius: 8 }}>
+            Trending for you
           </Text>
           {TREADING_TOPICS.map((item, index) => (
             <TouchableOpacity
               key={index}
-              className="py-3 boder-b border-gray-300"
+              className="py-3 border-b border-white/5"
             >
         
-              <Text className=" font-bold text-gray-900 text-lg ">
+              <Text className="font-bold text-white text-lg">
                 {item.topic}
               </Text>
-              <Text className=" font-bold text-gray-300 text-lg ">
+              <Text className="text-gray-400 text-sm mt-1">
                 {item.tweets} Tweets
               </Text>
             </TouchableOpacity>

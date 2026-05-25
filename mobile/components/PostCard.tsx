@@ -4,6 +4,7 @@ import { Post, User } from "@/types";
 import { formatDate, formatNumber } from "@/utils/formatters";
 import { AntDesign, Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { BlurView } from "expo-blur";
 
 interface PostCardProps {
   post: Post;
@@ -44,12 +45,12 @@ const PostCard = ({
   };
 
   return (
-    <View className="border-b  border-gray-100 bg-white">
-      <View className="flex-row p-4">
+    <View className="mb-2 mx-2 rounded-2xl overflow-hidden border border-white/10">
+      <BlurView intensity={30} tint="dark" className="flex-row p-4">
         <TouchableOpacity onPress={handleUserPress}>
           <Image
             source={{ uri: post.user.profilePicture || "" }}
-            className="w-12 h-12 rounded-full mr-3"
+            className="w-12 h-12 rounded-full mr-3 border border-neon-purple/50"
           />
         </TouchableOpacity>
 
@@ -59,22 +60,22 @@ const PostCard = ({
               className="flex-row items-center flex-1"
               onPress={handleUserPress}
             >
-              <Text className="font-bold text-gray-900 mr-1">
+              <Text className="font-bold text-white mr-1">
                 {post.user.firstName} {post.user.lastName}
               </Text>
-              <Text className="text-gray-500 mr-1">@{post.user.username}</Text>
-              <Text className="font-bold ml-5">
+              <Text className="text-gray-400 mr-1">@{post.user.username}</Text>
+              <Text className="font-bold text-gray-500 ml-5">
                 .{formatDate(post.createdAt)}
               </Text>
             </TouchableOpacity>
             {isOwnPost && (
               <TouchableOpacity onPress={handleDelete}>
-                <Feather name="trash" size={20} color="#67786" />
+                <Feather name="trash" size={20} color="#888" />
               </TouchableOpacity>
             )}
           </View>
           {post.content && (
-            <Text className="text-gray-500 text-base leading-5 mb-3">
+            <Text className="text-gray-300 text-base leading-5 mb-3">
               {post.content}
             </Text>
           )}
@@ -82,27 +83,26 @@ const PostCard = ({
           {post.image && (
             <Image
               source={{ uri: post.image }}
-              className="w-full h-48 rounded-2xl mb-3"
+              className="w-full h-48 rounded-2xl mb-3 border border-white/5"
               resizeMode="cover"
             />
           )}
 
-          {/* message-circle button */}
-          <View className="flex-row justify-between max-w-xs">
+          {/* Actions */}
+          <View className="flex-row justify-between max-w-xs mt-2">
             <TouchableOpacity
               className="flex-row items-center"
               onPress={() => onComment(post)}
             >
-              <Feather name="message-circle" size={18} color="#657786" />
-              <Text className="text-gray-600 text-sm ml-2">
+              <Feather name="message-circle" size={18} color="#A0AEC0" />
+              <Text className="text-gray-400 text-sm ml-2">
                 {formatNumber(post.comments?.length || 0)}
               </Text>
             </TouchableOpacity>
 
-            {/* repeat button */}
             <TouchableOpacity className="flex-row items-center">
-              <Feather name="repeat" size={17} />
-              <Text className="text-gray-900 ml-2 text-sm">0</Text>
+              <Feather name="repeat" size={17} color="#A0AEC0" />
+              <Text className="text-gray-400 ml-2 text-sm">0</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -110,19 +110,20 @@ const PostCard = ({
               onPress={() => onLike(post._id)}
             >
               {isLiked ? (
-                <AntDesign name="heart" size={18} color="#E0245E" />
+                <AntDesign name="heart" size={18} color="#9D00FF" style={{ textShadowColor: '#9D00FF', textShadowRadius: 8 }} />
               ) : (
-                <Feather name="heart" size={18} color="#657786" />
+                <Feather name="heart" size={18} color="#A0AEC0" />
               )}
               <Text
-                className={`text-sm ml-2 ${isLiked ? "text-red-500" : "text-gray-500"}`}
+                className={`text-sm ml-2 ${isLiked ? "text-neon-purple font-bold" : "text-gray-400"}`}
+                style={isLiked ? { textShadowColor: '#9D00FF', textShadowRadius: 10 } : {}}
               >
                 {formatNumber(post.likes?.length || 0)}
               </Text>
             </TouchableOpacity>
           </View>
         </View>
-      </View>
+      </BlurView>
     </View>
   );
 };

@@ -7,7 +7,7 @@ import PostCard from "./PostCard";
 import CommentsModal from "./CommentsModal";
 
 const PostsList = ({username}:{username?:string}) => {
-  const { currentUser } = useCurrentUser();
+  const { currentUser, isLoading: isUserLoading } = useCurrentUser();
   const {
     posts,
     isLoading,
@@ -22,11 +22,11 @@ const PostsList = ({username}:{username?:string}) => {
   const [selectedPostId, setSelectedPostId]= useState<string | null>(null)
   const selectedPost = selectedPostId ? posts.find((p:Post) => p._id===selectedPostId):null
 
-  if (isLoading) {
+  if (isLoading || isUserLoading) {
     return (
       <View className="p-8 items-center">
-        <ActivityIndicator size="large" color="#1DA1F2" />
-        <Text className="text-gray-500 mt-5">Loading Posts....</Text>
+        <ActivityIndicator size="large" color="#9D00FF" />
+        <Text className="text-gray-400 mt-5">Loading Posts....</Text>
       </View>
     );
   }
@@ -34,9 +34,9 @@ const PostsList = ({username}:{username?:string}) => {
   if (error) {
     return (
       <View className="p-8 items-center">
-        <Text className="text-gray-500 mb-4">Failed to load Posts</Text>
+        <Text className="text-gray-400 mb-4">Failed to load Posts</Text>
         <TouchableOpacity
-          className="bg-blue-500 px-4 py-2 rounded-lg"
+          className="bg-neon-purple px-4 py-2 rounded-lg"
           onPress={() => refetch()}
         >
           <Text className="text-white font-semibold"> Retry </Text>
@@ -45,10 +45,19 @@ const PostsList = ({username}:{username?:string}) => {
     );
   }
 
+  if (!currentUser) {
+    return (
+      <View className="p-8 items-center">
+        <ActivityIndicator size="large" color="#9D00FF" />
+        <Text className="text-gray-400 mt-5">Loading user...</Text>
+      </View>
+    );
+  }
+
   if (posts.length === 0) {
     return (
       <View className="p-8 items-center">
-        <Text className="text-gray-500"> No Posts Yet...</Text>
+        <Text className="text-gray-400"> No Posts Yet...</Text>
       </View>
     );
   }
