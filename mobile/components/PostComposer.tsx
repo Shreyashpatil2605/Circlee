@@ -12,6 +12,7 @@ import React from "react";
 import { useCreatePost } from "@/hooks/useCreatePost";
 import { useUser } from "@clerk/clerk-expo";
 import { Feather } from "@expo/vector-icons";
+import { BlurView } from "expo-blur";
 import { getCameraPermissionsAsync } from "expo-image-picker";
 
 const PostComposer = () => {
@@ -28,69 +29,71 @@ const PostComposer = () => {
   const { user } = useUser();
 
   return (
-    <View className="border-b border-gray-100 p-4 bg-white">
-      {/*Whats Happeing  making */}
-      <View className="flex-row">
-        <Image
-          source={{ uri: user?.imageUrl }}
-          className="w-12 h-12 rounded-full mr-3"
-        />
-        <View className="flex-1">
-          <TextInput
-            className="text-gray-900 text-lg"
-            placeholder="Whats happening?"
-            placeholderTextColor="#657786"
-            multiline
-            value={content}
-            onChangeText={setContent}
-            maxLength={200}
+    <View className="mb-2 mx-2 rounded-2xl overflow-hidden border border-gray-200">
+      <BlurView intensity={30} tint="light" className="p-4">
+        {/*Whats Happening */}
+        <View className="flex-row">
+          <Image
+            source={{ uri: user?.imageUrl }}
+            className="w-12 h-12 rounded-full mr-3 border border-neon-purple/50"
           />
-        </View>
-      </View>
-
-      {/*Selecting the image */}
-      {selectedImage && (
-        <View className="mt-3 ml-3">
-          <View className="relative">
-            <Image
-              source={{ uri: selectedImage }}
-              className="w-full h-48 rounded-2xl"
+          <View className="flex-1">
+            <TextInput
+              className="text-black text-lg"
+              placeholder="What's happening?"
+              placeholderTextColor="#9CA3AF"
+              multiline
+              value={content}
+              onChangeText={setContent}
+              maxLength={200}
             />
-            <TouchableOpacity
-              className="absolute top-2 right-2 w-8 h-8 bg-black bg-opacity-60 rounded-full items-center justify-center"
-              onPress={removeImage}
-            >
-              <Feather name="x" size={16} color="white" />
-            </TouchableOpacity>
           </View>
         </View>
-      )}
-      {/*Image picker icon and the camera icon  */}
-      <View className="flex-row justify-between items-center mt-3">
-        <View className="flex-row">
-          <TouchableOpacity className="mr-4" onPress={pickImageFromGallery}>
-            <Feather name="image" size={20} color="#1DA1F2" />
-          </TouchableOpacity>
-          <TouchableOpacity className="mr-4" onPress={takePhoto}>
-            <Feather name="camera" size={20} color="#1DA1F2" />
-          </TouchableOpacity>
-        </View>
 
-        <View className="flex-row items-center">
-          {content.length > 0 && (
-            <Text
-              className={`text-sm mr-3 ${
-                content.length > 260 ? "text-red-500" : "text-gray-500"
-              }`}
-            >
-              {280 - content.length}
-            </Text>
-          )}
+        {/* Image Display */}
+        {selectedImage && (
+          <View className="mt-3">
+            <View className="relative">
+              <Image
+                source={{ uri: selectedImage }}
+                className="w-full h-48 rounded-2xl border border-gray-200"
+              />
+              <TouchableOpacity
+                className="absolute top-2 right-2 w-8 h-8 bg-white/60 rounded-full items-center justify-center"
+                onPress={removeImage}
+              >
+                <Feather name="x" size={16} color="white" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
+        {/* Image picker and Camera icons with Post button */}
+        <View className="flex-row justify-between items-center mt-3">
+          <View className="flex-row">
+            <TouchableOpacity className="mr-4" onPress={pickImageFromGallery}>
+              <Feather name="image" size={20} color="#9D00FF" />
+            </TouchableOpacity>
+            <TouchableOpacity className="mr-4" onPress={takePhoto}>
+              <Feather name="camera" size={20} color="#9D00FF" />
+            </TouchableOpacity>
+          </View>
 
           <TouchableOpacity
             className={`px-6 py-2 rounded-full ${
-              content.trim() || selectedImage ? "bg-blue-500" : "bg-gray-300"
+              content.trim() || selectedImage ? "bg-neon-purple" : "bg-gray-200"
             }`}
+            style={
+              content.trim() || selectedImage
+                ? {
+                    shadowColor: "#9D00FF",
+                    shadowOffset: { width: 0, height: 0 },
+                    shadowOpacity: 0.8,
+                    shadowRadius: 10,
+                    elevation: 5,
+                  }
+                : {}
+            }
             onPress={createPost}
             disabled={isCreating || !(content.trim() || selectedImage)}
           >
@@ -98,13 +101,18 @@ const PostComposer = () => {
               <ActivityIndicator size="small" color="white" />
             ) : (
               <Text
-                className={`font-semibold ${content.trim() || selectedImage ? "text-white" : "text-gray-500"}`}>
+                className={`font-semibold ${
+                  content.trim() || selectedImage
+                    ? "text-white"
+                    : "text-gray-600"
+                }`}
+              >
                 Post
               </Text>
             )}
           </TouchableOpacity>
         </View>
-      </View>
+      </BlurView>
     </View>
   );
 };

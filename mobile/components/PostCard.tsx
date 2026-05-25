@@ -44,8 +44,8 @@ const PostCard = ({
   };
 
   return (
-    <View className="border-b  border-gray-100 bg-white">
-      <View className="flex-row p-4">
+    <View className="mb-2 mx-2 rounded-2xl overflow-hidden border border-gray-200">
+      <BlurView intensity={30} tint="light" className="flex-row p-4">
         <TouchableOpacity onPress={handleUserPress}>
           <Image
             source={{ uri: post.user.profilePicture || "" }}
@@ -59,11 +59,11 @@ const PostCard = ({
               className="flex-row items-center flex-1"
               onPress={handleUserPress}
             >
-              <Text className="font-bold text-gray-900 mr-1">
+              <Text className="font-bold text-black mr-1">
                 {post.user.firstName} {post.user.lastName}
               </Text>
-              <Text className="text-gray-500 mr-1">@{post.user.username}</Text>
-              <Text className="font-bold ml-5">
+              <Text className="text-gray-600 mr-1">@{post.user.username}</Text>
+              <Text className="font-bold text-gray-500 ml-5">
                 .{formatDate(post.createdAt)}
               </Text>
             </TouchableOpacity>
@@ -74,7 +74,7 @@ const PostCard = ({
             )}
           </View>
           {post.content && (
-            <Text className="text-gray-500 text-base leading-5 mb-3">
+            <Text className="text-gray-700 text-base leading-5 mb-3">
               {post.content}
             </Text>
           )}
@@ -82,7 +82,7 @@ const PostCard = ({
           {post.image && (
             <Image
               source={{ uri: post.image }}
-              className="w-full h-48 rounded-2xl mb-3"
+              className="w-full h-48 rounded-2xl mb-3 border border-gray-200"
               resizeMode="cover"
             />
           )}
@@ -93,7 +93,7 @@ const PostCard = ({
               className="flex-row items-center"
               onPress={() => onComment(post)}
             >
-              <Feather name="message-circle" size={18} color="#657786" />
+              <Feather name="message-circle" size={18} color="#9CA3AF" />
               <Text className="text-gray-600 text-sm ml-2">
                 {formatNumber(post.comments?.length || 0)}
               </Text>
@@ -101,8 +101,8 @@ const PostCard = ({
 
             {/* repeat button */}
             <TouchableOpacity className="flex-row items-center">
-              <Feather name="repeat" size={17} />
-              <Text className="text-gray-900 ml-2 text-sm">0</Text>
+              <Feather name="repeat" size={17} color="#9CA3AF" />
+              <Text className="text-gray-600 ml-2 text-sm">0</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -115,7 +115,8 @@ const PostCard = ({
                 <Feather name="heart" size={18} color="#657786" />
               )}
               <Text
-                className={`text-sm ml-2 ${isLiked ? "text-red-500" : "text-gray-500"}`}
+                className={`text-sm ml-2 ${isLiked ? "text-neon-purple font-bold" : "text-gray-600"}`}
+                style={isLiked ? { textShadowColor: '#9D00FF', textShadowRadius: 10 } : {}}
               >
                 {formatNumber(post.likes?.length || 0)}
               </Text>

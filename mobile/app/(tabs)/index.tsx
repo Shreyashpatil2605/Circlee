@@ -21,12 +21,12 @@ const HomeScreen = () => {
   useUserSync();
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
-      <View className="flex-row justify-between items-center px-4 py-3 border-b border-gray-100">
+      <BlurView intensity={20} tint="light" className="flex-row justify-between items-center px-4 py-3 border-b border-gray-200 z-10">
         <Image
           source={require("../../assets/images/color-adjustment.png")}
           className="size-10"
         />
-        <Text className="text-xl font-bold text-gray-900"> Home</Text>
+        <Text className="text-xl font-bold text-black" style={{ textShadowColor: '#9D00FF', textShadowRadius: 10 }}>Home</Text>
         <SignOutButton />
       </View>
       <ScrollView

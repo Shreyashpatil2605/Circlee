@@ -6,7 +6,6 @@ import {
   ScrollView,
   Text,
   FlatList,
-  Image,
   TouchableOpacity,
 } from "react-native";
 import { GlassBottomTabBar, TabBarItem } from "./GlassBottomTabBar";

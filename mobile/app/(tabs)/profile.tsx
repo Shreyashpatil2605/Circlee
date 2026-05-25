@@ -21,6 +21,7 @@ import PostsList from "@/components/PostsList";
 import { useProfile } from "@/hooks/useProfile";
 import EditProfileModel from "@/components/EditProfileModel";
 import { FollowListModal } from "@/components/FollowListModal";
+import { BlurView } from "expo-blur";
 
 const ProfileScreen = () => {
   const { currentUser, isLoading } = useCurrentUser();
@@ -48,8 +49,8 @@ const ProfileScreen = () => {
 
   if (isLoading) {
     return (
-      <View className="flex-1 bg-white itmes-center justify-center">
-        <ActivityIndicator size="large" color="#1DA1F2"></ActivityIndicator>
+      <View className="flex-1 bg-white items-center justify-center">
+        <ActivityIndicator size="large" color="#9D00FF"></ActivityIndicator>
       </View>
     );
   }
@@ -57,17 +58,17 @@ const ProfileScreen = () => {
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
       {/* header */}
-      <View className="flex-row items-center justify-between px-4 py-3 border-b border-gray-100">
+      <BlurView intensity={20} tint="light" className="flex-row items-center justify-between px-4 py-3 border-b border-gray-200">
         <View>
-          <Text className="font-bold text-xl">
+          <Text className="font-bold text-xl text-black">
             {currentUser.firstName} {currentUser.lastName}
           </Text>
-          <Text className="text-gray-500 text-sm">
+          <Text className="text-gray-600 text-sm">
             {userPosts.length} Posts
           </Text>
         </View>
         <SignOutButton />
-      </View>
+      </BlurView>
 
       {/* ScrollView */}
       <ScrollView
@@ -97,11 +98,12 @@ const ProfileScreen = () => {
         />
 
         {/* profilePicture */}
-        <View className="px-4 pb-4 border-b border-gray-100">
+        <View className="px-4 pb-4 border-b border-gray-200">
           <View className="flex-row justify-between items-end -mt-16 mb-4">
             <Image
               source={{ uri: currentUser.profilePicture }}
               className="w-32 h-32 rounded-full border-4 border-white"
+              style={{ borderColor: '#000', shadowColor: '#9D00FF', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.5, shadowRadius: 12 }}
             />
             <TouchableOpacity
               className="border border-gray-300 px-6 py-2 rounded-full"
@@ -114,26 +116,26 @@ const ProfileScreen = () => {
           {/* currentUser.firstName // currentUser.lastName */}
           <View className="mb-4">
             <View className="flex-row items-center mb-1">
-              <Text className="font-bold text-xl mr-1">
+              <Text className="font-bold text-xl mr-1 text-black">
                 {currentUser.firstName} {currentUser.lastName}
               </Text>
               <Feather name="check-circle" size={20} color="#1DA1F2" />
             </View>
 
             {/* {currentUser.username} */}
-            <Text className="text-gray-500 mb-2">@{currentUser.username}</Text>
-            <Text className="text-gray-900 mb-3">{currentUser.bio}</Text>
+            <Text className="text-gray-600 mb-2">@{currentUser.username}</Text>
+            <Text className="text-gray-700 mb-3">{currentUser.bio}</Text>
 
             {/* location */}
             <View className="flex-row items-center mb-2">
-              <Feather name="map-pin" size={16} color="#657786" />
-              <Text className="ml-2">{currentUser.location}</Text>
+              <Feather name="map-pin" size={16} color="#9D00FF" />
+              <Text className="ml-2 text-gray-600">{currentUser.location}</Text>
             </View>
 
             {/* createdAt */}
             <View className="flex-row items-center mb-2">
-              <Feather name="calendar" size={16} color="#657786" />
-              <Text className="ml-2">
+              <Feather name="calendar" size={16} color="#9D00FF" />
+              <Text className="ml-2 text-gray-600">
                 {" "}
                 Joined {format(new Date(currentUser.createdAt), "MMMM yyyy")}
               </Text>
@@ -145,21 +147,21 @@ const ProfileScreen = () => {
                 className="mr-6"
                 onPress={() => setFollowingModalVisible(true)}
               >
-                <Text className="text-gray-900">
+                <Text className="text-black">
                   <Text className="font-bold">
                     {currentUser.following?.length || 0}
                   </Text>
-                  <Text className="text-gray-500"> Following</Text>
+                  <Text className="text-gray-600"> Following</Text>
                 </Text>
               </TouchableOpacity>
 
               {/* followers */}
               <TouchableOpacity onPress={() => setFollowersModalVisible(true)}>
-                <Text className="text-gray-900">
+                <Text className="text-black">
                   <Text className="font-bold">
                     {currentUser.followers?.length || 0}
                   </Text>
-                  <Text className="text-gray-500"> Followers</Text>
+                  <Text className="text-gray-600"> Followers</Text>
                 </Text>
               </TouchableOpacity>
             </View>
