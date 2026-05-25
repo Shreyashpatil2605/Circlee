@@ -31,7 +31,7 @@ const PostComposer = () => {
   return (
     <View className="mb-2 mx-2 rounded-2xl overflow-hidden border border-white/10">
       <BlurView intensity={30} tint="dark" className="p-4">
-        {/*Whats Happeing  making */}
+        {/*Whats Happneing  making */}
         <View className="flex-row">
           <Image
             source={{ uri: user?.imageUrl }}

@@ -57,7 +57,7 @@ const NotificationCard = ({ notification, onDelete }: NotificationCardProps) => 
             className="size-12 rounded-full border border-neon-purple/50"
           />
 
-          <View className="abolute -bottom-1 -right-1 size-6 bg-black/50 items-center justify-center rounded-full">
+          <View className="absolute -bottom-1 -right-1 size-6 bg-black/50 items-center justify-center rounded-full">
             {getNotificationIcon()}
           </View>
         </View>
