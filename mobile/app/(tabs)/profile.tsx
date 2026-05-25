@@ -49,7 +49,7 @@ const ProfileScreen = () => {
 
   if (isLoading) {
     return (
-      <View className="flex-1 bg-dark-bg items-center justify-center">
+      <View className="flex-1 bg-white items-center justify-center">
         <ActivityIndicator size="large" color="#9D00FF"></ActivityIndicator>
       </View>
     );
@@ -58,12 +58,12 @@ const ProfileScreen = () => {
   return (
     <SafeAreaView className="flex-1 bg-dark-bg" edges={["top"]}>
       {/* header */}
-      <BlurView intensity={20} tint="dark" className="flex-row items-center justify-between px-4 py-3 border-b border-white/10">
+      <BlurView intensity={20} tint="light" className="flex-row items-center justify-between px-4 py-3 border-b border-gray-200">
         <View>
-          <Text className="font-bold text-xl text-white">
+          <Text className="font-bold text-xl text-black">
             {currentUser.firstName} {currentUser.lastName}
           </Text>
-          <Text className="text-gray-400 text-sm">
+          <Text className="text-gray-600 text-sm">
             {userPosts.length} Posts
           </Text>
         </View>
@@ -98,11 +98,11 @@ const ProfileScreen = () => {
         />
 
         {/* profilePicture */}
-        <View className="px-4 pb-4 border-b border-white/10">
+        <View className="px-4 pb-4 border-b border-gray-200">
           <View className="flex-row justify-between items-end -mt-16 mb-4">
             <Image
               source={{ uri: currentUser.profilePicture }}
-              className="w-32 h-32 rounded-full border-4 border-black"
+              className="w-32 h-32 rounded-full border-4 border-white"
               style={{ borderColor: '#000', shadowColor: '#9D00FF', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.5, shadowRadius: 12 }}
             />
             <TouchableOpacity
@@ -117,26 +117,26 @@ const ProfileScreen = () => {
           {/* currentUser.firstName // currentUser.lastName */}
           <View className="mb-4">
             <View className="flex-row items-center mb-1">
-              <Text className="font-bold text-xl mr-1 text-white">
+              <Text className="font-bold text-xl mr-1 text-black">
                 {currentUser.firstName} {currentUser.lastName}
               </Text>
               <Feather name="check-circle" size={20} color="#9D00FF" />
             </View>
 
             {/* {currentUser.username} */}
-            <Text className="text-gray-400 mb-2">@{currentUser.username}</Text>
-            <Text className="text-gray-300 mb-3">{currentUser.bio}</Text>
+            <Text className="text-gray-600 mb-2">@{currentUser.username}</Text>
+            <Text className="text-gray-700 mb-3">{currentUser.bio}</Text>
 
             {/* location */}
             <View className="flex-row items-center mb-2">
               <Feather name="map-pin" size={16} color="#9D00FF" />
-              <Text className="ml-2 text-gray-400">{currentUser.location}</Text>
+              <Text className="ml-2 text-gray-600">{currentUser.location}</Text>
             </View>
 
             {/* createdAt */}
             <View className="flex-row items-center mb-2">
               <Feather name="calendar" size={16} color="#9D00FF" />
-              <Text className="ml-2 text-gray-400">
+              <Text className="ml-2 text-gray-600">
                 {" "}
                 Joined {format(new Date(currentUser.createdAt), "MMMM yyyy")}
               </Text>
@@ -148,21 +148,21 @@ const ProfileScreen = () => {
                 className="mr-6"
                 onPress={() => setFollowingModalVisible(true)}
               >
-                <Text className="text-white">
+                <Text className="text-black">
                   <Text className="font-bold">
                     {currentUser.following?.length || 0}
                   </Text>
-                  <Text className="text-gray-400"> Following</Text>
+                  <Text className="text-gray-600"> Following</Text>
                 </Text>
               </TouchableOpacity>
 
               {/* followers */}
               <TouchableOpacity onPress={() => setFollowersModalVisible(true)}>
-                <Text className="text-white">
+                <Text className="text-black">
                   <Text className="font-bold">
                     {currentUser.followers?.length || 0}
                   </Text>
-                  <Text className="text-gray-400"> Followers</Text>
+                  <Text className="text-gray-600"> Followers</Text>
                 </Text>
               </TouchableOpacity>
             </View>

@@ -24,30 +24,30 @@ const searchScreen = () => {
     <SafeAreaView className="flex-1 bg-dark-bg" edges={["top"]}>
       {/* Header */}
       <View className="px-3 py-2">
-        <View className="flex-row items-center bg-white/5 rounded-full px-4 py-3 border border-white/10">
+        <View className="flex-row items-center bg-gray-100 rounded-full px-4 py-3 border border-gray-300">
           <Feather name="search" size={20} color="#9D00FF" />
           <TextInput
             placeholder="Search Circlee"
-            className="flex-1 ml-2 text-base text-white"
-            placeholderTextColor="#A0AEC0"
+            className="flex-1 ml-2 text-base text-black"
+            placeholderTextColor="#9CA3AF"
           />
         </View>
       </View>
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
         <View className="p-4">
-          <Text className="text-xl font-bold text-white mb-4" style={{ textShadowColor: '#9D00FF', textShadowRadius: 8 }}>
+          <Text className="text-xl font-bold text-black mb-4" style={{ textShadowColor: '#9D00FF', textShadowRadius: 8 }}>
             Trending for you
           </Text>
           {TREADING_TOPICS.map((item, index) => (
             <TouchableOpacity
               key={index}
-              className="py-3 border-b border-white/5"
+              className="py-3 border-b border-gray-200"
             >
         
-              <Text className="font-bold text-white text-lg">
+              <Text className="font-bold text-black text-lg">
                 {item.topic}
               </Text>
-              <Text className="text-gray-400 text-sm mt-1">
+              <Text className="text-gray-600 text-sm mt-1">
                 {item.tweets} Tweets
               </Text>
             </TouchableOpacity>

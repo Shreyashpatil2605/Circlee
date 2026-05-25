@@ -3,8 +3,9 @@ import React, { useState } from "react";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { usePosts } from "@/hooks/usePosts";
 import { Post } from "@/types";
-import PostCard from "./PostCard";
 import CommentsModal from "./CommentsModal";
+import PostCard from "./PostCard";
+
 
 const PostsList = ({username}:{username?:string}) => {
   const { currentUser, isLoading: isUserLoading } = useCurrentUser();
@@ -26,7 +27,7 @@ const PostsList = ({username}:{username?:string}) => {
     return (
       <View className="p-8 items-center">
         <ActivityIndicator size="large" color="#9D00FF" />
-        <Text className="text-gray-400 mt-5">Loading Posts....</Text>
+        <Text className="text-gray-600 mt-5">Loading Posts....</Text>
       </View>
     );
   }
@@ -34,7 +35,7 @@ const PostsList = ({username}:{username?:string}) => {
   if (error) {
     return (
       <View className="p-8 items-center">
-        <Text className="text-gray-400 mb-4">Failed to load Posts</Text>
+        <Text className="text-gray-600 mb-4">Failed to load Posts</Text>
         <TouchableOpacity
           className="bg-neon-purple px-4 py-2 rounded-lg"
           onPress={() => refetch()}
@@ -49,7 +50,7 @@ const PostsList = ({username}:{username?:string}) => {
     return (
       <View className="p-8 items-center">
         <ActivityIndicator size="large" color="#9D00FF" />
-        <Text className="text-gray-400 mt-5">Loading user...</Text>
+        <Text className="text-gray-600 mt-5">Loading user...</Text>
       </View>
     );
   }
@@ -57,7 +58,7 @@ const PostsList = ({username}:{username?:string}) => {
   if (posts.length === 0) {
     return (
       <View className="p-8 items-center">
-        <Text className="text-gray-400"> No Posts Yet...</Text>
+        <Text className="text-gray-600"> No Posts Yet...</Text>
       </View>
     );
   }

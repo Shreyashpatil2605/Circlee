@@ -1,6 +1,7 @@
 import { Image, RefreshControl, ScrollView, Text, View } from "react-native";
 import React, { useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { BlurView } from "expo-blur";
 import SignOutButton from "@/components/SignOutButton";
 import { useUserSync } from "@/hooks/useUserSync";
 import PostComposer from "@/components/PostComposer";
@@ -21,14 +22,14 @@ const HomeScreen = () => {
 
   useUserSync();
   return (
-    <SafeAreaView className="flex-1 bg-dark-bg" edges={["top"]}>
-      <BlurView intensity={20} tint="dark" className="flex-row justify-between items-center px-4 py-3 border-b border-white/10 z-10">
+    <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
+      <BlurView intensity={20} tint="light" className="flex-row justify-between items-center px-4 py-3 border-b border-gray-200 z-10">
         <Image
           source={require("../../assets/images/color-adjustment.png")}
           className="size-10"
           style={{ tintColor: '#9D00FF' }}
         />
-        <Text className="text-xl font-bold text-white" style={{ textShadowColor: '#9D00FF', textShadowRadius: 10 }}>Home</Text>
+        <Text className="text-xl font-bold text-black" style={{ textShadowColor: '#9D00FF', textShadowRadius: 10 }}>Home</Text>
         <SignOutButton />
       </BlurView>
       <ScrollView

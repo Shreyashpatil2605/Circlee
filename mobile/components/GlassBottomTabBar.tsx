@@ -37,8 +37,12 @@ const TabBarButton: React.FC<{
   tintColor: string;
   inactiveTintColor: string;
 }> = ({ item, isActive, onPress, tintColor, inactiveTintColor }) => {
-  const scaleValue = React.useRef(new Animated.Value(isActive ? 1 : 0.85)).current;
-  const opacityValue = React.useRef(new Animated.Value(isActive ? 1 : 0)).current;
+  const scaleValue = React.useRef(
+    new Animated.Value(isActive ? 1 : 0.85),
+  ).current;
+  const opacityValue = React.useRef(
+    new Animated.Value(isActive ? 1 : 0),
+  ).current;
 
   React.useEffect(() => {
     Animated.parallel([
@@ -55,6 +59,7 @@ const TabBarButton: React.FC<{
       }),
     ]).start();
   }, [isActive]);
+  
 
   return (
     <TouchableOpacity
@@ -62,28 +67,38 @@ const TabBarButton: React.FC<{
       style={styles.tabItemContainer}
       activeOpacity={0.7}
     >
-      <View style={styles.iconBubble}>
-        {/* Subtle monochromatic pill background - animated */}
-        <Animated.View
-          style={[
-            styles.activePillBackground,
-            {
-              opacity: opacityValue,
-              transform: [{ scale: scaleValue }],
-            },
-          ]}
-        />
+     <View style={styles.iconBubble}>
+  {/* Subtle monochromatic pill background - animated */}
+  <Animated.View
+    style={[
+      styles.activePillBackground,
+      {
+        opacity: opacityValue,
+        transform: [{ scale: scaleValue }],
+      },
+    ]}
+  />
 
-        {/* Icon - animated scale */}
-        <Animated.View style={{ transform: [{ scale: scaleValue }], alignItems: "center", justifyContent: "center" }}>
-          <Feather
-            name={item.icon as any}
-            size={22}
-            color={isActive ? tintColor : inactiveTintColor}
-            style={styles.icon}
-          />
-        </Animated.View>
-      </View>
+  {/* Icon - animated scale */}
+  <Animated.View
+    style={{
+      transform: [{ scale: scaleValue }],
+      alignItems: "center",
+      justifyContent: "center",
+    }}
+  >
+    <Feather
+      name={item.icon as any}
+      size={22}
+      color={isActive ? tintColor : inactiveTintColor}
+      style={styles.icon}
+    />
+  </Animated.View>
+
+  {/* Active Bottom Dash */}
+  {isActive && <View style={styles.activeIndicator} />}
+</View>
+
 
       {/* Notification Dot */}
       {item.badge !== undefined && item.badge > 0 && (
@@ -111,7 +126,7 @@ export const GlassBottomTabBar: React.FC<GlassBottomTabBarProps> = ({
       {/* Frosted Glass Blur Effect */}
       <BlurView intensity={blurIntensity} style={styles.blurContainer}>
         <LinearGradient
-          colors={["rgba(255, 255, 255, 0.8)", "rgba(255, 255, 255, 0.55)"]}
+          colors={["rgba(20,20,20,0.85)", "rgba(40,40,40,0.65)"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
           style={styles.gradient}
@@ -201,7 +216,7 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     borderRadius: 24,
-    backgroundColor: "rgba(157, 0, 255, 0.15)", // Soft neon purple pill
+  backgroundColor: "rgba(117, 106, 220, 0.36)"
   },
   icon: {
     marginBottom: 0,
@@ -218,5 +233,19 @@ const styles = StyleSheet.create({
     borderColor: "#000",
     zIndex: 4,
   },
-});
+  activeIndicator: {
+  position: "absolute",
+  bottom: 4,
+  width: 18,
+  height: 3,
+  borderRadius: 2,
+  backgroundColor: "#1E40AF",
 
+  shadowColor: "#1E40AF",
+  shadowOffset: { width: 0, height: 0 },
+  shadowOpacity: 0.8,
+  shadowRadius: 4,
+
+  elevation: 4,
+},
+});

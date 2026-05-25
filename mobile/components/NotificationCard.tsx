@@ -1,6 +1,7 @@
 import { Notification } from "@/types";
 import { formatDate } from "@/utils/formatters";
 import { Feather } from "@expo/vector-icons";
+import { BlurView } from "expo-blur";
 import { View, Text, Alert, Image, TouchableOpacity } from "react-native";
 import { BlurView } from "expo-blur";
 
@@ -49,15 +50,15 @@ const NotificationCard = ({ notification, onDelete }: NotificationCardProps) => 
   };
 
   return (
-    <View className="mb-2 mx-2 rounded-2xl overflow-hidden border border-white/10">
-      <BlurView intensity={30} tint="dark" className="flex-row p-4">
+    <View className="mb-2 mx-2 rounded-2xl overflow-hidden border border-gray-200">
+      <BlurView intensity={30} tint="light" className="flex-row p-4">
         <View className="relative mr-3">
           <Image
             source={{ uri: notification.from.profilePicture }}
             className="size-12 rounded-full border border-neon-purple/50"
           />
 
-          <View className="abolute -bottom-1 -right-1 size-6 bg-black/50 items-center justify-center rounded-full">
+          <View className="absolute -bottom-1 -right-1 size-6 bg-white/50 items-center justify-center rounded-full">
             {getNotificationIcon()}
           </View>
         </View>
@@ -65,11 +66,11 @@ const NotificationCard = ({ notification, onDelete }: NotificationCardProps) => 
         <View className="flex-1">
           <View className="flex-row items-start justify-between mb-1">
             <View className="flex-1">
-              <Text className="text-white text-base leading-5 mb-1">
+              <Text className="text-black text-base leading-5 mb-1">
                 <Text className="font-semibold">
                   {notification.from.firstName} {notification.from.lastName}
                 </Text>
-                <Text className="text-gray-400"> @{notification.from.username}</Text>
+                <Text className="text-gray-600"> @{notification.from.username}</Text>
               </Text>
               <Text className="text-gray-300 text-sm mb-2">{getNotificationText()}</Text>
             </View>
@@ -80,8 +81,8 @@ const NotificationCard = ({ notification, onDelete }: NotificationCardProps) => 
           </View>
 
           {notification.post && (
-            <View className="bg-white/5 rounded-lg p-3 mb-2 border border-white/5">
-              <Text className="text-gray-300 text-sm mb-1" numberOfLines={3}>
+            <View className="bg-gray-100 rounded-lg p-3 mb-2 border border-gray-200">
+              <Text className="text-gray-700 text-sm mb-1" numberOfLines={3}>
                 {notification.post.content}
               </Text>
               {notification.post.image && (
@@ -95,13 +96,13 @@ const NotificationCard = ({ notification, onDelete }: NotificationCardProps) => 
           )}
           {notification.comment && (
             <View className="bg-neon-purple-dim rounded-lg p-3 mb-2 border border-neon-purple/10">
-              <Text className="text-gray-400 text-xs mb-1">Comment:</Text>
-              <Text className="text-gray-300 text-sm" numberOfLines={2}>
+              <Text className="text-gray-600 text-xs mb-1">Comment:</Text>
+              <Text className="text-gray-700 text-sm" numberOfLines={2}>
                 &ldquo;{notification.comment.content}&rdquo;
               </Text>
             </View>
           )}
-          <Text className="text-gray-500 text-xs">{formatDate(notification.createdAt)}</Text>
+          <Text className="text-gray-600 text-xs">{formatDate(notification.createdAt)}</Text>
         </View>
       </BlurView>
     </View>
