@@ -14,7 +14,6 @@ import { useUser } from "@clerk/clerk-expo";
 import { Feather } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { getCameraPermissionsAsync } from "expo-image-picker";
-import { BlurView } from "expo-blur";
 
 const PostComposer = () => {
   const {

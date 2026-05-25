@@ -3,8 +3,6 @@ import { formatDate } from "@/utils/formatters";
 import { Feather } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { View, Text, Alert, Image, TouchableOpacity } from "react-native";
-import { BlurView } from "expo-blur";
-
 interface NotificationCardProps {
   notification: Notification;
   onDelete: (notificationId: string) => void;

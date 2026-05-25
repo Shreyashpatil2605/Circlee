@@ -21,7 +21,6 @@ import { Feather } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { format } from "date-fns";
-import { BlurView } from "expo-blur";
 
 const MessageScreen = () => {
   const insets = useSafeAreaInsets();

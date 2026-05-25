@@ -7,7 +7,6 @@ import { useUserSync } from "@/hooks/useUserSync";
 import PostComposer from "@/components/PostComposer";
 import PostsList from "@/components/PostsList";
 import { usePosts } from "@/hooks/usePosts";
-import { BlurView } from "expo-blur";
 
 const HomeScreen = () => {
   const [isRefetching, setisRefectching] = useState(false);

@@ -5,7 +5,6 @@ import { formatDate, formatNumber } from "@/utils/formatters";
 import { AntDesign, Feather } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { useRouter } from "expo-router";
-import { BlurView } from "expo-blur";
 
 interface PostCardProps {
   post: Post;

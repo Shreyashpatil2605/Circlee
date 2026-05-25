@@ -18,7 +18,6 @@ import { BlurView } from "expo-blur";
 import NoNotificationsFound from "@/components/NoNotificationsFound";
 import { Notification } from "@/types";
 import NotificationCard from "@/components/NotificationCard";
-import { BlurView } from "expo-blur";
 
 const NotificationScreen = () => {
   const {

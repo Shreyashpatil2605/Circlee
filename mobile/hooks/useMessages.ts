@@ -1,78 +1,95 @@
 import { useState } from "react";
 import { Alert } from "react-native";
-import { useQuery, useMutation } from "convex/react";
-// @ts-ignore
-import { api } from "../../convex/_generated/api";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { apiClient } from "../utils/api";
 
 export const useMessages = (conversationId: string) => {
   const [messageText, setMessageText] = useState("");
-  const [isSending, setIsSending] = useState(false);
+  const queryClient = useQueryClient();
 
-  const messages = useQuery(
-    api.messages.getMessages,
-    conversationId ? { conversationId: conversationId as any } : "skip"
-  );
+  const { data: messages = [], isLoading: isLoadingMessages } = useQuery({
+    queryKey: ["messages", conversationId],
+    queryFn: async () => {
+      if (!conversationId) return [];
+      const response = await apiClient.get(`/api/messages/${conversationId}`);
+      return response.data.messages || [];
+    },
+    enabled: !!conversationId,
+  });
 
-  const sendMessageMutation = useMutation(api.messages.sendMessage);
+  const sendMessageMutation = useMutation({
+    mutationFn: async (content: string) => {
+      const response = await apiClient.post(`/api/messages/${conversationId}`, {
+        content,
+      });
+      return response.data;
+    },
+    onSuccess: () => {
+      setMessageText("");
+      queryClient.invalidateQueries({ queryKey: ["messages", conversationId] });
+    },
+    onError: (error: any) => {
+      Alert.alert("Error", error.response?.data?.message || "Failed to send message. Try again.");
+    },
+  });
 
   const sendMessage = async () => {
     if (!messageText.trim()) {
       Alert.alert("Empty Message", "Please write something before sending");
       return;
     }
-    
-    setIsSending(true);
-    try {
-      await sendMessageMutation({
-        conversationId: conversationId as any,
-        content: messageText.trim(),
-      });
-      setMessageText("");
-    } catch (error: any) {
-      Alert.alert("Error", error.message || "Failed to send message. Try again.");
-      console.log(error);
-    } finally {
-      setIsSending(false);
-    }
+    await sendMessageMutation.mutate(messageText.trim());
   };
 
   return {
-    messages: messages || [],
-    isLoadingMessages: messages === undefined && conversationId !== "",
+    messages,
+    isLoadingMessages,
     messagesError: null,
     messageText,
     setMessageText,
     sendMessage,
-    isSending,
-    refetchMessages: () => {}, 
+    isSending: sendMessageMutation.isPending,
+    refetchMessages: () => queryClient.invalidateQueries({ queryKey: ["messages", conversationId] }),
   };
 };
 
 export const useConversations = () => {
-  const [isCreating, setIsCreating] = useState(false);
-  const conversations = useQuery(api.messages.getConversations);
-  const getOrCreateConversationMutation = useMutation(api.messages.getOrCreateConversation);
+  const queryClient = useQueryClient();
+
+  const { data: conversations = [], isLoading } = useQuery({
+    queryKey: ["conversations"],
+    queryFn: async () => {
+      const response = await apiClient.get("/api/messages/conversations");
+      return response.data.conversations || [];
+    },
+  });
+
+  const getOrCreateConversationMutation = useMutation({
+    mutationFn: async (participantId: string) => {
+      const response = await apiClient.post("/api/messages/conversation", {
+        participantId,
+      });
+      return response.data.conversation;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["conversations"] });
+    },
+    onError: (error: any) => {
+      Alert.alert("Cannot Message", error.response?.data?.message || "Failed to create conversation");
+    },
+  });
 
   const getOrCreateConversation = async (participantId: string) => {
-    setIsCreating(true);
-    try {
-      const id = await getOrCreateConversationMutation({ participantId });
-      return { conversation: { _id: id } };
-    } catch (error: any) {
-      Alert.alert("Cannot Message", error.message || "Failed to create conversation");
-      console.log(error);
-      throw error;
-    } finally {
-      setIsCreating(false);
-    }
+    const result = await getOrCreateConversationMutation.mutateAsync(participantId);
+    return { conversation: result };
   };
 
   return {
-    conversations: conversations || [],
-    isLoading: conversations === undefined,
+    conversations,
+    isLoading,
     error: null,
-    refetch: () => {}, 
+    refetch: () => queryClient.invalidateQueries({ queryKey: ["conversations"] }),
     getOrCreateConversation,
-    isCreating,
+    isCreating: getOrCreateConversationMutation.isPending,
   };
 };

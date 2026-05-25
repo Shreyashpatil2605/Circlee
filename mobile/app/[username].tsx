@@ -25,7 +25,6 @@ import { useQuery } from "@tanstack/react-query";
 import { useFollowUser } from "@/hooks/useFollowUser";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useConversations } from "@/hooks/useMessages";
-import { BlurView } from "expo-blur";
 
 const UserProfileScreen = () => {
   const { username } = useLocalSearchParams();
