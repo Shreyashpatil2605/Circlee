@@ -1,6 +1,7 @@
 import { Image, RefreshControl, ScrollView, Text, View } from "react-native";
 import React, { useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { BlurView } from "expo-blur";
 import SignOutButton from "@/components/SignOutButton";
 import { useUserSync } from "@/hooks/useUserSync";
 import PostComposer from "@/components/PostComposer";
@@ -28,7 +29,7 @@ const HomeScreen = () => {
         />
         <Text className="text-xl font-bold text-black" style={{ textShadowColor: '#9D00FF', textShadowRadius: 10 }}>Home</Text>
         <SignOutButton />
-      </View>
+      </BlurView>
       <ScrollView
         showsVerticalScrollIndicator={false}
         className="flex-1"

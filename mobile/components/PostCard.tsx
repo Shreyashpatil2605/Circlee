@@ -3,6 +3,7 @@ import React from "react";
 import { Post, User } from "@/types";
 import { formatDate, formatNumber } from "@/utils/formatters";
 import { AntDesign, Feather } from "@expo/vector-icons";
+import { BlurView } from "expo-blur";
 import { useRouter } from "expo-router";
 
 interface PostCardProps {
@@ -123,7 +124,7 @@ const PostCard = ({
             </TouchableOpacity>
           </View>
         </View>
-      </View>
+      </BlurView>
     </View>
   );
 };
