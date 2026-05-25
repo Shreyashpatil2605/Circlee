@@ -29,7 +29,10 @@ export const useMessages = (conversationId: string) => {
       queryClient.invalidateQueries({ queryKey: ["messages", conversationId] });
     },
     onError: (error: any) => {
-      Alert.alert("Error", error.response?.data?.message || "Failed to send message. Try again.");
+      Alert.alert(
+        "Error",
+        error.response?.data?.message || "Failed to send message. Try again.",
+      );
     },
   });
 
@@ -49,7 +52,8 @@ export const useMessages = (conversationId: string) => {
     setMessageText,
     sendMessage,
     isSending: sendMessageMutation.isPending,
-    refetchMessages: () => queryClient.invalidateQueries({ queryKey: ["messages", conversationId] }),
+    refetchMessages: () =>
+      queryClient.invalidateQueries({ queryKey: ["messages", conversationId] }),
   };
 };
 
@@ -75,12 +79,16 @@ export const useConversations = () => {
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
     },
     onError: (error: any) => {
-      Alert.alert("Cannot Message", error.response?.data?.message || "Failed to create conversation");
+      Alert.alert(
+        "Cannot Message",
+        error.response?.data?.message || "Failed to create conversation",
+      );
     },
   });
 
   const getOrCreateConversation = async (participantId: string) => {
-    const result = await getOrCreateConversationMutation.mutateAsync(participantId);
+    const result =
+      await getOrCreateConversationMutation.mutateAsync(participantId);
     return { conversation: result };
   };
 
@@ -88,7 +96,8 @@ export const useConversations = () => {
     conversations,
     isLoading,
     error: null,
-    refetch: () => queryClient.invalidateQueries({ queryKey: ["conversations"] }),
+    refetch: () =>
+      queryClient.invalidateQueries({ queryKey: ["conversations"] }),
     getOrCreateConversation,
     isCreating: getOrCreateConversationMutation.isPending,
   };
