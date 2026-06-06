@@ -29,17 +29,17 @@ const PostComposer = () => {
   const { user } = useUser();
 
   return (
-    <View className="mb-2 mx-2 rounded-2xl overflow-hidden border border-gray-200">
-      <BlurView intensity={30} tint="light" className="p-4">
+    <View className="mb-3 mx-3 rounded-2xl overflow-hidden border border-border-glass-light">
+      <BlurView intensity={35} tint="dark" className="p-4">
         {/*Whats Happening */}
         <View className="flex-row">
           <Image
             source={{ uri: user?.imageUrl }}
-            className="w-12 h-12 rounded-full mr-3 border border-neon-purple/50"
+            className="w-12 h-12 rounded-full mr-3 border border-accent-blue/30"
           />
           <View className="flex-1">
             <TextInput
-              className="text-black text-lg"
+              className="text-text-primary text-lg"
               placeholder="What's happening?"
               placeholderTextColor="#9CA3AF"
               multiline
@@ -56,13 +56,13 @@ const PostComposer = () => {
             <View className="relative">
               <Image
                 source={{ uri: selectedImage }}
-                className="w-full h-48 rounded-2xl border border-gray-200"
+                className="w-full h-48 rounded-xl border border-border-glass-medium"
               />
               <TouchableOpacity
-                className="absolute top-2 right-2 w-8 h-8 bg-white/60 rounded-full items-center justify-center"
+                className="absolute top-2 right-2 w-8 h-8 bg-glass-light/80 rounded-full items-center justify-center border border-border-glass-highlight"
                 onPress={removeImage}
               >
-                <Feather name="x" size={16} color="white" />
+                <Feather name="x" size={16} color="#FFFFFF" />
               </TouchableOpacity>
             </View>
           </View>
@@ -72,21 +72,23 @@ const PostComposer = () => {
         <View className="flex-row justify-between items-center mt-3">
           <View className="flex-row">
             <TouchableOpacity className="mr-4" onPress={pickImageFromGallery}>
-              <Feather name="image" size={20} color="#9D00FF" />
+              <Feather name="image" size={20} color="#0A84FF" />
             </TouchableOpacity>
             <TouchableOpacity className="mr-4" onPress={takePhoto}>
-              <Feather name="camera" size={20} color="#9D00FF" />
+              <Feather name="camera" size={20} color="#0A84FF" />
             </TouchableOpacity>
           </View>
 
           <TouchableOpacity
-            className={`px-6 py-2 rounded-full ${
-              content.trim() || selectedImage ? "bg-neon-purple" : "bg-gray-200"
+            className={`px-6 py-2 rounded-lg ${
+              content.trim() || selectedImage
+                ? "bg-accent-blue"
+                : "bg-glass-light"
             }`}
             style={
               content.trim() || selectedImage
                 ? {
-                    shadowColor: "#9D00FF",
+                    shadowColor: "#0A84FF",
                     shadowOffset: { width: 0, height: 0 },
                     shadowOpacity: 0.8,
                     shadowRadius: 10,
@@ -98,13 +100,13 @@ const PostComposer = () => {
             disabled={isCreating || !(content.trim() || selectedImage)}
           >
             {isCreating ? (
-              <ActivityIndicator size="small" color="white" />
+              <ActivityIndicator size="small" color="#FFFFFF" />
             ) : (
               <Text
                 className={`font-semibold ${
                   content.trim() || selectedImage
                     ? "text-white"
-                    : "text-gray-600"
+                    : "text-text-tertiary"
                 }`}
               >
                 Post

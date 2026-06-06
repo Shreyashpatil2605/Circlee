@@ -1,3 +1,55 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Dark Mode Base Styles */
+@layer base {
+  * {
+    @apply text-text-primary;
+  }
+
+  body,
+  View {
+    @apply bg-dark-bg;
+  }
+}
+
+/* Premium Typography */
+@layer components {
+  .text-heading-lg {
+    @apply text-3xl font-bold tracking-tight;
+  }
+
+  .text-heading-md {
+    @apply text-2xl font-bold tracking-tight;
+  }
+
+  .text-heading-sm {
+    @apply text-xl font-semibold tracking-tight;
+  }
+
+  .text-body-lg {
+    @apply text-base leading-6;
+  }
+
+  .text-body-md {
+    @apply text-sm leading-5;
+  }
+
+  .text-label-lg {
+    @apply text-xs font-semibold tracking-wide uppercase;
+  }
+
+  /* Glassmorphism Components */
+  .glass-container {
+    @apply bg-glass-light border border-border-glass-light rounded-2xl;
+  }
+
+  .glass-card {
+    @apply bg-glass-medium border border-border-glass-medium rounded-2xl;
+  }
+
+  .glass-surface {
+    @apply bg-glass-dark border border-border-glass-highlight rounded-xl;
+  }
+}

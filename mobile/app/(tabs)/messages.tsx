@@ -66,20 +66,29 @@ const MessageScreen = () => {
   return (
     <SafeAreaView className="flex-1 bg-dark-bg" edges={["top"]}>
       {/* HEADER */}
-      <BlurView intensity={20} tint="light" className="flex-row items-center justify-between px-4 py-4 border-b border-gray-200">
-        <Text className="text-xl font-bold text-black" style={{ textShadowColor: '#9D00FF', textShadowRadius: 10 }}>Messages</Text>
+      <BlurView
+        intensity={70}
+        tint="dark"
+        className="flex-row items-center justify-between px-4 py-4 border-b border-border-glass-light"
+      >
+        <Text
+          className="text-xl font-bold text-text-primary"
+          style={{ textShadowColor: "#0A84FF", textShadowRadius: 10 }}
+        >
+          Messages
+        </Text>
         <TouchableOpacity>
-          <Feather name="edit" size={24} color={"#9D00FF"} />
+          <Feather name="edit" size={24} color={"#0A84FF"} />
         </TouchableOpacity>
       </BlurView>
 
       {/* Search Bar */}
-      <View className="px-4 py-3 border-b border-gray-200">
-        <View className="flex-row items-center bg-gray-100 rounded-full px-4 py-2.5 border border-gray-300">
-          <Feather name="search" size={20} color="#9D00FF" />
+      <View className="px-4 py-3 border-b border-border-glass-light">
+        <View className="flex-row items-center bg-glass-light rounded-full px-4 py-2.5 border border-border-glass-medium">
+          <Feather name="search" size={20} color="#0A84FF" />
           <TextInput
             placeholder="Search conversations..."
-            className="flex-1 ml-3 text-base text-black"
+            className="flex-1 ml-3 text-base text-text-primary"
             placeholderTextColor="#9CA3AF"
             value={searchText}
             onChangeText={setSearchText}
@@ -90,12 +99,12 @@ const MessageScreen = () => {
       {/* Conversations List */}
       {isLoadingConversations ? (
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#9D00FF" />
+          <ActivityIndicator size="large" color="#0A84FF" />
         </View>
       ) : filteredConversations.length === 0 ? (
         <View className="flex-1 items-center justify-center">
-          <Feather name="message-square" size={48} color="#999" />
-          <Text className="mt-4 text-gray-600">No conversations yet</Text>
+          <Feather name="message-square" size={48} color="#6B7280" />
+          <Text className="mt-4 text-text-tertiary">No conversations yet</Text>
         </View>
       ) : (
         <FlatList
@@ -104,25 +113,27 @@ const MessageScreen = () => {
           renderItem={({ item: conversation }) => (
             <TouchableOpacity
               onPress={() => openConversation(conversation)}
-              className="flex-row items-center px-4 py-4 border-b border-gray-200"
+              className="flex-row items-center px-4 py-4 border-b border-border-glass-light"
             >
               <Image
                 source={{
                   uri: conversation.otherUser?.profilePicture,
                 }}
-                className="w-12 h-12 rounded-full mr-3 border border-neon-purple/50"
+                className="w-12 h-12 rounded-full mr-3 border border-accent-blue/30"
               />
               <View className="flex-1">
-                <Text className="font-semibold text-black">
+                <Text className="font-semibold text-text-primary">
                   {conversation.otherUser?.firstName}{" "}
                   {conversation.otherUser?.lastName}
                 </Text>
-                <Text className="text-gray-600 text-sm" numberOfLines={1}>
+                <Text className="text-text-tertiary text-sm" numberOfLines={1}>
                   {conversation.lastMessage}
                 </Text>
               </View>
-              <Text className="text-gray-600 text-xs">
-                {conversation.lastMessageAt ? format(new Date(conversation.lastMessageAt), "p") : ""}
+              <Text className="text-text-tertiary text-xs">
+                {conversation.lastMessageAt
+                  ? format(new Date(conversation.lastMessageAt), "p")
+                  : ""}
               </Text>
             </TouchableOpacity>
           )}
@@ -143,16 +154,20 @@ const MessageScreen = () => {
         >
           <SafeAreaView className="flex-1 bg-dark-bg">
             {/* Chat Header */}
-            <BlurView intensity={20} tint="light" className="flex-row items-center justify-between px-4 py-3 border-b border-gray-200">
+            <BlurView
+              intensity={70}
+              tint="dark"
+              className="flex-row items-center justify-between px-4 py-4 border-b border-border-glass-light"
+            >
               <TouchableOpacity onPress={closeChatModal}>
-                <Feather name="arrow-left" size={24} color="#9D00FF" />
+                <Feather name="arrow-left" size={24} color="#0A84FF" />
               </TouchableOpacity>
               <View className="flex-1 ml-3">
-                <Text className="font-semibold text-black">
+                <Text className="font-semibold text-text-primary">
                   {selectedConversation?.otherUser?.firstName}{" "}
                   {selectedConversation?.otherUser?.lastName}
                 </Text>
-                <Text className="text-gray-600 text-sm">
+                <Text className="text-text-tertiary text-sm">
                   @{selectedConversation?.otherUser?.username}
                 </Text>
               </View>
@@ -161,7 +176,7 @@ const MessageScreen = () => {
             {/* Messages */}
             {isLoadingMessages ? (
               <View className="flex-1 items-center justify-center">
-                <ActivityIndicator size="large" color="#9D00FF" />
+                <ActivityIndicator size="large" color="#0A84FF" />
               </View>
             ) : (
               <FlatList
@@ -174,16 +189,25 @@ const MessageScreen = () => {
                       className={`px-4 py-2 flex-row ${isOwnMessage ? "justify-end" : "justify-start"}`}
                     >
                       <View
-                        className={`max-w-xs px-4 py-3 rounded-2xl ${isOwnMessage ? "bg-neon-purple" : "bg-gray-200"}`}
-                        style={isOwnMessage ? { shadowColor: '#9D00FF', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.4, shadowRadius: 8 } : {}}
+                        className={`max-w-xs px-4 py-3 rounded-xl ${isOwnMessage ? "bg-accent-blue" : "bg-glass-light"}`}
+                        style={
+                          isOwnMessage
+                            ? {
+                                shadowColor: "#0A84FF",
+                                shadowOffset: { width: 0, height: 0 },
+                                shadowOpacity: 0.4,
+                                shadowRadius: 8,
+                              }
+                            : {}
+                        }
                       >
                         <Text
-                          className={`text-base ${isOwnMessage ? "text-white" : "text-black"}`}
+                          className={`text-base ${isOwnMessage ? "text-white" : "text-text-primary"}`}
                         >
                           {message.content}
                         </Text>
                         <Text
-                          className={`text-xs mt-1 ${isOwnMessage ? "text-purple-200" : "text-gray-500"}`}
+                          className={`text-xs mt-1 ${isOwnMessage ? "text-accent-blue-light" : "text-text-tertiary"}`}
                         >
                           {format(new Date(message.createdAt), "p")}
                         </Text>
@@ -197,10 +221,10 @@ const MessageScreen = () => {
             )}
 
             {/* Message Input */}
-            <View className="border-t border-gray-200 p-4">
+            <View className="border-t border-border-glass-light p-4 bg-dark-secondary/50">
               <View className="flex-row items-end">
                 <TextInput
-                  className="flex-1 border border-gray-300 rounded-full px-4 py-3 mr-3 max-h-24 text-black bg-gray-50"
+                  className="flex-1 border border-border-glass-medium rounded-2xl px-4 py-3 mr-3 max-h-24 text-text-primary bg-glass-light"
                   placeholder="Type a message..."
                   placeholderTextColor="#9CA3AF"
                   value={messageText}
@@ -211,13 +235,26 @@ const MessageScreen = () => {
                 <TouchableOpacity
                   onPress={sendMessage}
                   disabled={isSending || !messageText.trim()}
-                  className={`p-3 rounded-full ${messageText.trim() ? "bg-neon-purple" : "bg-gray-200"}`}
-                  style={messageText.trim() ? { shadowColor: '#9D00FF', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.6, shadowRadius: 10 } : {}}
+                  className={`p-3 rounded-full ${messageText.trim() ? "bg-accent-blue" : "bg-glass-light"}`}
+                  style={
+                    messageText.trim()
+                      ? {
+                          shadowColor: "#0A84FF",
+                          shadowOffset: { width: 0, height: 0 },
+                          shadowOpacity: 0.6,
+                          shadowRadius: 10,
+                        }
+                      : {}
+                  }
                 >
                   {isSending ? (
-                    <ActivityIndicator size="small" color="white" />
+                    <ActivityIndicator size="small" color="#FFFFFF" />
                   ) : (
-                    <Feather name="send" size={20} color="white" />
+                    <Feather
+                      name="send"
+                      size={20}
+                      color={messageText.trim() ? "#FFFFFF" : "#9CA3AF"}
+                    />
                   )}
                 </TouchableOpacity>
               </View>

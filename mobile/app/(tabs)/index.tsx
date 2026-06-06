@@ -21,25 +21,25 @@ const HomeScreen = () => {
 
   useUserSync();
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
-      <BlurView intensity={20} tint="light" className="flex-row justify-between items-center px-4 py-3 border-b border-gray-200 z-10">
+    <SafeAreaView className="flex-1 bg-dark-bg" edges={["top"]}>
+      <BlurView intensity={70} tint="dark" className="flex-row justify-between items-center px-4 py-4 border-b border-border-glass-light z-10">
         <Image
           source={require("../../assets/images/color-adjustment.png")}
           className="size-10"
-          style={{ tintColor: '#9D00FF' }}
+          style={{ tintColor: '#0A84FF' }}
         />
-        <Text className="text-xl font-bold text-black" style={{ textShadowColor: '#9D00FF', textShadowRadius: 10 }}>Home</Text>
+        <Text className="text-xl font-bold text-text-primary" style={{ textShadowColor: '#0A84FF', textShadowRadius: 10 }}>Home</Text>
         <SignOutButton />
       </BlurView>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        className="flex-1 mt-2"
+        className="flex-1 mt-2 bg-dark-bg"
         contentContainerStyle={{ paddingBottom: 100 }}
         refreshControl={
           <RefreshControl
             refreshing={isRefetching}
             onRefresh={handlePulltoRefresh}
-            tintColor={"#9D00FF"}
+            tintColor={"#0A84FF"}
           />
         }
       >
@@ -49,5 +49,6 @@ const HomeScreen = () => {
     </SafeAreaView>
   );
 };
+
 
 export default HomeScreen;

@@ -49,8 +49,8 @@ const ProfileScreen = () => {
 
   if (isLoading) {
     return (
-      <View className="flex-1 bg-white items-center justify-center">
-        <ActivityIndicator size="large" color="#9D00FF"></ActivityIndicator>
+      <View className="flex-1 bg-dark-bg items-center justify-center">
+        <ActivityIndicator size="large" color="#0A84FF"></ActivityIndicator>
       </View>
     );
   }
@@ -58,12 +58,16 @@ const ProfileScreen = () => {
   return (
     <SafeAreaView className="flex-1 bg-dark-bg" edges={["top"]}>
       {/* header */}
-      <BlurView intensity={20} tint="light" className="flex-row items-center justify-between px-4 py-3 border-b border-gray-200">
+      <BlurView
+        intensity={70}
+        tint="dark"
+        className="flex-row items-center justify-between px-4 py-4 border-b border-border-glass-light"
+      >
         <View>
-          <Text className="font-bold text-xl text-black">
+          <Text className="font-bold text-xl text-text-primary">
             {currentUser.firstName} {currentUser.lastName}
           </Text>
-          <Text className="text-gray-600 text-sm">
+          <Text className="text-text-tertiary text-sm">
             {userPosts.length} Posts
           </Text>
         </View>
@@ -72,7 +76,7 @@ const ProfileScreen = () => {
 
       {/* ScrollView */}
       <ScrollView
-        className="flex-1"
+        className="flex-1 bg-dark-bg"
         contentContainerStyle={{ paddingBottom: 120 + insets.bottom }}
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -82,7 +86,7 @@ const ProfileScreen = () => {
               refetchProfile();
               refetchPosts();
             }}
-            tintColor="#9D00FF"
+            tintColor="#0A84FF"
           />
         }
       >
@@ -98,45 +102,61 @@ const ProfileScreen = () => {
         />
 
         {/* profilePicture */}
-        <View className="px-4 pb-4 border-b border-gray-200">
+        <View className="px-4 pb-4 border-b border-border-glass-light">
           <View className="flex-row justify-between items-end -mt-16 mb-4">
             <Image
               source={{ uri: currentUser.profilePicture }}
-              className="w-32 h-32 rounded-full border-4 border-white"
-              style={{ borderColor: '#000', shadowColor: '#9D00FF', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.5, shadowRadius: 12 }}
+              className="w-32 h-32 rounded-full border-4 border-accent-blue"
+              style={{
+                shadowColor: "#0A84FF",
+                shadowOffset: { width: 0, height: 0 },
+                shadowOpacity: 0.5,
+                shadowRadius: 12,
+              }}
             />
             <TouchableOpacity
-              className="border border-neon-purple px-6 py-2 rounded-full"
-              style={{ shadowColor: '#9D00FF', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.4, shadowRadius: 8 }}
+              className="border border-accent-blue px-6 py-2 rounded-full"
+              style={{
+                shadowColor: "#0A84FF",
+                shadowOffset: { width: 0, height: 0 },
+                shadowOpacity: 0.4,
+                shadowRadius: 8,
+              }}
               onPress={openEditModel}
             >
-              <Text className="font-semibold text-neon-purple">Edit Profile</Text>
+              <Text className="font-semibold text-accent-blue">
+                Edit Profile
+              </Text>
             </TouchableOpacity>
           </View>
 
           {/* currentUser.firstName // currentUser.lastName */}
           <View className="mb-4">
-            <View className="flex-row items-center mb-1">
-              <Text className="font-bold text-xl mr-1 text-black">
+            <View className="flex-row items-center mb-2">
+              <Text className="font-bold text-xl mr-2 text-text-primary">
                 {currentUser.firstName} {currentUser.lastName}
               </Text>
-              <Feather name="check-circle" size={20} color="#9D00FF" />
+              <Feather name="check-circle" size={20} color="#0A84FF" />
             </View>
 
             {/* {currentUser.username} */}
-            <Text className="text-gray-600 mb-2">@{currentUser.username}</Text>
-            <Text className="text-gray-700 mb-3">{currentUser.bio}</Text>
+            <Text className="text-text-tertiary mb-2">
+              @{currentUser.username}
+            </Text>
+            <Text className="text-text-secondary mb-3">{currentUser.bio}</Text>
 
             {/* location */}
             <View className="flex-row items-center mb-2">
-              <Feather name="map-pin" size={16} color="#9D00FF" />
-              <Text className="ml-2 text-gray-600">{currentUser.location}</Text>
+              <Feather name="map-pin" size={16} color="#0A84FF" />
+              <Text className="ml-2 text-text-tertiary">
+                {currentUser.location}
+              </Text>
             </View>
 
             {/* createdAt */}
-            <View className="flex-row items-center mb-2">
-              <Feather name="calendar" size={16} color="#9D00FF" />
-              <Text className="ml-2 text-gray-600">
+            <View className="flex-row items-center mb-3">
+              <Feather name="calendar" size={16} color="#0A84FF" />
+              <Text className="ml-2 text-text-tertiary">
                 {" "}
                 Joined {format(new Date(currentUser.createdAt), "MMMM yyyy")}
               </Text>
@@ -148,21 +168,21 @@ const ProfileScreen = () => {
                 className="mr-6"
                 onPress={() => setFollowingModalVisible(true)}
               >
-                <Text className="text-black">
-                  <Text className="font-bold">
+                <Text className="text-text-secondary">
+                  <Text className="font-bold text-text-primary">
                     {currentUser.following?.length || 0}
                   </Text>
-                  <Text className="text-gray-600"> Following</Text>
+                  <Text className="text-text-tertiary"> Following</Text>
                 </Text>
               </TouchableOpacity>
 
               {/* followers */}
               <TouchableOpacity onPress={() => setFollowersModalVisible(true)}>
-                <Text className="text-black">
-                  <Text className="font-bold">
+                <Text className="text-text-secondary">
+                  <Text className="font-bold text-text-primary">
                     {currentUser.followers?.length || 0}
                   </Text>
-                  <Text className="text-gray-600"> Followers</Text>
+                  <Text className="text-text-tertiary"> Followers</Text>
                 </Text>
               </TouchableOpacity>
             </View>

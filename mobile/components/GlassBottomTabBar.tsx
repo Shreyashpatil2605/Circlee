@@ -59,7 +59,6 @@ const TabBarButton: React.FC<{
       }),
     ]).start();
   }, [isActive]);
-  
 
   return (
     <TouchableOpacity
@@ -67,38 +66,37 @@ const TabBarButton: React.FC<{
       style={styles.tabItemContainer}
       activeOpacity={0.7}
     >
-     <View style={styles.iconBubble}>
-  {/* Subtle monochromatic pill background - animated */}
-  <Animated.View
-    style={[
-      styles.activePillBackground,
-      {
-        opacity: opacityValue,
-        transform: [{ scale: scaleValue }],
-      },
-    ]}
-  />
+      <View style={styles.iconBubble}>
+        {/* Subtle monochromatic pill background - animated */}
+        <Animated.View
+          style={[
+            styles.activePillBackground,
+            {
+              opacity: opacityValue,
+              transform: [{ scale: scaleValue }],
+            },
+          ]}
+        />
 
-  {/* Icon - animated scale */}
-  <Animated.View
-    style={{
-      transform: [{ scale: scaleValue }],
-      alignItems: "center",
-      justifyContent: "center",
-    }}
-  >
-    <Feather
-      name={item.icon as any}
-      size={22}
-      color={isActive ? tintColor : inactiveTintColor}
-      style={styles.icon}
-    />
-  </Animated.View>
+        {/* Icon - animated scale */}
+        <Animated.View
+          style={{
+            transform: [{ scale: scaleValue }],
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Feather
+            name={item.icon as any}
+            size={22}
+            color={isActive ? tintColor : inactiveTintColor}
+            style={styles.icon}
+          />
+        </Animated.View>
 
-  {/* Active Bottom Dash */}
-  {isActive && <View style={styles.activeIndicator} />}
-</View>
-
+        {/* Active Bottom Dash */}
+        {isActive && <View style={styles.activeIndicator} />}
+      </View>
 
       {/* Notification Dot */}
       {item.badge !== undefined && item.badge > 0 && (
@@ -115,9 +113,9 @@ export const GlassBottomTabBar: React.FC<GlassBottomTabBarProps> = ({
   items,
   activeIndex,
   onTabPress,
-  tintColor = "#0F172A", // Charcoal/slate black for clean premium look
-  inactiveTintColor = "#94A3B8", // Soft slate gray
-  blurIntensity = 75, // Sleek, semi-transparent blur
+  tintColor = "#0A84FF", // Apple blue
+  inactiveTintColor = "#9CA3AF", // Soft gray
+  blurIntensity = 90, // Intense glass blur for premium effect
   style,
   ...props
 }) => {
@@ -126,7 +124,7 @@ export const GlassBottomTabBar: React.FC<GlassBottomTabBarProps> = ({
       {/* Frosted Glass Blur Effect */}
       <BlurView intensity={blurIntensity} style={styles.blurContainer}>
         <LinearGradient
-          colors={["rgba(20,20,20,0.85)", "rgba(40,40,40,0.65)"]}
+          colors={["rgba(20,20,20,0.85)", "rgba(15,15,15,0.95)"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
           style={styles.gradient}
@@ -216,7 +214,9 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     borderRadius: 24,
-  backgroundColor: "rgba(117, 106, 220, 0.36)"
+    backgroundColor: "rgba(10,132,255,0.2)", // Apple blue with transparency
+    borderWidth: 1,
+    borderColor: "rgba(10,132,255,0.4)",
   },
   icon: {
     marginBottom: 0,
@@ -228,24 +228,27 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: "#9D00FF", // Neon purple dot
+    backgroundColor: "#0A84FF", // Apple blue notification
     borderWidth: 1.5,
     borderColor: "#000",
     zIndex: 4,
+    shadowColor: "#0A84FF",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 4,
+    elevation: 2,
   },
   activeIndicator: {
-  position: "absolute",
-  bottom: 4,
-  width: 18,
-  height: 3,
-  borderRadius: 2,
-  backgroundColor: "#1E40AF",
-
-  shadowColor: "#1E40AF",
-  shadowOffset: { width: 0, height: 0 },
-  shadowOpacity: 0.8,
-  shadowRadius: 4,
-
-  elevation: 4,
-},
+    position: "absolute",
+    bottom: 4,
+    width: 18,
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: "#0A84FF", // Apple blue indicator
+    shadowColor: "#0A84FF",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 4,
+    elevation: 4,
+  },
 });

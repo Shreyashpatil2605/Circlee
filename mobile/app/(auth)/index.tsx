@@ -1,9 +1,16 @@
 import { useSocialAuth } from "@/hooks/useSocialAuth";
-import { ActivityIndicator, Image, Text, Touchable, TouchableOpacity, View } from "react-native";
+import {
+  ActivityIndicator,
+  Image,
+  Text,
+  Touchable,
+  TouchableOpacity,
+  View,
+} from "react-native";
 export default function Index() {
-  const {handleSocialAuth,isLoading} = useSocialAuth()
+  const { handleSocialAuth, isLoading } = useSocialAuth();
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-dark-bg">
       <View className="flex-1 px-8 justify-between">
         <View className="flex-1 justify-center">
           {/* demo image */}
@@ -14,64 +21,76 @@ export default function Index() {
               resizeMode="contain"
             />
           </View>
-          
-          <View className="flex-col gap-2">
+
+          <View className="flex-col gap-3">
             {/* Google Icon  */}
             <TouchableOpacity
-              className="flex-row items-center justify-center bg-white border border-gray-300 rounded-full py-3 px-6"
+              className="flex-row items-center justify-center bg-glass-light border border-border-glass-medium rounded-2xl py-3 px-6"
               onPress={() => handleSocialAuth("oauth_google")}
               disabled={isLoading}
               style={{
                 shadowColor: "#000",
-                shadowOffset:{width:0, height:1},
-                shadowOpacity:0.1,
-                shadowRadius:2,
-                elevation:2,
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.3,
+                shadowRadius: 6,
+                elevation: 4,
               }}
             >
-              {isLoading ? (<ActivityIndicator size="small" color="#4285F4" />):(
-              <View className="flex-row items-center justify-center">
-                <Image
-                  source={require("../../assets/images/google.png")}
-                  className="size-12 mr-3"
-                  resizeMode="contain"
-                />
-                <Text className=" text-black font-bold text-base "> Continue With Google </Text>
-              </View>
+              {isLoading ? (
+                <ActivityIndicator size="small" color="#0A84FF" />
+              ) : (
+                <View className="flex-row items-center justify-center">
+                  <Image
+                    source={require("../../assets/images/google.png")}
+                    className="size-12 mr-3"
+                    resizeMode="contain"
+                  />
+                  <Text className="text-text-primary font-bold text-base">
+                    {" "}
+                    Continue With Google{" "}
+                  </Text>
+                </View>
               )}
             </TouchableOpacity>
 
             {/* Apple Icon */}
-             <TouchableOpacity
-              className="flex-row items-center justify-center bg-white border border-gray-300 rounded-full py-3 px-6"
-             onPress={() => handleSocialAuth("oauth_apple")}
+            <TouchableOpacity
+              className="flex-row items-center justify-center bg-glass-light border border-border-glass-medium rounded-2xl py-3 px-6"
+              onPress={() => handleSocialAuth("oauth_apple")}
               disabled={isLoading}
               style={{
                 shadowColor: "#000",
-                shadowOffset:{width:0, height:1},
-                shadowOpacity:0.1,
-                shadowRadius:2,
-                elevation:2,
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.3,
+                shadowRadius: 6,
+                elevation: 4,
               }}
-              >
-              {isLoading ? (<ActivityIndicator size="small" color="#000" />):(
-              <View className="flex-row items-center justify-center">
-                <Image
-                  source={require("../../assets/images/apple.png")}
-                  className="size-8 mr-3"
-                  resizeMode="contain"
-                />
-                <Text className=" text-black font-bold text-base "> Continue With Apple </Text>
-              </View>
+            >
+              {isLoading ? (
+                <ActivityIndicator size="small" color="#0A84FF" />
+              ) : (
+                <View className="flex-row items-center justify-center">
+                  <Image
+                    source={require("../../assets/images/apple.png")}
+                    className="size-8 mr-3"
+                    resizeMode="contain"
+                  />
+                  <Text className="text-text-primary font-bold text-base">
+                    {" "}
+                    Continue With Apple{" "}
+                  </Text>
+                </View>
               )}
             </TouchableOpacity>
           </View>
           {/* Terms and Privacy */}
-          <Text className=" text-center text-gray-500 text-xs leading-4 mt-6 px-2" >
-            By signing up, you agree to our <Text className="text-blue-500">Terms</Text>{","} 
-            <Text className="text-blue-500"> Privacy Policy</Text>
+          <Text className="text-center text-text-tertiary text-xs leading-5 mt-8 px-2">
+            By signing up, you agree to our{" "}
+            <Text className="text-accent-blue">Terms</Text>
+            {","}
+            <Text className="text-accent-blue"> Privacy Policy</Text>
             {", and "}
-           <Text className="text-blue-500"> Cookie Use</Text>.
+            <Text className="text-accent-blue"> Cookie Use</Text>.
           </Text>
         </View>
       </View>
