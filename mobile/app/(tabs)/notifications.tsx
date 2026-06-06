@@ -33,10 +33,12 @@ const NotificationScreen = () => {
 
   if (error) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
-        <Text className="text-gray-600 mb-4">Failed to load Notifications</Text>
+      <View className="flex-1 items-center justify-center bg-dark-bg">
+        <Text className="text-text-tertiary mb-4">
+          Failed to load Notifications
+        </Text>
         <TouchableOpacity
-          className="bg-neon-purple px-4 py-2 rounded-lg"
+          className="bg-accent-blue px-4 py-2 rounded-lg"
           onPress={() => refetch()}
         >
           <Text className="text-white font-semibold">Retry</Text>
@@ -48,29 +50,40 @@ const NotificationScreen = () => {
   return (
     <SafeAreaView className="flex-1 bg-dark-bg" edges={["top"]}>
       {/* header */}
-      <BlurView intensity={20} tint="light" className="flex-row items-center justify-between px-4 py-3 border-b border-gray-200">
-        <Text className="text-xl font-bold text-black" style={{ textShadowColor: '#9D00FF', textShadowRadius: 10 }}>Notifications</Text>
+      <BlurView
+        intensity={70}
+        tint="dark"
+        className="flex-row items-center justify-between px-4 py-4 border-b border-border-glass-light"
+      >
+        <Text
+          className="text-xl font-bold text-text-primary"
+          style={{ textShadowColor: "#0A84FF", textShadowRadius: 10 }}
+        >
+          Notifications
+        </Text>
         <TouchableOpacity>
-          <Feather name="settings" size={24} color="#9D00FF" />
+          <Feather name="settings" size={24} color="#0A84FF" />
         </TouchableOpacity>
       </BlurView>
       {/* content */}
       <ScrollView
-        className="flex-1 mt-2"
+        className="flex-1 mt-2 bg-dark-bg"
         contentContainerStyle={{ paddingBottom: 120 + insets.bottom }}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
             refreshing={isRefetching}
             onRefresh={refetch}
-            tintColor={"#9D00FF"}
+            tintColor={"#0A84FF"}
           />
         }
       >
         {isLoading ? (
           <View className="flex-1  items-center justify-center p-8">
-            <ActivityIndicator size="large" color="#9D00FF" />
-            <Text className="text-gray-600 mt-4">Loading notifications...</Text>
+            <ActivityIndicator size="large" color="#0A84FF" />
+            <Text className="text-text-tertiary mt-4">
+              Loading notifications...
+            </Text>
           </View>
         ) : notifications.length === 0 ? (
           <NoNotificationsFound />
