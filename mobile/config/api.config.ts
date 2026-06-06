@@ -31,3 +31,6 @@ export const getApiBaseUrl = (): string => {
 };
 
 export const API_BASE_URL = getApiBaseUrl() + "/api";
+
+console.log("API_BASE_URL =", API_BASE_URL);
+console.log("ENV URL =", process.env.EXPO_PUBLIC_API_URL);
