@@ -84,25 +84,53 @@ export const updateProfile = asyncHandler(async (req, res) => {
 });
 
 export const syncUser = asyncHandler(async (req, res) => {
-  const { userId } = getAuth(req);
-  const existingUser = await User.findOne({ clerkId: userId });
-  //Check if user already exist in mongodb
-  if (existingUser) {
-    return res
-      .status(200)
-      .json({ user: existingUser, message: "User is Already Existed" });
+  try {
+    const { userId } = getAuth(req);
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized - no user ID found" });
+    }
+
+    const existingUser = await User.findOne({ clerkId: userId });
+    //Check if user already exist in mongodb
+    if (existingUser) {
+      return res
+        .status(200)
+        .json({ user: existingUser, message: "User is Already Existed" });
+    }
+
+    const clerkUser = await clerkClient.users.getUser(userId);
+
+    if (!clerkUser.emailAddresses || clerkUser.emailAddresses.length === 0) {
+      return res.status(400).json({ error: "User has no email address" });
+    }
+
+    const email = clerkUser.emailAddresses[0].emailAddress;
+    let baseUsername = email.split("@")[0];
+    let username = baseUsername;
+    let counter = 1;
+
+    // Ensure username is unique
+    while (await User.findOne({ username })) {
+      username = `${baseUsername}${counter}`;
+      counter++;
+    }
+
+    const userData = {
+      clerkId: userId,
+      email,
+      firstName: clerkUser.firstName || "",
+      lastName: clerkUser.lastName || "",
+      username,
+      profilePicture: clerkUser.imageUrl || "",
+    };
+
+    const user = await User.create(userData);
+    res.status(201).json({ user, message: "User Created Successfully" });
+  } catch (error) {
+    console.error("Error in syncUser:", error);
+    throw error;
   }
-  const clerkUser = await clerkClient.users.getUser(userId);
-  const userData = {
-    clerkId: userId,
-    email: clerkUser.emailAddresses[0].emailAddress,
-    firstName: clerkUser.firstName || "",
-    lastName: clerkUser.lastName || "",
-    username: clerkUser.emailAddresses[0].emailAddress.split("@")[0],
-    profilePicture: clerkUser.imageUrl || "",
-  };
-  const user = await User.create(userData);
-  res.status(201).json({ user, message: "User Created Successfully" });
 });
 
 // getCurrentUser

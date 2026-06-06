@@ -13,7 +13,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(clerkMiddleware());
-app.use(arcjetMiddware);
+// app.use(arcjetMiddware);
 app.get("/", (req, res) => {
   res.send("Hello From the server,");
 });
@@ -25,7 +25,12 @@ app.use("/api/messages", messageRoutes);
 
 app.use((err, req, res, next) => {
   console.error("Unhandled error", err);
-  res.status(500).json({ error: err.message || "Internal server Error " });
+  res.status(500).json({
+    error: {
+      code: "500",
+      message: err.message || "Internal server error",
+    },
+  });
 });
 
 const startServer = async () => {
@@ -33,7 +38,7 @@ const startServer = async () => {
     await connectDB();
     //Listen for local development
     if (ENV.NODE_ENV !== "production") {
-      app.listen(ENV.PORT, () =>
+      app.listen(ENV.PORT, "0.0.0.0", () =>
         console.log("Server is up and  running on PORT:", ENV.PORT),
       );
     }

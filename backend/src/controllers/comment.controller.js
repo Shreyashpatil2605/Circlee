@@ -21,7 +21,7 @@ export const createComment = asyncHandler(async (req, res) => {
   const { content } = req.body;
 
   if (!content || content.trim() === "") {
-    return res.status(400).json("Their must be some content nedded!");
+    return res.status(400).json({ error: "Content is required!" });
   }
 
   const user = await User.findOne({ clerkId: userId });
@@ -66,10 +66,12 @@ export const deleteComment = asyncHandler(async (req, res) => {
   const comment = await Comment.findById(commentId);
 
   if (!user || !comment) {
-    res.status(404).json({ error: "User or Comment are not found" });
+    return res.status(404).json({ error: "User or Comment are not found" });
   }
   if (comment.user.toString() !== user._id.toString()) {
-    res.status(403).status({ error: "You cannot delete your own Comments" });
+    return res
+      .status(403)
+      .json({ error: "You cannot delete other users' comments" });
   }
 
   //remove comment from the past

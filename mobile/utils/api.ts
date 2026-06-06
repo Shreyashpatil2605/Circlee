@@ -1,7 +1,6 @@
 import { useAuth } from "@clerk/clerk-expo";
 import axios, { AxiosInstance } from "axios";
-// const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
-const API_BASE_URL = "http://192.168.1.8:5001/api";
+import { API_BASE_URL } from "../config/api.config";
 
 export const createApiClient = (
   getToken: () => Promise<string | null>,

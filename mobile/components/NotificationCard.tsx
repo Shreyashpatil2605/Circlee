@@ -8,7 +8,10 @@ interface NotificationCardProps {
   onDelete: (notificationId: string) => void;
 }
 
-const NotificationCard = ({ notification, onDelete }: NotificationCardProps) => {
+const NotificationCard = ({
+  notification,
+  onDelete,
+}: NotificationCardProps) => {
   const getNotificationText = () => {
     const name = `${notification.from.firstName} ${notification.from.lastName}`;
     switch (notification.type) {
@@ -37,14 +40,18 @@ const NotificationCard = ({ notification, onDelete }: NotificationCardProps) => 
   };
 
   const handleDelete = () => {
-    Alert.alert("Delete Notification", "Are you sure you want to delete this notification?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: () => onDelete(notification._id),
-      },
-    ]);
+    Alert.alert(
+      "Delete Notification",
+      "Are you sure you want to delete this notification?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => onDelete(notification._id),
+        },
+      ],
+    );
   };
 
   return (
@@ -68,9 +75,14 @@ const NotificationCard = ({ notification, onDelete }: NotificationCardProps) => 
                 <Text className="font-semibold">
                   {notification.from.firstName} {notification.from.lastName}
                 </Text>
-                <Text className="text-gray-600"> @{notification.from.username}</Text>
+                <Text className="text-gray-600">
+                  {" "}
+                  @{notification.from.username}
+                </Text>
               </Text>
-              <Text className="text-gray-300 text-sm mb-2">{getNotificationText()}</Text>
+              <Text className="text-gray-300 text-sm mb-2">
+                {getNotificationText()}
+              </Text>
             </View>
 
             <TouchableOpacity className="ml-2 p-1" onPress={handleDelete}>
@@ -100,7 +112,9 @@ const NotificationCard = ({ notification, onDelete }: NotificationCardProps) => 
               </Text>
             </View>
           )}
-          <Text className="text-gray-600 text-xs">{formatDate(notification.createdAt)}</Text>
+          <Text className="text-gray-600 text-xs">
+            {formatDate(notification.createdAt)}
+          </Text>
         </View>
       </BlurView>
     </View>

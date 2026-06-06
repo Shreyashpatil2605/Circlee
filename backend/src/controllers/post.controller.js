@@ -1,6 +1,5 @@
 import asyncHandler from "express-async-handler";
 import Post from "../models/post.model.js";
-import { populate } from "dotenv";
 import User from "../models/user.model.js";
 import { getAuth } from "@clerk/express";
 import Notification from "../models/notification.model.js";
@@ -31,7 +30,7 @@ export const getPost = asyncHandler(async (req, res) => {
       path: "comments",
       populate: {
         path: "user",
-        select: "username firstname lastName  profilePicture",
+        select: "username firstName lastName profilePicture",
       },
     });
   if (!post) return res.status(404).json({ error: "Post not found" });

@@ -16,15 +16,14 @@ const commentSchema = new mongoose.Schema(
       maxlength: 280,
       required: true,
     },
-    Like: [
+    likes: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
-        required: true,
       },
     ],
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 const Comment = mongoose.model("Comment", commentSchema);
 export default Comment;
