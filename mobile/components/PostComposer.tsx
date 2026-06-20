@@ -56,7 +56,7 @@ const PostComposer = () => {
             <View className="relative">
               <Image
                 source={{ uri: selectedImage }}
-                className="w-full h-48 rounded-xl border border-border-glass-medium"
+                className="w-full h-48 rounded-xl border border-x-border-glass-light"
               />
               <TouchableOpacity
                 className="absolute top-2 right-2 w-8 h-8 bg-glass-light/80 rounded-full items-center justify-center border border-border-glass-highlight"

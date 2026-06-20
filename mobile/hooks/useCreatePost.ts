@@ -44,9 +44,11 @@ export const useCreatePost = () => {
       queryClient.invalidateQueries({ queryKey: ["posts"] });
       Alert.alert("Success", "Post created successfully!");
     },
-    onError: () => {
-      Alert.alert("Error", "Failed to create post. Please try again.");
-      console.log(Error);
+    onError: (error: any) => {
+      Alert.alert("Error", "Failed to create post. Please try again");
+      console.log("Status:", error?.response?.status);
+      console.log("Data:", error?.response?.data);
+      console.log("Message:", error?.message);
     },
   });
 

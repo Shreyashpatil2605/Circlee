@@ -10,6 +10,7 @@ import {
 } from "../controllers/user.controller.js";
 import { protectRoute } from "../middleware/auth.middleware.js";
 import upload from "../middleware/upload.middleware.js";
+import { searchUsers } from "../controllers/search.controller.js";
 const router = express.Router();
 router.get("/profile/:username", getUserProfile);
 router.post("/sync", protectRoute, syncUser);
@@ -23,4 +24,5 @@ router.put(
 router.post("/follow/:targetUserId", protectRoute, followUser);
 router.get("/:userId/followers", getFollowers);
 router.get("/:userId/following", getFollowing);
+router.get("/search", searchUsers);
 export default router;

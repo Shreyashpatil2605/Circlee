@@ -1,5 +1,5 @@
 export const protectRoute = async (req, res, next) => {
-  const auth = req.auth;
+  const auth = req.auth();
   if (!auth || !auth.userId) {
     return res
       .status(401)
