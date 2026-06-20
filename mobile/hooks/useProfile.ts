@@ -65,9 +65,7 @@ export const useProfile = () => {
           } as any);
         }
 
-        return api.put("/users/profile", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        return api.put("/users/profile", formData);
       } else {
         // No images, send as JSON
         return userApi.updateProfile(api, {

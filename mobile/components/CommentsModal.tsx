@@ -1,7 +1,6 @@
 import { useComments } from "@/hooks/useComments";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { Post } from "@/types";
-import { Text } from "@react-navigation/elements";
 import {
   ActivityIndicator,
   Image,
@@ -9,6 +8,7 @@ import {
   ScrollView,
   TextInput,
   TouchableOpacity,
+  Text,
   View,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";

@@ -1,17 +1,18 @@
 import { useState } from "react";
 import { Alert } from "react-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiClient } from "../utils/api";
+import { useApiClient, messageApi } from "../utils/api";
 
 export const useMessages = (conversationId: string) => {
   const [messageText, setMessageText] = useState("");
   const queryClient = useQueryClient();
+  const api = useApiClient();
 
   const { data: messages = [], isLoading: isLoadingMessages } = useQuery({
     queryKey: ["messages", conversationId],
     queryFn: async () => {
       if (!conversationId) return [];
-      const response = await apiClient.get(`/api/messages/${conversationId}`);
+      const response = await messageApi.getMessages(api, conversationId);
       return response.data.messages || [];
     },
     enabled: !!conversationId,
@@ -19,9 +20,7 @@ export const useMessages = (conversationId: string) => {
 
   const sendMessageMutation = useMutation({
     mutationFn: async (content: string) => {
-      const response = await apiClient.post(`/api/messages/${conversationId}`, {
-        content,
-      });
+      const response = await messageApi.sendMessage(api, conversationId, content);
       return response.data;
     },
     onSuccess: () => {
@@ -59,20 +58,19 @@ export const useMessages = (conversationId: string) => {
 
 export const useConversations = () => {
   const queryClient = useQueryClient();
+  const api = useApiClient();
 
   const { data: conversations = [], isLoading } = useQuery({
     queryKey: ["conversations"],
     queryFn: async () => {
-      const response = await apiClient.get("/api/messages/conversations");
+      const response = await messageApi.getConversations(api);
       return response.data.conversations || [];
     },
   });
 
   const getOrCreateConversationMutation = useMutation({
     mutationFn: async (participantId: string) => {
-      const response = await apiClient.post("/api/messages/conversation", {
-        participantId,
-      });
+      const response = await messageApi.getOrCreateConversation(api, participantId);
       return response.data.conversation;
     },
     onSuccess: () => {
@@ -102,3 +100,4 @@ export const useConversations = () => {
     isCreating: getOrCreateConversationMutation.isPending,
   };
 };
+

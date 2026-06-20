@@ -85,7 +85,10 @@ const PostCard = ({
           {post.image && (
             <Image
               source={{ uri: post.image }}
-              className="w-full h-48 rounded-xl mb-3 border border-border-glass-medium"
+              className="w-full rounded-2xl mb-3 border border-border-glass-light"
+              style={{
+                aspectRatio: 4 / 5,
+              }}
               resizeMode="cover"
             />
           )}

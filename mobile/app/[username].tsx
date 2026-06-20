@@ -140,14 +140,14 @@ const UserProfileScreen = () => {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-dark-bg" edges={["top"]}>
+    <SafeAreaView className="flex-1 bg-dark-bg">
       {/* Header */}
-      <BlurView intensity={20} tint="light" className="flex-row items-center px-4 py-3 border-b border-gray-200">
+      <BlurView intensity={20} tint="light"  className="flex-row items-center px-4 py-3 border-b border-gray-200">
         <TouchableOpacity onPress={() => router.back()}>
           <Feather name="arrow-left" size={24} color="#9D00FF" />
         </TouchableOpacity>
         <View className="ml-4">
-          <Text className="font-bold text-xl text-black">{user.firstName} {user.lastName}</Text>
+          <Text className="font-bold text-xl text-white">{user.firstName} {user.lastName}</Text>
           <Text className="text-gray-600 text-sm">{userPosts.length} Posts</Text>
         </View>
       </BlurView>
@@ -232,7 +232,7 @@ const UserProfileScreen = () => {
           {/* User Info */}
           <View className="mb-4">
             <View className="flex-row items-center mb-1">
-              <Text className="font-bold text-xl mr-1 text-black">
+              <Text className="font-bold text-xl mr-1 text-white">
                 {user.firstName} {user.lastName}
               </Text>
               <Feather name="check-circle" size={20} color="#9D00FF" />
@@ -261,7 +261,7 @@ const UserProfileScreen = () => {
                 className="mr-6"
                 onPress={() => setFollowingModalVisible(true)}
               >
-                <Text className="text-black">
+                <Text className="text-white">
                   <Text className="font-bold">
                     {user.following?.length || 0}
                   </Text>
@@ -270,7 +270,7 @@ const UserProfileScreen = () => {
               </TouchableOpacity>
 
               <TouchableOpacity onPress={() => setFollowersModalVisible(true)}>
-                <Text className="text-black">
+                <Text className="text-white">
                   <Text className="font-bold">
                     {user.followers?.length || 0}
                   </Text>

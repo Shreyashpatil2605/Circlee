@@ -8,6 +8,7 @@ import SearchScreen from "./search";
 import MessagesScreen from "./messages";
 import NotificationsScreen from "./notifications";
 import ProfileScreen from "./profile";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 const TAB_ITEMS: TabBarItem[] = [
   { name: "home", icon: "home", label: "Home" },
@@ -41,6 +42,7 @@ const Tabslayout = () => {
   };
 
   return (
+   
     <View style={{ flex: 1 }}>
       {renderScreen()}
       <GlassBottomTabBar
@@ -51,6 +53,7 @@ const Tabslayout = () => {
         inactiveTintColor="#94A3B8"
       />
     </View>
+    
   );
 };
 
