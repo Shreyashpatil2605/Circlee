@@ -3,16 +3,14 @@ import { api } from "../convex/_generated/api";
 import { useState } from "react";
 
 export const useConversations = () => {
-  const conversations =
-    useQuery(api.messages.getConversations) ?? [];
+  const conversations = useQuery(api.messages.getConversations) ?? [];
 
   const getOrCreateConversation = useMutation(
-    api.messages.getOrCreateConversation
+    api.messages.getOrCreateConversation,
   );
 
-  const markConversationRead = useMutation(
-    api.messages.markConversationRead
-  );
+  const markConversationRead = useMutation(api.messages.markConversationRead);
+
 
   return {
     conversations,
@@ -34,12 +32,11 @@ export const useMessages = (conversationId?: any) => {
         ? {
             conversationId,
           }
-        : "skip"
+        : "skip",
     ) ?? [];
 
-  const sendMessageMutation = useMutation(
-    api.messages.sendMessage
-  );
+  const sendMessageMutation = useMutation(api.messages.sendMessage);
+  const updateTyping = useMutation(api.messages.updateTyping);
 
   const sendMessage = async () => {
     if (!conversationId || !messageText.trim()) return;
@@ -47,16 +44,26 @@ export const useMessages = (conversationId?: any) => {
       conversationId,
       content: messageText,
     });
+    await updateTyping({
+      conversationId,
+      isTyping: false,
+    });
 
     setMessageText("");
   };
+  const conversation = useQuery(
+    api.messages.watchConversation,
+    conversationId ? { conversationId } : "skip",
+  );
 
   return {
     messages,
     isLoadingMessages: false,
     messageText,
+    conversation,
     setMessageText,
     sendMessage,
     isSending: false,
+    updateTyping,
   };
 };

@@ -18,6 +18,7 @@ export default defineSchema({
     lastMessageAt: v.optional(v.number()),
     lastMessageFrom: v.optional(v.string()),
     unreadBy: v.optional(v.array(v.string())),
+    typingBy: v.optional(v.string()),
   }),
 
   messages: defineTable({

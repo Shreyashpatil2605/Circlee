@@ -20,7 +20,7 @@ import { useConversations, useMessages } from "@/hooks/useMessages";
 import { Feather } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { format, formatDistanceToNow } from "date-fns";
+import { format, formatDistanceToNow, isToday, isYesterday } from "date-fns";
 import { useApiClient, userApi } from "@/utils/api";
 
 const MessageScreen = () => {
@@ -48,6 +48,8 @@ const MessageScreen = () => {
     setMessageText,
     sendMessage,
     isSending,
+    updateTyping,
+    conversation,
   } = useMessages(selectedConversation?._id || "");
 
   const openConversation = async (conversation: any) => {
@@ -81,6 +83,15 @@ const MessageScreen = () => {
     setMessageText("");
   };
 
+  const getMessageDateLabel = (timestamp: number) => {
+    const date = new Date(timestamp);
+
+    if (isToday(date)) return "Today";
+    if (isYesterday(date)) return "Yesterday";
+
+    return format(date, "MMM d, yyyy");
+  };
+
   const filteredConversations = conversations.filter(
     (conv: any) =>
       conv.otherUser?.firstName
@@ -88,6 +99,8 @@ const MessageScreen = () => {
         .includes(searchText.toLowerCase()) ||
       conv.otherUser?.username.toLowerCase().includes(searchText.toLowerCase()),
   );
+  const isTyping =
+    conversation?.typingBy === selectedConversation?.otherUser?.clerkId;
   const flatListRef = useRef<FlatList>(null);
 
   useEffect(() => {
@@ -244,7 +257,9 @@ const MessageScreen = () => {
                   {selectedConversation?.otherUser?.firstName}{" "}
                   {selectedConversation?.otherUser?.lastName}
                 </Text>
-                {selectedUserProfile?.isOnline ? (
+                {isTyping ? (
+                  <Text className="text-blue-400 text-sm">typing...</Text>
+                ) : selectedUserProfile?.isOnline ? (
                   <Text className="text-green-500 text-sm">● Online</Text>
                 ) : (
                   <Text className="text-text-tertiary text-sm">
@@ -286,7 +301,13 @@ const MessageScreen = () => {
                   paddingVertical: 10,
                   paddingBottom: 20,
                 }}
-                renderItem={({ item: message }) => {
+                renderItem={({ item: message, index }) => {
+                  const previousMessage =
+                    index > 0 ? messages[index - 1] : null;
+                  const showDateSeparator =
+                    !previousMessage ||
+                    getMessageDateLabel(previousMessage.createdAt) !==
+                      getMessageDateLabel(message.createdAt);
                   const isOwnMessage =
                     message.sender?.clerkId === currentUser?.clerkId;
                   const isSeen =
@@ -295,13 +316,23 @@ const MessageScreen = () => {
                     ) ?? false;
 
                   return (
-                    <View
-                      className={`px-3 mb-2 ${
-                        isOwnMessage ? "items-end" : "items-start"
-                      }`}
-                    >
+                    <>
+                      {showDateSeparator && (
+                        <View className="items-center my-4">
+                          <View className="bg-zinc-800 px-4 py-1 rounded-full">
+                            <Text className="text-zinc-300 text-xs font-medium">
+                              {getMessageDateLabel(message.createdAt)}
+                            </Text>
+                          </View>
+                        </View>
+                      )}
                       <View
-                        className={`
+                        className={`px-3 mb-2 ${
+                          isOwnMessage ? "items-end" : "items-start"
+                        }`}
+                      >
+                        <View
+                          className={`
                                     max-w-[85%]
                                     px-4
                                     py-3
@@ -312,37 +343,38 @@ const MessageScreen = () => {
                                         : "bg-zinc-800 rounded-bl-md"
                                     }
                                   `}
-                      >
-                        <Text
-                          className={`text-base ${
-                            isOwnMessage ? "text-white" : "text-white"
-                          }`}
                         >
-                          {message.content}
-                        </Text>
-                        <View className="flex-row items-center self-end mt-1">
                           <Text
-                            className={`text-[11px] ${
-                              isOwnMessage ? "text-blue-200" : "text-zinc-400"
+                            className={`text-base ${
+                              isOwnMessage ? "text-white" : "text-white"
                             }`}
                           >
-                            {format(new Date(message.createdAt), "p")}
+                            {message.content}
                           </Text>
-
-                          {isOwnMessage && (
+                          <View className="flex-row items-center self-end mt-1">
                             <Text
-                              className={`ml-1 text-[11px] ${
-                                message.readBy?.length > 1
-                                  ? "text-blue-300"
-                                  : "text-zinc-300"
+                              className={`text-[11px] ${
+                                isOwnMessage ? "text-blue-200" : "text-zinc-400"
                               }`}
                             >
-                              {message.readBy?.length > 1 ? "✓✓" : "✓"}
+                              {format(new Date(message.createdAt), "p")}
                             </Text>
-                          )}
+
+                            {isOwnMessage && (
+                              <Text
+                                className={`ml-1 text-[11px] ${
+                                  message.readBy?.length > 1
+                                    ? "text-blue-300"
+                                    : "text-zinc-300"
+                                }`}
+                              >
+                                {message.readBy?.length > 1 ? "✓✓" : "✓"}
+                              </Text>
+                            )}
+                          </View>
                         </View>
                       </View>
-                    </View>
+                    </>
                   );
                 }}
                 scrollEnabled
@@ -357,7 +389,16 @@ const MessageScreen = () => {
                   placeholder="Type a message..."
                   placeholderTextColor="#9CA3AF"
                   value={messageText}
-                  onChangeText={setMessageText}
+                  onChangeText={(text) => {
+                    setMessageText(text);
+
+                    if (selectedConversation?._id) {
+                      updateTyping({
+                        conversationId: selectedConversation._id,
+                        isTyping: text.length > 0,
+                      });
+                    }
+                  }}
                   multiline
                   maxLength={500}
                 />

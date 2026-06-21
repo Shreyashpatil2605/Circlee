@@ -47,6 +47,7 @@ export const getOrCreateConversation = mutation({
 
 // Send Message
 export const sendMessage = mutation({
+  
   args: {
     conversationId: v.id("conversations"),
     content: v.string(),
@@ -93,6 +94,7 @@ export const sendMessage = mutation({
 
     return messageId;
   },
+  
 });
 export const markConversationRead = mutation({
   args: {
@@ -284,5 +286,26 @@ export const watchConversation = query({
     }
 
     return conversation;
+  },
+});
+// updateTyping mutation
+export const updateTyping = mutation({
+  args: {
+    conversationId: v.id("conversations"),
+    isTyping: v.boolean(),
+  },
+
+  async handler(ctx, args) {
+    const userId = await getAuthUserId(ctx);
+
+    if (!userId) {
+      throw new Error("Not authenticated");
+    }
+
+    await ctx.db.patch(args.conversationId, {
+      typingBy: args.isTyping ? userId : undefined,
+    });
+
+    return true;
   },
 });
