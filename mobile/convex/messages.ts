@@ -78,7 +78,6 @@ export const sendMessage = mutation({
       senderId: userId,
       content: args.content,
       createdAt: Date.now(),
-
       readBy: [userId],
     });
 

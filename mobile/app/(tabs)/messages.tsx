@@ -89,6 +89,7 @@ const MessageScreen = () => {
       conv.otherUser?.username.toLowerCase().includes(searchText.toLowerCase()),
   );
   const flatListRef = useRef<FlatList>(null);
+
   useEffect(() => {
     flatListRef.current?.scrollToEnd({
       animated: true,
@@ -288,6 +289,10 @@ const MessageScreen = () => {
                 renderItem={({ item: message }) => {
                   const isOwnMessage =
                     message.sender?.clerkId === currentUser?.clerkId;
+                  const isSeen =
+                    message.readBy?.some(
+                      (id: string) => id !== currentUser?.clerkId,
+                    ) ?? false;
 
                   return (
                     <View
@@ -304,7 +309,7 @@ const MessageScreen = () => {
                                     ${
                                       isOwnMessage
                                         ? "bg-accent-blue rounded-br-md"
-                                        : "bg-zinc-900 rounded-bl-md"
+                                        : "bg-zinc-800 rounded-bl-md"
                                     }
                                   `}
                       >
@@ -315,14 +320,27 @@ const MessageScreen = () => {
                         >
                           {message.content}
                         </Text>
+                        <View className="flex-row items-center self-end mt-1">
+                          <Text
+                            className={`text-[11px] ${
+                              isOwnMessage ? "text-blue-200" : "text-zinc-400"
+                            }`}
+                          >
+                            {format(new Date(message.createdAt), "p")}
+                          </Text>
 
-                        <Text
-                          className={`text-[11px] mt-1 self-end ${
-                            isOwnMessage ? "text-blue-200" : "text-zinc-400"
-                          }`}
-                        >
-                          {format(new Date(message.createdAt), "p")}
-                        </Text>
+                          {isOwnMessage && (
+                            <Text
+                              className={`ml-1 text-[11px] ${
+                                message.readBy?.length > 1
+                                  ? "text-blue-300"
+                                  : "text-zinc-300"
+                              }`}
+                            >
+                              {message.readBy?.length > 1 ? "✓✓" : "✓"}
+                            </Text>
+                          )}
+                        </View>
                       </View>
                     </View>
                   );
@@ -335,7 +353,7 @@ const MessageScreen = () => {
             <View className="border-t border-border-glass-light p-4 bg-dark-secondary/50">
               <View className="flex-row items-end">
                 <TextInput
-                  className="flex-1 bg-zinc-900 rounded-full px-5 py-3 mr-3 text-white max-h-24"
+                  className="flex-1 bg-zinc-950 rounded-full px-5 py-3 mr-3 text-white max-h-24"
                   placeholder="Type a message..."
                   placeholderTextColor="#9CA3AF"
                   value={messageText}
