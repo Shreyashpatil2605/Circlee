@@ -238,3 +238,27 @@ export const getFollowing = asyncHandler(async (req, res) => {
   }
   res.status(200).json({ following: user.following });
 });
+export const updatePresence = asyncHandler(async (req, res) => {
+  const { userId } = getAuth(req);
+
+  const user = await User.findOneAndUpdate(
+    { clerkId: userId },
+    {
+      isOnline: req.body.isOnline,
+      lastSeen: new Date(),
+    },
+    { new: true },
+  );
+
+  if (!user) {
+    return res.status(404).json({
+      message: "User not found",
+    });
+  }
+
+  res.status(200).json({
+    success: true,
+    isOnline: user.isOnline,
+    lastSeen: user.lastSeen,
+  });
+});

@@ -9,6 +9,7 @@ export default defineSchema({
     lastName: v.string(),
     username: v.string(),
     profilePicture: v.string(),
+    isOnline: v.optional(v.boolean()),
   }).index("by_clerkId", ["clerkId"]),
 
   conversations: defineTable({
@@ -16,6 +17,7 @@ export default defineSchema({
     lastMessage: v.optional(v.string()),
     lastMessageAt: v.optional(v.number()),
     lastMessageFrom: v.optional(v.string()),
+    unreadBy: v.optional(v.array(v.string())),
   }),
 
   messages: defineTable({
@@ -23,6 +25,7 @@ export default defineSchema({
     senderId: v.string(),
     content: v.string(),
     createdAt: v.number(),
+    readBy: v.optional(v.array(v.string())),
   })
     .index("by_conversation", ["conversationId"])
     .index("by_sender", ["senderId"]),

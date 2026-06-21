@@ -10,10 +10,15 @@ export const useConversations = () => {
     api.messages.getOrCreateConversation
   );
 
+  const markConversationRead = useMutation(
+    api.messages.markConversationRead
+  );
+
   return {
     conversations,
     isLoading: conversations === undefined,
     getOrCreateConversation,
+    markConversationRead,
     isCreating: false,
     refetch: () => {},
   };
@@ -38,7 +43,6 @@ export const useMessages = (conversationId?: any) => {
 
   const sendMessage = async () => {
     if (!conversationId || !messageText.trim()) return;
-
     await sendMessageMutation({
       conversationId,
       content: messageText,

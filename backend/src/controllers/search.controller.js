@@ -14,9 +14,7 @@ export const searchUsers = expressAsyncHandler(async (req, res) => {
       { firstName: { $regex: q, $options: "i" } },
       { lastName: { $regex: q, $options: "i" } },
     ],
-  }).select(
-    "username firstName lastName profilePicture"
-  );
+  }).select("username firstName lastName profilePicture isOnline lastSeen");
 
   res.status(200).json({ users });
 });

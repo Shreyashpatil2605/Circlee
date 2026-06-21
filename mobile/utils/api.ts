@@ -24,6 +24,8 @@ export const useApiClient = (): AxiosInstance => {
 export const userApi = {
   syncUser: (api: AxiosInstance) => api.post("/users/sync"),
   getCurrentUser: (api: AxiosInstance) => api.get("/users/me"),
+  getUserProfile: (api: AxiosInstance, username: string) =>
+    api.get(`/users/profile/${username}`),
   updateProfile: (api: AxiosInstance, data: any) =>
     api.put("/users/profile", data),
   followUser: (api: AxiosInstance, targetUserId: string) =>
@@ -32,6 +34,11 @@ export const userApi = {
     api.get(`/users/${userId}/followers`),
   getFollowing: (api: AxiosInstance, userId: string) =>
     api.get(`/users/${userId}/following`),
+
+  updatePresence: (api: AxiosInstance, isOnline: boolean) =>
+    api.put("/users/presence", {
+      isOnline,
+    }),
 };
 
 export const postApi = {
@@ -56,5 +63,3 @@ export const commentApi = {
   deleteComment: (api: AxiosInstance, commentId: string) =>
     api.delete(`/comments/${commentId}`),
 };
-
-

@@ -37,6 +37,7 @@ const UserProfileScreen = () => {
   const [followingModalVisible, setFollowingModalVisible] = useState(false);
 
   // Fetch user profile
+  console.log("BEFORE USEQUERY");
   const {
     data: profileData,
     isLoading: profileLoading,
@@ -51,8 +52,9 @@ const UserProfileScreen = () => {
         : null,
     enabled: !!username,
   });
-
+  console.log("AFTER USEQUERY");
   const user = profileData?.data?.user;
+  console.log("PROFILE USER:", user);
 
   const {
     posts: userPosts,
@@ -110,7 +112,7 @@ const UserProfileScreen = () => {
       });
 
       console.log("CONVERSATION CREATED:", JSON.stringify(result, null, 2));
-
+      router.push("/(tabs)/messages");
       Alert.alert("Success", "Conversation created successfully");
     } catch (err) {
       console.log("CONVERSATION ERROR:", err);
@@ -314,8 +316,19 @@ const UserProfileScreen = () => {
               </Text>
               <Feather name="check-circle" size={20} color="#9D00FF" />
             </View>
+            <View className="mb-2">
+              <Text className="text-gray-600">@{user.username}</Text>
 
-            <Text className="text-gray-600 mb-2">@{user.username}</Text>
+              {user.isOnline ? (
+                <Text className="text-green-500 text-sm font-medium">
+                  ● Online
+                </Text>
+              ) : (
+                <Text className="text-gray-500 text-sm">
+                  Last seen {format(new Date(user.lastSeen), "MMM d, h:mm a")}
+                </Text>
+              )}
+            </View>
             <Text className="text-gray-700 mb-3">{user.bio}</Text>
 
             {user.location && (

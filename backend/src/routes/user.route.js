@@ -7,6 +7,7 @@ import {
   updateProfile,
   getFollowers,
   getFollowing,
+  updatePresence,
 } from "../controllers/user.controller.js";
 import { protectRoute } from "../middleware/auth.middleware.js";
 import upload from "../middleware/upload.middleware.js";
@@ -15,6 +16,7 @@ const router = express.Router();
 router.get("/profile/:username", getUserProfile);
 router.post("/sync", protectRoute, syncUser);
 router.get("/me", protectRoute, getCurrentUser);
+router.put("/presence", protectRoute, updatePresence);
 router.put(
   "/profile",
   protectRoute,

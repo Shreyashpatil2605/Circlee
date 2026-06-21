@@ -78,18 +78,65 @@ export const sendMessage = mutation({
       senderId: userId,
       content: args.content,
       createdAt: Date.now(),
+
+      readBy: [userId],
     });
 
     await ctx.db.patch(args.conversationId, {
       lastMessage: args.content,
       lastMessageAt: Date.now(),
       lastMessageFrom: userId,
+
+      unreadBy: conversation.participants.filter(
+        (participant) => participant !== userId,
+      ),
     });
 
     return messageId;
   },
 });
+export const markConversationRead = mutation({
+  args: {
+    conversationId: v.id("conversations"),
+  },
 
+  async handler(ctx, args) {
+    const userId = await getAuthUserId(ctx);
+
+    if (!userId) {
+      throw new Error("Not authenticated");
+    }
+
+    const conversation = await ctx.db.get(args.conversationId);
+
+    if (!conversation) {
+      throw new Error("Conversation not found");
+    }
+
+    // Clear conversation unread flag
+    await ctx.db.patch(args.conversationId, {
+      unreadBy: conversation.unreadBy?.filter((id) => id !== userId) || [],
+    });
+
+    // Mark all messages as read
+    const messages = await ctx.db
+      .query("messages")
+      .withIndex("by_conversation", (q) =>
+        q.eq("conversationId", args.conversationId),
+      )
+      .collect();
+
+    for (const message of messages) {
+      if (!(message.readBy ?? []).includes(userId)) {
+        await ctx.db.patch(message._id, {
+          readBy: [...(message.readBy ?? []), userId],
+        });
+      }
+    }
+
+    return true;
+  },
+});
 // Get Messages
 export const getMessages = query({
   args: {
@@ -120,6 +167,7 @@ export const getMessages = query({
       )
       .order("asc")
       .collect();
+    console.log("MESSAGES:", JSON.stringify(messages, null, 2));
 
     const enrichedMessages = await Promise.all(
       messages.map(async (msg) => {
@@ -133,6 +181,7 @@ export const getMessages = query({
           sender: sender
             ? {
                 id: sender._id,
+                clerkId: sender.clerkId,
                 firstName: sender.firstName,
                 lastName: sender.lastName,
                 username: sender.username,
@@ -151,23 +200,28 @@ export const getMessages = query({
 export const getConversations = query({
   async handler(ctx) {
     const userId = await getAuthUserId(ctx);
-
     console.log("===== GET CONVERSATIONS =====");
     console.log("CLERK USER:", userId);
-
     const conversations = await ctx.db.query("conversations").collect();
-
-    const userConversations = conversations.filter((conv) =>
-      conv.participants.includes(userId),
-    );
-
+    const userConversations = conversations
+      .filter((conv) => conv.participants.includes(userId))
+      .sort((a, b) => (b.lastMessageAt || 0) - (a.lastMessageAt || 0));
     const enrichedConversations = await Promise.all(
       userConversations.map(async (conv) => {
+        const messages = await ctx.db
+          .query("messages")
+          .withIndex("by_conversation", (q) => q.eq("conversationId", conv._id))
+          .collect();
+        const unreadCount = messages.filter(
+          (msg) =>
+            msg.senderId !== userId && !(msg.readBy ?? []).includes(userId),
+        ).length;
         const otherParticipantId = conv.participants.find((p) => p !== userId);
 
         if (!otherParticipantId) {
           return {
             ...conv,
+            unreadCount,
             otherUser: null,
           };
         }
@@ -179,6 +233,7 @@ export const getConversations = query({
 
         return {
           ...conv,
+          unreadCount,
           otherUser: otherUser
             ? {
                 id: otherUser._id,
@@ -187,6 +242,7 @@ export const getConversations = query({
                 lastName: otherUser.lastName,
                 username: otherUser.username,
                 profilePicture: otherUser.profilePicture,
+                isOnline: otherUser.isOnline,
               }
             : null,
         };
@@ -194,8 +250,11 @@ export const getConversations = query({
     );
 
     console.log(
-      "ENRICHED CONVERSATIONS:",
-      JSON.stringify(enrichedConversations, null, 2),
+      "UNREAD:",
+      enrichedConversations.map((c) => ({
+        user: c.otherUser?.username,
+        unreadCount: c.unreadCount,
+      })),
     );
 
     return enrichedConversations;

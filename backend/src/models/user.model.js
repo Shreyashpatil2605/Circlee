@@ -12,8 +12,18 @@ const userSchema = new mongoose.Schema(
     location: { type: String, default: "" },
     followers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     following: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    isOnline: {
+      type: Boolean,
+      default: false,
+    },
+    lastSeen: {
+      type: Date,
+      default: Date.now,
+    },
   },
+
   { timestamps: true },
 );
+
 const User = mongoose.model("User", userSchema);
 export default User;

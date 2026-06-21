@@ -9,7 +9,9 @@ import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { ConvexReactClient } from "convex/react";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
-
+import { AppState } from "react-native";
+import { useEffect } from "react";
+import { usePresence } from "@/hooks/usePresence";
 const queryclient = new QueryClient();
 
 const convex = new ConvexReactClient(process.env.EXPO_PUBLIC_CONVEX_URL!);
@@ -34,6 +36,36 @@ function ConvexClerkProvider({ children }: { children: React.ReactNode }) {
     </ConvexProviderWithClerk>
   );
 }
+function PresenceTracker() {
+  const { updatePresence } = usePresence();
+  const { isSignedIn } = useAuth();
+
+  useEffect(() => {
+    if (!isSignedIn) return;
+
+    updatePresence(true);
+    const subscription = AppState.addEventListener("change", (nextState) => {
+      console.log("APP STATE:", nextState);
+
+      if (nextState === "active") {
+        console.log("SETTING ONLINE");
+        updatePresence(true);
+      }
+
+      if (nextState === "background" || nextState === "inactive") {
+        console.log("SETTING OFFLINE");
+        updatePresence(false);
+      }
+    });
+
+    return () => {
+      updatePresence(false);
+      subscription.remove();
+    };
+  }, [isSignedIn]);
+
+  return null;
+}
 
 export default function RootLayout() {
   console.log("CONVEX URL:", process.env.EXPO_PUBLIC_CONVEX_URL);
@@ -48,6 +80,7 @@ export default function RootLayout() {
           <QueryClientProvider client={queryclient}>
             {/* DEBUG AUTH */}
             <DebugAuth />
+            <PresenceTracker />
             <ConvexUserSync />
 
             <View className="flex-1 bg-white">
