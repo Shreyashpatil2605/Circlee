@@ -57,12 +57,4 @@ export const commentApi = {
     api.delete(`/comments/${commentId}`),
 };
 
-export const messageApi = {
-  getOrCreateConversation: (api: AxiosInstance, participantId: string) =>
-    api.post("/messages/conversation", { participantId }),
-  getConversations: (api: AxiosInstance) => api.get("/messages/conversations"),
-  sendMessage: (api: AxiosInstance, conversationId: string, content: string) =>
-    api.post(`/messages/${conversationId}`, { content }),
-  getMessages: (api: AxiosInstance, conversationId: string) =>
-    api.get(`/messages/${conversationId}`),
-};
+

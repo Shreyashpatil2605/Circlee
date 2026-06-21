@@ -1,55 +1,78 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
-import { getAuthUserId } from "./lib/auth";
+import { getAuthUserId } from "./auth";
 
-// Get or create a conversation between two users
+// Get or create conversation
 export const getOrCreateConversation = mutation({
   args: {
-    participantId: v.string(), // The other user's ID
+    participantId: v.string(),
   },
+
   async handler(ctx, args) {
     const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
+
+    console.log("===== CREATE CONVERSATION =====");
+    console.log("Current User:", userId);
+    console.log("Participant:", args.participantId);
 
     const participants = [userId, args.participantId].sort();
 
-    // Check if conversation exists
-    const existing = await ctx.db
-      .query("conversations")
-      .withIndex("by_participants", (q) => q.eq("participants", participants))
-      .first();
+    const existingConversations = await ctx.db.query("conversations").collect();
+
+    console.log("Existing Conversations:", existingConversations.length);
+
+    const existing = existingConversations.find((conv) => {
+      const sorted = [...conv.participants].sort();
+
+      return (
+        sorted.length === participants.length &&
+        sorted.every((p, i) => p === participants[i])
+      );
+    });
 
     if (existing) {
+      console.log("Conversation already exists");
       return existing._id;
     }
 
-    // Create new conversation
     const conversationId = await ctx.db.insert("conversations", {
       participants,
     });
+
+    console.log("Conversation Created:", conversationId);
 
     return conversationId;
   },
 });
 
-// Send a message
+// Send Message
 export const sendMessage = mutation({
   args: {
     conversationId: v.id("conversations"),
     content: v.string(),
   },
+
   async handler(ctx, args) {
     const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
-    if (!args.content.trim()) throw new Error("Message content is required");
 
-    // Verify user is part of conversation
+    if (!userId) {
+      throw new Error("Not authenticated");
+    }
+
+    if (!args.content.trim()) {
+      throw new Error("Message content is required");
+    }
+
     const conversation = await ctx.db.get(args.conversationId);
-    if (!conversation || !conversation.participants.includes(userId)) {
+
+    if (!conversation) {
+      throw new Error("Conversation not found");
+    }
+
+    if (!conversation.participants.includes(userId)) {
       throw new Error("Not authorized");
     }
 
-    // Create message
     const messageId = await ctx.db.insert("messages", {
       conversationId: args.conversationId,
       senderId: userId,
@@ -57,7 +80,6 @@ export const sendMessage = mutation({
       createdAt: Date.now(),
     });
 
-    // Update conversation
     await ctx.db.patch(args.conversationId, {
       lastMessage: args.content,
       lastMessageAt: Date.now(),
@@ -68,22 +90,29 @@ export const sendMessage = mutation({
   },
 });
 
-// Get all messages in a conversation
+// Get Messages
 export const getMessages = query({
   args: {
     conversationId: v.id("conversations"),
   },
+
   async handler(ctx, args) {
     const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
 
-    // Verify user is part of conversation
+    if (!userId) {
+      throw new Error("Not authenticated");
+    }
+
     const conversation = await ctx.db.get(args.conversationId);
-    if (!conversation || !conversation.participants.includes(userId)) {
+
+    if (!conversation) {
+      throw new Error("Conversation not found");
+    }
+
+    if (!conversation.participants.includes(userId)) {
       throw new Error("Not authorized");
     }
 
-    // Get all messages
     const messages = await ctx.db
       .query("messages")
       .withIndex("by_conversation", (q) =>
@@ -92,7 +121,6 @@ export const getMessages = query({
       .order("asc")
       .collect();
 
-    // Enrich with sender info
     const enrichedMessages = await Promise.all(
       messages.map(async (msg) => {
         const sender = await ctx.db
@@ -119,25 +147,34 @@ export const getMessages = query({
   },
 });
 
-// Get all conversations for a user
+// Get Conversations
 export const getConversations = query({
   async handler(ctx) {
     const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
+
+    console.log("===== GET CONVERSATIONS =====");
+    console.log("CLERK USER:", userId);
 
     const conversations = await ctx.db.query("conversations").collect();
 
-    const userConversations = conversations
-      .filter((conv) => conv.participants.includes(userId))
-      .sort((a, b) => (b.lastMessageAt || 0) - (a.lastMessageAt || 0));
+    const userConversations = conversations.filter((conv) =>
+      conv.participants.includes(userId),
+    );
 
-    // Enrich with participant info
     const enrichedConversations = await Promise.all(
       userConversations.map(async (conv) => {
         const otherParticipantId = conv.participants.find((p) => p !== userId);
+
+        if (!otherParticipantId) {
+          return {
+            ...conv,
+            otherUser: null,
+          };
+        }
+
         const otherUser = await ctx.db
           .query("users")
-          .withIndex("by_clerkId", (q) => q.eq("clerkId", otherParticipantId!))
+          .withIndex("by_clerkId", (q) => q.eq("clerkId", otherParticipantId))
           .first();
 
         return {
@@ -145,6 +182,7 @@ export const getConversations = query({
           otherUser: otherUser
             ? {
                 id: otherUser._id,
+                clerkId: otherUser.clerkId,
                 firstName: otherUser.firstName,
                 lastName: otherUser.lastName,
                 username: otherUser.username,
@@ -155,21 +193,35 @@ export const getConversations = query({
       }),
     );
 
+    console.log(
+      "ENRICHED CONVERSATIONS:",
+      JSON.stringify(enrichedConversations, null, 2),
+    );
+
     return enrichedConversations;
   },
 });
 
-// Watch a conversation for real-time updates
+// Watch Conversation
 export const watchConversation = query({
   args: {
     conversationId: v.id("conversations"),
   },
+
   async handler(ctx, args) {
     const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
+
+    if (!userId) {
+      throw new Error("Not authenticated");
+    }
 
     const conversation = await ctx.db.get(args.conversationId);
-    if (!conversation || !conversation.participants.includes(userId)) {
+
+    if (!conversation) {
+      throw new Error("Conversation not found");
+    }
+
+    if (!conversation.participants.includes(userId)) {
       throw new Error("Not authorized");
     }
 

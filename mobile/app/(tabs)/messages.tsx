@@ -34,6 +34,7 @@ const MessageScreen = () => {
     isLoading: isLoadingConversations,
     refetch,
   } = useConversations();
+  console.log("Conversations:", conversations);
 
   const {
     messages,
@@ -60,7 +61,8 @@ const MessageScreen = () => {
       conv.otherUser?.firstName
         .toLowerCase()
         .includes(searchText.toLowerCase()) ||
-      conv.otherUser?.username.toLowerCase().includes(searchText.toLowerCase()),
+      conv.otherUser?.username.toLowerCase().includes(searchText.toLowerCase()
+    ),
   );
 
   return (

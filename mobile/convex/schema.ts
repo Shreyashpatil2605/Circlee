@@ -12,15 +12,15 @@ export default defineSchema({
   }).index("by_clerkId", ["clerkId"]),
 
   conversations: defineTable({
-    participants: v.array(v.string()), // Array of user IDs
+    participants: v.array(v.string()),
     lastMessage: v.optional(v.string()),
     lastMessageAt: v.optional(v.number()),
     lastMessageFrom: v.optional(v.string()),
-  }).index("by_participants", ["participants"]),
+  }),
 
   messages: defineTable({
     conversationId: v.id("conversations"),
-    senderId: v.string(), // clerk user ID
+    senderId: v.string(),
     content: v.string(),
     createdAt: v.number(),
   })

@@ -1,103 +1,58 @@
+import { useMutation, useQuery } from "convex/react";
+import { api } from "../convex/_generated/api";
 import { useState } from "react";
-import { Alert } from "react-native";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useApiClient, messageApi } from "../utils/api";
 
-export const useMessages = (conversationId: string) => {
+export const useConversations = () => {
+  const conversations =
+    useQuery(api.messages.getConversations) ?? [];
+
+  const getOrCreateConversation = useMutation(
+    api.messages.getOrCreateConversation
+  );
+
+  return {
+    conversations,
+    isLoading: conversations === undefined,
+    getOrCreateConversation,
+    isCreating: false,
+    refetch: () => {},
+  };
+};
+
+export const useMessages = (conversationId?: any) => {
   const [messageText, setMessageText] = useState("");
-  const queryClient = useQueryClient();
-  const api = useApiClient();
 
-  const { data: messages = [], isLoading: isLoadingMessages } = useQuery({
-    queryKey: ["messages", conversationId],
-    queryFn: async () => {
-      if (!conversationId) return [];
-      const response = await messageApi.getMessages(api, conversationId);
-      return response.data.messages || [];
-    },
-    enabled: !!conversationId,
-  });
+  const messages =
+    useQuery(
+      api.messages.getMessages,
+      conversationId
+        ? {
+            conversationId,
+          }
+        : "skip"
+    ) ?? [];
 
-  const sendMessageMutation = useMutation({
-    mutationFn: async (content: string) => {
-      const response = await messageApi.sendMessage(api, conversationId, content);
-      return response.data;
-    },
-    onSuccess: () => {
-      setMessageText("");
-      queryClient.invalidateQueries({ queryKey: ["messages", conversationId] });
-    },
-    onError: (error: any) => {
-      Alert.alert(
-        "Error",
-        error.response?.data?.message || "Failed to send message. Try again.",
-      );
-    },
-  });
+  const sendMessageMutation = useMutation(
+    api.messages.sendMessage
+  );
 
   const sendMessage = async () => {
-    if (!messageText.trim()) {
-      Alert.alert("Empty Message", "Please write something before sending");
-      return;
-    }
-    await sendMessageMutation.mutate(messageText.trim());
+    if (!conversationId || !messageText.trim()) return;
+
+    await sendMessageMutation({
+      conversationId,
+      content: messageText,
+    });
+
+    setMessageText("");
   };
 
   return {
     messages,
-    isLoadingMessages,
-    messagesError: null,
+    isLoadingMessages: false,
     messageText,
     setMessageText,
     sendMessage,
-    isSending: sendMessageMutation.isPending,
-    refetchMessages: () =>
-      queryClient.invalidateQueries({ queryKey: ["messages", conversationId] }),
+    isSending: false,
   };
 };
-
-export const useConversations = () => {
-  const queryClient = useQueryClient();
-  const api = useApiClient();
-
-  const { data: conversations = [], isLoading } = useQuery({
-    queryKey: ["conversations"],
-    queryFn: async () => {
-      const response = await messageApi.getConversations(api);
-      return response.data.conversations || [];
-    },
-  });
-
-  const getOrCreateConversationMutation = useMutation({
-    mutationFn: async (participantId: string) => {
-      const response = await messageApi.getOrCreateConversation(api, participantId);
-      return response.data.conversation;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["conversations"] });
-    },
-    onError: (error: any) => {
-      Alert.alert(
-        "Cannot Message",
-        error.response?.data?.message || "Failed to create conversation",
-      );
-    },
-  });
-
-  const getOrCreateConversation = async (participantId: string) => {
-    const result =
-      await getOrCreateConversationMutation.mutateAsync(participantId);
-    return { conversation: result };
-  };
-
-  return {
-    conversations,
-    isLoading,
-    error: null,
-    refetch: () =>
-      queryClient.invalidateQueries({ queryKey: ["conversations"] }),
-    getOrCreateConversation,
-    isCreating: getOrCreateConversationMutation.isPending,
-  };
-};
-

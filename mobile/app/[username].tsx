@@ -35,16 +35,19 @@ const UserProfileScreen = () => {
 
   const [followersModalVisible, setFollowersModalVisible] = useState(false);
   const [followingModalVisible, setFollowingModalVisible] = useState(false);
-  const [isFollowingOptimistic, setIsFollowingOptimistic] = useState(false);
 
   // Fetch user profile
-  const { data: profileData, isLoading: profileLoading, refetch: refetchProfile } = useQuery({
+  const {
+    data: profileData,
+    isLoading: profileLoading,
+    refetch: refetchProfile,
+  } = useQuery({
     queryKey: ["userProfile", username],
     queryFn: () =>
       username
-        ? userApi.getCurrentUser(api).then(() =>
-            api.get(`/users/profile/${username}`),
-          )
+        ? userApi
+            .getCurrentUser(api)
+            .then(() => api.get(`/users/profile/${username}`))
         : null,
     enabled: !!username,
   });
@@ -61,12 +64,27 @@ const UserProfileScreen = () => {
   const { getOrCreateConversation, isCreating: isCreatingConversation } =
     useConversations();
 
-  const handleMessage = () => {
+  const handleMessage = async () => {
     if (!user) return;
 
-    // Check if users mutually follow each other
-    const userFollowsCurrentUser = user?.followers?.includes(currentUser?._id);
-    const currentUserFollowsUser = currentUser?.following?.includes(user?._id);
+    console.log("===== MESSAGE BUTTON PRESSED =====");
+    console.log("Current User:", currentUser);
+    console.log("Target User:", user);
+
+    const userFollowsCurrentUser =
+      user?.followers?.some(
+        (follower: any) =>
+          follower._id?.toString() === currentUser?._id?.toString(),
+      ) ?? false;
+
+    const currentUserFollowsUser =
+      currentUser?.following?.some(
+        (followedUser: any) =>
+          followedUser._id?.toString() === user?._id?.toString(),
+      ) ?? false;
+
+    console.log("userFollowsCurrentUser:", userFollowsCurrentUser);
+    console.log("currentUserFollowsUser:", currentUserFollowsUser);
 
     if (!userFollowsCurrentUser || !currentUserFollowsUser) {
       Alert.alert(
@@ -76,45 +94,70 @@ const UserProfileScreen = () => {
       return;
     }
 
-    // Get or create conversation
-    getOrCreateConversation(user._id);
+    try {
+      // IMPORTANT DEBUG LOGS
+      console.log("Selected User:", JSON.stringify(user, null, 2));
+      console.log("user._id:", user._id);
+      console.log("user.clerkId:", user.clerkId);
+
+      // Use Clerk ID if available
+      const participantId = user.clerkId || user._id;
+
+      console.log("Sending participantId:", participantId);
+
+      const result = await getOrCreateConversation({
+        participantId,
+      });
+
+      console.log("CONVERSATION CREATED:", JSON.stringify(result, null, 2));
+
+      Alert.alert("Success", "Conversation created successfully");
+    } catch (err) {
+      console.log("CONVERSATION ERROR:", err);
+      Alert.alert("Error", "Failed to create conversation");
+    }
   };
 
-  const handleFollow = () => {
+  const handleFollow = async () => {
     if (!user) return;
-    
-    const currentFollowStatus = isFollowingOptimistic || currentUser?.following?.includes(user?._id);
-    
-    if (currentFollowStatus) {
-      // Show confirmation alert before unfollowing
-      Alert.alert(
-        "Unfollow User",
-        `Are you sure you want to unfollow ${user.firstName} ${user.lastName}?`,
-        [
-          {
-            text: "Cancel",
-            onPress: () => {},
-            style: "cancel",
-          },
-          {
-            text: "Unfollow",
-            onPress: () => {
-              setIsFollowingOptimistic(false);
-              followUser(user._id);
+
+    try {
+      if (isFollowing) {
+        Alert.alert(
+          "Unfollow User",
+          `Are you sure you want to unfollow ${user.firstName} ${user.lastName}?`,
+          [
+            {
+              text: "Cancel",
+              style: "cancel",
             },
-            style: "destructive",
-          },
-        ]
-      );
-    } else {
-      // Follow without confirmation
-      setIsFollowingOptimistic(true);
-      followUser(user._id);
+            {
+              text: "Unfollow",
+              style: "destructive",
+              onPress: async () => {
+                await followUser(user._id);
+                await refetchCurrentUser();
+                await refetchProfile();
+              },
+            },
+          ],
+        );
+      } else {
+        await followUser(user._id);
+        await refetchCurrentUser();
+        await refetchProfile();
+      }
+    } catch (err) {
+      console.log("FOLLOW ERROR:", err);
     }
   };
 
   const isOwnProfile = currentUser?._id === user?._id;
-  const isFollowing = isFollowingOptimistic || currentUser?.following?.includes(user?._id);
+  const isFollowing =
+    currentUser?.following?.some(
+      (followedUser: any) =>
+        followedUser._id?.toString() === user?._id?.toString(),
+    ) ?? false;
 
   if (profileLoading) {
     return (
@@ -131,7 +174,12 @@ const UserProfileScreen = () => {
         <TouchableOpacity
           onPress={() => router.back()}
           className="mt-4 px-6 py-2 bg-neon-purple rounded-full"
-          style={{ shadowColor: '#9D00FF', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.6, shadowRadius: 10 }}
+          style={{
+            shadowColor: "#9D00FF",
+            shadowOffset: { width: 0, height: 0 },
+            shadowOpacity: 0.6,
+            shadowRadius: 10,
+          }}
         >
           <Text className="text-white font-semibold">Go Back</Text>
         </TouchableOpacity>
@@ -142,13 +190,21 @@ const UserProfileScreen = () => {
   return (
     <SafeAreaView className="flex-1 bg-dark-bg">
       {/* Header */}
-      <BlurView intensity={20} tint="light"  className="flex-row items-center px-4 py-3 border-b border-gray-200">
+      <BlurView
+        intensity={20}
+        tint="light"
+        className="flex-row items-center px-4 py-3 border-b border-gray-200"
+      >
         <TouchableOpacity onPress={() => router.back()}>
           <Feather name="arrow-left" size={24} color="#9D00FF" />
         </TouchableOpacity>
         <View className="ml-4">
-          <Text className="font-bold text-xl text-white">{user.firstName} {user.lastName}</Text>
-          <Text className="text-gray-600 text-sm">{userPosts.length} Posts</Text>
+          <Text className="font-bold text-xl text-white">
+            {user.firstName} {user.lastName}
+          </Text>
+          <Text className="text-gray-600 text-sm">
+            {userPosts.length} Posts
+          </Text>
         </View>
       </BlurView>
 
@@ -182,25 +238,35 @@ const UserProfileScreen = () => {
             <Image
               source={{ uri: user.profilePicture }}
               className="w-32 h-32 rounded-full border-4 border-white"
-              style={{ shadowColor: '#9D00FF', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.5, shadowRadius: 12 }}
+              style={{
+                shadowColor: "#9D00FF",
+                shadowOffset: { width: 0, height: 0 },
+                shadowOpacity: 0.5,
+                shadowRadius: 12,
+              }}
             />
             {!isOwnProfile && (
               <View className="flex-row gap-2">
                 <TouchableOpacity
                   className={`px-6 py-2 rounded-full ${
-                    isFollowing
-                      ? "border border-gray-300"
-                      : "bg-neon-purple"
+                    isFollowing ? "border border-gray-300" : "bg-neon-purple"
                   }`}
-                  style={!isFollowing ? { shadowColor: '#9D00FF', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.6, shadowRadius: 10 } : {}}
+                  style={
+                    !isFollowing
+                      ? {
+                          shadowColor: "#9D00FF",
+                          shadowOffset: { width: 0, height: 0 },
+                          shadowOpacity: 0.6,
+                          shadowRadius: 10,
+                        }
+                      : {}
+                  }
                   onPress={handleFollow}
                   disabled={isFollowPending}
                 >
                   <Text
                     className={`font-semibold ${
-                      isFollowing
-                        ? "text-white"
-                        : "text-white"
+                      isFollowing ? "text-white" : "text-white"
                     }`}
                   >
                     {isFollowPending
@@ -212,19 +278,30 @@ const UserProfileScreen = () => {
                 </TouchableOpacity>
 
                 {/* Message Button - Only show if users mutually follow */}
-                {isFollowing && user?.followers?.includes(currentUser?._id) && (
-                  <TouchableOpacity
-                    className="px-6 py-2 rounded-full bg-neon-purple"
-                    onPress={handleMessage}
-                    disabled={isCreatingConversation}
-                  >
-                    {isCreatingConversation ? (
-                      <ActivityIndicator size="small" color="white" />
-                    ) : (
-                      <Feather name="message-circle" size={20} color="white" />
-                    )}
-                  </TouchableOpacity>
-                )}
+                {isFollowing &&
+                  user?.followers?.some(
+                    (follower: any) =>
+                      follower._id?.toString() === currentUser?._id?.toString(),
+                  ) && (
+                    <TouchableOpacity
+                      className="px-6 py-2 rounded-full bg-neon-purple"
+                      onPress={() => {
+                        console.log("BUTTON CLICKED");
+                        handleMessage();
+                      }}
+                      disabled={isCreatingConversation}
+                    >
+                      {isCreatingConversation ? (
+                        <ActivityIndicator size="small" color="white" />
+                      ) : (
+                        <Feather
+                          name="message-circle"
+                          size={20}
+                          color="white"
+                        />
+                      )}
+                    </TouchableOpacity>
+                  )}
               </View>
             )}
           </View>
@@ -303,4 +380,3 @@ const UserProfileScreen = () => {
 };
 
 export default UserProfileScreen;
-

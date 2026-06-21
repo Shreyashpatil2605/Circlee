@@ -88,29 +88,45 @@ export const syncUser = asyncHandler(async (req, res) => {
     const { userId } = getAuth(req);
 
     if (!userId) {
-      return res.status(401).json({ error: "Unauthorized - no user ID found" });
-    }
-
-    const existingUser = await User.findOne({ clerkId: userId });
-    //Check if user already exist in mongodb
-    if (existingUser) {
-      return res
-        .status(200)
-        .json({ user: existingUser, message: "User is Already Existed" });
+      return res.status(401).json({
+        error: "Unauthorized - no user ID found",
+      });
     }
 
     const clerkUser = await clerkClient.users.getUser(userId);
 
     if (!clerkUser.emailAddresses || clerkUser.emailAddresses.length === 0) {
-      return res.status(400).json({ error: "User has no email address" });
+      return res.status(400).json({
+        error: "User has no email address",
+      });
     }
 
     const email = clerkUser.emailAddresses[0].emailAddress;
+
+    // Check by clerkId OR email
+    let existingUser = await User.findOne({
+      $or: [{ clerkId: userId }, { email: email }],
+    });
+
+    if (existingUser) {
+      // Update clerkId if account was recreated in Clerk
+      if (existingUser.clerkId !== userId) {
+        existingUser.clerkId = userId;
+        await existingUser.save();
+
+        console.log("Updated existing user with new Clerk ID:", userId);
+      }
+
+      return res.status(200).json({
+        user: existingUser,
+        message: "User already exists",
+      });
+    }
+
     let baseUsername = email.split("@")[0];
     let username = baseUsername;
     let counter = 1;
 
-    // Ensure username is unique
     while (await User.findOne({ username })) {
       username = `${baseUsername}${counter}`;
       counter++;
@@ -126,7 +142,11 @@ export const syncUser = asyncHandler(async (req, res) => {
     };
 
     const user = await User.create(userData);
-    res.status(201).json({ user, message: "User Created Successfully" });
+
+    return res.status(201).json({
+      user,
+      message: "User Created Successfully",
+    });
   } catch (error) {
     console.error("Error in syncUser:", error);
     throw error;
