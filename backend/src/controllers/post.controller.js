@@ -75,6 +75,12 @@ export const createPost = asyncHandler(async (req, res) => {
   }
   console.log("======================================");
 
+
+  console.log("========== CREATE POST ==========");
+  console.log("BODY:", req.body);
+  console.log("FILE:", req.file);
+  console.log("================================");
+
   if (!content && !imageFile) {
     return res
       .status(400)
