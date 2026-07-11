@@ -32,11 +32,19 @@ export const useCreatePost = () => {
           name: `image.${fileType}`,
           type: mimeType,
         } as any);
+
+        console.log("Image URI:", postData.imageUri);
+
+        if (postData.imageUri) {
+          console.log({
+            uri: postData.imageUri,
+            name: `image.${fileType}`,
+            type: mimeType,
+          });
+        }
       }
 
-      return api.post("/posts", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      return api.post("/posts", formData);
     },
     onSuccess: () => {
       setContent("");

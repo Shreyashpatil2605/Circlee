@@ -65,6 +65,16 @@ export const createPost = asyncHandler(async (req, res) => {
   const { content } = req.body;
   const imageFile = req.file;
 
+  console.log("========== CREATE POST DEBUG ==========");
+  console.log("USER ID:", userId);
+  console.log("CONTENT LENGTH:", content?.length || 0);
+  console.log("HAS IMAGE FILE:", Boolean(imageFile));
+  if (imageFile) {
+    console.log("IMAGE MIME:", imageFile.mimetype);
+    console.log("IMAGE SIZE:", imageFile.size);
+  }
+  console.log("======================================");
+
   if (!content && !imageFile) {
     return res
       .status(400)
@@ -98,11 +108,23 @@ export const createPost = asyncHandler(async (req, res) => {
       console.error("========== CLOUDINARY ERROR ==========");
       console.error(uploadError);
       console.error("MESSAGE:", uploadError?.message);
+      console.error("HTTP CODE:", uploadError?.http_code);
+      console.error("ERROR DETAILS:", uploadError?.error);
+      console.error("FULL DETAILS:", {
+        message: uploadError?.message,
+        httpCode: uploadError?.http_code,
+        error: uploadError?.error,
+      });
       console.error("=====================================");
 
       return res.status(400).json({
         error: "Failed to upload image",
-        details: uploadError?.message,
+        details:
+          uploadError?.message ||
+          uploadError?.error?.message ||
+          uploadError?.error?.description ||
+          uploadError?.http_code ||
+          "Cloudinary upload failed",
       });
     }
   }
