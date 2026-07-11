@@ -238,6 +238,7 @@ export const getFollowing = asyncHandler(async (req, res) => {
   }
   res.status(200).json({ following: user.following });
 });
+// updatePresence
 export const updatePresence = asyncHandler(async (req, res) => {
   const { userId } = getAuth(req);
 

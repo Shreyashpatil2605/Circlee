@@ -109,6 +109,10 @@ const MessageScreen = () => {
     });
   }, [messages]);
 
+  const isRecentlyActive =
+    selectedUserProfile?.lastSeen &&
+    Date.now() - new Date(selectedUserProfile.lastSeen).getTime() < 60000;
+
   return (
     <SafeAreaView className="flex-1 bg-dark-bg" edges={["top"]}>
       {/* HEADER */}
@@ -259,7 +263,7 @@ const MessageScreen = () => {
                 </Text>
                 {isTyping ? (
                   <Text className="text-blue-400 text-sm">typing...</Text>
-                ) : selectedUserProfile?.isOnline ? (
+                ) : isRecentlyActive ? (
                   <Text className="text-green-500 text-sm">● Online</Text>
                 ) : (
                   <Text className="text-text-tertiary text-sm">

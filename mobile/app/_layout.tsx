@@ -27,7 +27,7 @@ function DebugAuth() {
   return null;
 }
 
-function ConvexClerkProvider({ children }: { children: React.ReactNode }) {
+function ConvexClerkProvider({ children }: { children: React.ReactNode}) {
   const auth = useAuth();
 
   return (
@@ -36,6 +36,9 @@ function ConvexClerkProvider({ children }: { children: React.ReactNode }) {
     </ConvexProviderWithClerk>
   );
 }
+
+//PresenceTracker
+
 function PresenceTracker() {
   const { updatePresence } = usePresence();
   const { isSignedIn } = useAuth();
@@ -44,6 +47,12 @@ function PresenceTracker() {
     if (!isSignedIn) return;
 
     updatePresence(true);
+
+    // Heartbeat every 30 seconds
+    const interval = setInterval(() => {
+      updatePresence(true);
+    }, 30000);
+
     const subscription = AppState.addEventListener("change", (nextState) => {
       console.log("APP STATE:", nextState);
 
@@ -60,6 +69,7 @@ function PresenceTracker() {
 
     return () => {
       updatePresence(false);
+      clearInterval(interval);
       subscription.remove();
     };
   }, [isSignedIn]);
@@ -74,7 +84,7 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <ClerkProvider
         tokenCache={tokenCache}
-        publishableKey={process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!}
+        publishableKey={process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}
       >
         <ConvexClerkProvider>
           <QueryClientProvider client={queryclient}>

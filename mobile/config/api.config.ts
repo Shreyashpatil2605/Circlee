@@ -11,16 +11,16 @@ import { Platform } from "react-native";
  */
 
 export const getApiBaseUrl = (): string => {
-  // const envUrl = process.env.EXPO_PUBLIC_API_URL;
+  const envUrl = process.env.EXPO_PUBLIC_API_URL;
 
-  // if (envUrl) {
-  //   return envUrl;
-  // }
+  if (envUrl) {
+    return envUrl;
+  }
 
   // Fallback based on platform
   if (Platform.OS === "android") {
     // Android emulator uses 10.0.2.2 to refer to the host machine
-    return "http://192.168.1.7:5001";
+    return "http://192.168.137.1:5001";
   } else if (Platform.OS === "ios") {
     // iOS simulator can use localhost
     return "http://localhost:5001";
