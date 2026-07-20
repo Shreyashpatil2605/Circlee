@@ -27,7 +27,38 @@ export default defineSchema({
     content: v.string(),
     createdAt: v.number(),
     readBy: v.optional(v.array(v.string())),
+    type: v.optional(v.string()), // "text" | "voice"
+    audioUrl: v.optional(v.string()),
+    attachments: v.optional(
+      v.array(
+        v.object({
+          type: v.string(), // "voice" | "image" | "video" | etc.
+          url: v.string(),
+          metadata: v.optional(
+            v.object({
+              duration: v.optional(v.number()),
+              waveform: v.optional(v.array(v.number())),
+              transcription: v.optional(
+                v.object({
+                  text: v.string(),
+                  language: v.optional(v.string()),
+                  confidence: v.optional(v.number()),
+                })
+              ),
+              fileSize: v.optional(v.number()),
+              mimeType: v.optional(v.string()),
+            })
+          ),
+        })
+      )
+    ),
   })
     .index("by_conversation", ["conversationId"])
     .index("by_sender", ["senderId"]),
+
+  notification_events: defineTable({
+    toUserId: v.string(),
+    createdAt: v.number(),
+  }).index("by_receiver", ["toUserId"]),
 });
+

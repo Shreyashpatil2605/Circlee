@@ -7,6 +7,7 @@ import userRoutes from "./routes/user.route.js";
 import postRoutes from "./routes/post.route.js";
 import commentRoutes from "./routes/comment.route.js";
 import notificationRoutes from "./routes/notification.route.js";
+import uploadRoutes from "./routes/voice.routes.js";
 import { arcjetMiddware } from "./middleware/arcjet.middleware.js";
 const app = express();
 app.use(cors());
@@ -20,6 +21,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/comments", commentRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/uploads", uploadRoutes);
 
 
 app.use((err, req, res, next) => {

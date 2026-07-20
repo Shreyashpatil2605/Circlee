@@ -1,4 +1,13 @@
 import mongoose from "mongoose";
+
+export const NotificationType = {
+  LIKE: "LIKE",
+  COMMENT: "COMMENT",
+  FOLLOW: "FOLLOW",
+  MESSAGE: "MESSAGE",
+  VOICE_MESSAGE: "VOICE_MESSAGE",
+};
+
 const notificationSchema = new mongoose.Schema(
   {
     from: {
@@ -14,7 +23,16 @@ const notificationSchema = new mongoose.Schema(
     type: {
       type: String,
       required: true,
-      enum: ["follow", "like", "comment"],
+      enum: Object.values(NotificationType),
+    },
+    targetType: {
+      type: String,
+      required: true,
+      enum: ["Post", "Comment", "Profile", "Conversation"],
+    },
+    targetId: {
+      type: String,
+      required: true,
     },
     post: {
       type: mongoose.Schema.Types.ObjectId,
@@ -26,8 +44,18 @@ const notificationSchema = new mongoose.Schema(
       ref: "Comment",
       default: null,
     },
+    read: {
+      type: Boolean,
+      default: false,
+    },
+    pushSent: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true },
 );
+
 const Notification = mongoose.model("Notification", notificationSchema);
 export default Notification;
+

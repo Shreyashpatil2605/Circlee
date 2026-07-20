@@ -4,8 +4,9 @@ import User from "../models/user.model.js";
 import { getAuth } from "@clerk/express";
 import cloudinary from "../config/cloudinary.js";
 
-import Notification from "../models/notification.model.js";
+import Notification, { NotificationType } from "../models/notification.model.js";
 import Comment from "../models/comment.model.js";
+import { triggerRealtimeNotification } from "./notification.controller.js";
 
 export const getPosts = asyncHandler(async (req, res) => {
   const posts = await Post.find()
@@ -169,12 +170,38 @@ export const likePost = asyncHandler(async (req, res) => {
 
     // create notification if not liking own post
     if (post.user.toString() !== user._id.toString()) {
-      await Notification.create({
-        from: user._id,
-        to: post.user,
-        type: "like",
-        post: postId,
-      });
+      const targetUser = await User.findById(post.user);
+      if (targetUser) {
+        const wantsLikes = targetUser.notificationPreferences?.likes !== false;
+        if (wantsLikes) {
+          // Check for existing unread like notification
+          let notification = await Notification.findOne({
+            from: user._id,
+            to: targetUser._id,
+            type: NotificationType.LIKE,
+            targetId: postId,
+            read: false,
+          });
+
+          if (notification) {
+            notification.createdAt = new Date();
+            await notification.save();
+          } else {
+            await Notification.create({
+              from: user._id,
+              to: targetUser._id,
+              type: NotificationType.LIKE,
+              targetType: "Post",
+              targetId: postId,
+              post: postId,
+            });
+          }
+
+          if (targetUser.clerkId) {
+            await triggerRealtimeNotification(targetUser.clerkId);
+          }
+        }
+      }
     }
   }
 

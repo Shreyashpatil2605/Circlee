@@ -1,6 +1,7 @@
-import { useMutation, useQuery } from "convex/react";
+import { useAction, useMutation, useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { useState } from "react";
+import { getApiBaseUrl } from "@/config/api.config";
 
 export const useConversations = () => {
   const conversations = useQuery(api.messages.getConversations) ?? [];
@@ -35,21 +36,36 @@ export const useMessages = (conversationId?: any) => {
         : "skip",
     ) ?? [];
 
-  const sendMessageMutation = useMutation(api.messages.sendMessage);
+  const sendMessageAction = useAction(api.messages.sendMessageAction);
   const updateTyping = useMutation(api.messages.updateTyping);
 
-  const sendMessage = async () => {
-    if (!conversationId || !messageText.trim()) return;
-    await sendMessageMutation({
+  const sendMessage = async (
+    customContent?: string,
+    type?: string,
+    audioUrl?: string,
+    attachments?: any[]
+  ) => {
+    if (!conversationId) return;
+    const content = customContent !== undefined ? customContent : messageText;
+    if (!content.trim() && !attachments) return;
+
+    await sendMessageAction({
       conversationId,
-      content: messageText,
+      content,
+      type,
+      audioUrl,
+      attachments,
+      apiUrl: getApiBaseUrl(),
     });
+
     await updateTyping({
       conversationId,
       isTyping: false,
     });
 
-    setMessageText("");
+    if (customContent === undefined) {
+      setMessageText("");
+    }
   };
   const conversation = useQuery(
     api.messages.watchConversation,

@@ -3,7 +3,8 @@ import Comment from "../models/comment.model.js";
 import { getAuth } from "@clerk/express";
 import User from "../models/user.model.js";
 import Post from "../models/post.model.js";
-import Notification from "../models/notification.model.js";
+import Notification, { NotificationType } from "../models/notification.model.js";
+import { triggerRealtimeNotification } from "./notification.controller.js";
 
 // getComments
 export const getComments = asyncHandler(async (req, res) => {
@@ -43,13 +44,41 @@ export const createComment = asyncHandler(async (req, res) => {
   });
   //create notification if not commenting on own post
   if (post.user.toString() !== user._id.toString()) {
-    await Notification.create({
-      from: user._id,
-      to: post.user,
-      type: "comment",
-      post: postId,
-      comment: comment._id,
-    });
+    const targetUser = await User.findById(post.user);
+    if (targetUser) {
+      const wantsComments = targetUser.notificationPreferences?.comments !== false;
+      if (wantsComments) {
+        // Deduplicate check: if there is an unread comment notification from this user on this post
+        let notification = await Notification.findOne({
+          from: user._id,
+          to: targetUser._id,
+          type: NotificationType.COMMENT,
+          post: postId,
+          read: false,
+        });
+
+        if (notification) {
+          notification.comment = comment._id;
+          notification.targetId = comment._id;
+          notification.createdAt = new Date();
+          await notification.save();
+        } else {
+          await Notification.create({
+            from: user._id,
+            to: targetUser._id,
+            type: NotificationType.COMMENT,
+            targetType: "Comment",
+            targetId: comment._id,
+            post: postId,
+            comment: comment._id,
+          });
+        }
+
+        if (targetUser.clerkId) {
+          await triggerRealtimeNotification(targetUser.clerkId);
+        }
+      }
+    }
   }
 
   res.status(201).json({ comment });

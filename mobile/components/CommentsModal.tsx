@@ -17,9 +17,10 @@ import { BlurView } from "expo-blur";
 interface CommentsModalProp {
   selectedPost: Post;
   onClose: () => void;
+  highlightCommentId?: string;
 }
 
-const CommentsModal = ({ selectedPost, onClose }: CommentsModalProp) => {
+const CommentsModal = ({ selectedPost, onClose, highlightCommentId }: CommentsModalProp) => {
   const {
     commentText,
     setCommentText,
@@ -104,7 +105,11 @@ const CommentsModal = ({ selectedPost, onClose }: CommentsModalProp) => {
             {selectedPost.comments.map((comment) => (
               <View
                 key={comment._id}
-                className="border-b border-border-glass-light p-4"
+                className={`border-b border-border-glass-light p-4 ${
+                  comment._id === highlightCommentId
+                    ? "bg-[#6B4EFF]/20 border-l-4 border-l-[#6B4EFF]"
+                    : ""
+                }`}
               >
                 <View className="flex-row">
                   <Image

@@ -30,16 +30,27 @@ export interface Post {
   comments: Comment[];
 }
 
+export enum NotificationType {
+  LIKE = "LIKE",
+  COMMENT = "COMMENT",
+  FOLLOW = "FOLLOW",
+  MESSAGE = "MESSAGE",
+  VOICE_MESSAGE = "VOICE_MESSAGE",
+}
+
 export interface Notification {
   _id: string;
   from: {
+    clerkId: string;
     username: string;
     firstName: string;
     lastName: string;
     profilePicture?: string;
   };
   to: string;
-  type: "like" | "comment" | "follow";
+  type: NotificationType;
+  targetType: "Post" | "Comment" | "Profile" | "Conversation";
+  targetId: string;
   post?: {
     _id: string;
     content: string;
@@ -49,5 +60,7 @@ export interface Notification {
     _id: string;
     content: string;
   };
+  read: boolean;
+  pushSent: boolean;
   createdAt: string;
 }

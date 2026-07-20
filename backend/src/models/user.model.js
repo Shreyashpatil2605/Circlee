@@ -12,13 +12,20 @@ const userSchema = new mongoose.Schema(
     location: { type: String, default: "" },
     followers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     following: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-    isOnline: {
+        isOnline: {
       type: Boolean,
       default: false,
     },
     lastSeen: {
       type: Date,
       default: Date.now,
+    },
+    notificationPreferences: {
+      likes: { type: Boolean, default: true },
+      comments: { type: Boolean, default: true },
+      messages: { type: Boolean, default: true },
+      voice: { type: Boolean, default: true },
+      follows: { type: Boolean, default: true },
     },
   },
 

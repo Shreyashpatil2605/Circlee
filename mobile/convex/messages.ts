@@ -1,6 +1,7 @@
-import { mutation, query } from "./_generated/server";
+import { action, mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "./auth";
+import { api } from "./_generated/api";
 
 // Get or create conversation
 export const getOrCreateConversation = mutation({
@@ -51,6 +52,31 @@ export const sendMessage = mutation({
   args: {
     conversationId: v.id("conversations"),
     content: v.string(),
+    type: v.optional(v.string()),
+    audioUrl: v.optional(v.string()),
+    attachments: v.optional(
+      v.array(
+        v.object({
+          type: v.string(),
+          url: v.string(),
+          metadata: v.optional(
+            v.object({
+              duration: v.optional(v.number()),
+              waveform: v.optional(v.array(v.number())),
+              transcription: v.optional(
+                v.object({
+                  text: v.string(),
+                  language: v.optional(v.string()),
+                  confidence: v.optional(v.number()),
+                })
+              ),
+              fileSize: v.optional(v.number()),
+              mimeType: v.optional(v.string()),
+            })
+          ),
+        })
+      )
+    ),
   },
 
   async handler(ctx, args) {
@@ -60,7 +86,7 @@ export const sendMessage = mutation({
       throw new Error("Not authenticated");
     }
 
-    if (!args.content.trim()) {
+    if (!args.content.trim() && !args.attachments) {
       throw new Error("Message content is required");
     }
 
@@ -74,16 +100,28 @@ export const sendMessage = mutation({
       throw new Error("Not authorized");
     }
 
+    const isVoice = args.type === "voice" || 
+      (args.attachments && args.attachments.some(a => a.type === "voice"));
+
+    const lastMsgContent = isVoice ? "🎙️ Voice message" : args.content;
+
     const messageId = await ctx.db.insert("messages", {
       conversationId: args.conversationId,
       senderId: userId,
       content: args.content,
       createdAt: Date.now(),
       readBy: [userId],
+      type: args.type,
+      audioUrl: args.audioUrl,
+      attachments: args.attachments,
     });
 
+    const receiverId = conversation.participants.find((p) => p !== userId)!;
+    const wasAlreadyUnread = conversation.unreadBy?.includes(receiverId) ?? false;
+    const isFirstUnread = !wasAlreadyUnread;
+
     await ctx.db.patch(args.conversationId, {
-      lastMessage: args.content,
+      lastMessage: lastMsgContent,
       lastMessageAt: Date.now(),
       lastMessageFrom: userId,
 
@@ -92,9 +130,57 @@ export const sendMessage = mutation({
       ),
     });
 
-    return messageId;
+    return {
+      messageId,
+      isFirstUnread,
+      senderId: userId,
+      receiverId,
+    };
   },
-  
+});
+
+export const sendMessageAction = action({
+  args: {
+    conversationId: v.id("conversations"),
+    content: v.string(),
+    type: v.optional(v.string()),
+    audioUrl: v.optional(v.string()),
+    attachments: v.optional(v.any()),
+    apiUrl: v.string(),
+  },
+  async handler(ctx, args): Promise<string> {
+    const result: any = await ctx.runMutation(api.messages.sendMessage, {
+      conversationId: args.conversationId,
+      content: args.content,
+      type: args.type,
+      audioUrl: args.audioUrl,
+      attachments: args.attachments,
+    });
+
+    if (result.isFirstUnread) {
+      try {
+        const response = await fetch(`${args.apiUrl}/api/notifications/internal-create`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-internal-secret": "circlee_super_secret_token_123",
+          },
+          body: JSON.stringify({
+            fromClerkId: result.senderId,
+            toClerkId: result.receiverId,
+            type: args.type === "voice" ? "VOICE_MESSAGE" : "MESSAGE",
+            targetType: "Conversation",
+            targetId: args.conversationId,
+          }),
+        });
+        console.log("Internal message notification create HTTP status:", response.status);
+      } catch (err) {
+        console.error("Failed to trigger message notification creation:", err);
+      }
+    }
+
+    return result.messageId;
+  },
 });
 export const markConversationRead = mutation({
   args: {

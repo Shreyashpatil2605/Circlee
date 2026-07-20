@@ -1,3 +1,4 @@
+import "react-native-gesture-handler";
 import { ClerkProvider, useAuth } from "@clerk/clerk-expo";
 import { tokenCache } from "@clerk/clerk-expo/token-cache";
 import { Stack } from "expo-router";
@@ -12,6 +13,9 @@ import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { AppState } from "react-native";
 import { useEffect } from "react";
 import { usePresence } from "@/hooks/usePresence";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import RealtimeNotificationTracker from "@/components/RealtimeNotificationTracker";
+
 const queryclient = new QueryClient();
 
 const convex = new ConvexReactClient(process.env.EXPO_PUBLIC_CONVEX_URL!);
@@ -81,34 +85,37 @@ export default function RootLayout() {
   console.log("CONVEX URL:", process.env.EXPO_PUBLIC_CONVEX_URL);
 
   return (
-    <SafeAreaProvider>
-      <ClerkProvider
-        tokenCache={tokenCache}
-        publishableKey={process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}
-      >
-        <ConvexClerkProvider>
-          <QueryClientProvider client={queryclient}>
-            {/* DEBUG AUTH */}
-            <DebugAuth />
-            <PresenceTracker />
-            <ConvexUserSync />
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <ClerkProvider
+          tokenCache={tokenCache}
+          publishableKey={process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}
+        >
+          <ConvexClerkProvider>
+            <QueryClientProvider client={queryclient}>
+              {/* DEBUG AUTH */}
+              <DebugAuth />
+              <PresenceTracker />
+              <ConvexUserSync />
+              <RealtimeNotificationTracker />
 
-            <View className="flex-1 bg-white">
-              <Stack
-                screenOptions={{
-                  headerShown: false,
-                  contentStyle: { backgroundColor: "#FFFFFF" },
-                }}
-              >
-                <Stack.Screen name="(auth)" />
-                <Stack.Screen name="(tabs)" />
-              </Stack>
+              <View className="flex-1 bg-white">
+                <Stack
+                  screenOptions={{
+                    headerShown: false,
+                    contentStyle: { backgroundColor: "#FFFFFF" },
+                  }}
+                >
+                  <Stack.Screen name="(auth)" />
+                  <Stack.Screen name="(tabs)" />
+                </Stack>
 
-              <StatusBar style="dark" />
-            </View>
-          </QueryClientProvider>
-        </ConvexClerkProvider>
-      </ClerkProvider>
-    </SafeAreaProvider>
+                <StatusBar style="dark" />
+              </View>
+            </QueryClientProvider>
+          </ConvexClerkProvider>
+        </ClerkProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }

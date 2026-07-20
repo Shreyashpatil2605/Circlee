@@ -7,6 +7,9 @@ import CommentsModal from "./CommentsModal";
 import PostCard from "./PostCard";
 
 
+import { useLocalSearchParams, router } from "expo-router";
+import { useEffect } from "react";
+
 const PostsList = ({username}:{username?:string}) => {
   const { currentUser, isLoading: isUserLoading } = useCurrentUser();
   const {
@@ -20,7 +23,23 @@ const PostsList = ({username}:{username?:string}) => {
   } = usePosts(username);
 
 
-  const [selectedPostId, setSelectedPostId]= useState<string | null>(null)
+  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+  const [activeHighlightCommentId, setActiveHighlightCommentId] = useState<string | null>(null);
+
+  const params = useLocalSearchParams();
+  const openPostCommentsId = params.openPostCommentsId as string | undefined;
+  const highlightCommentId = params.highlightCommentId as string | undefined;
+
+  useEffect(() => {
+    if (openPostCommentsId) {
+      setSelectedPostId(openPostCommentsId);
+      if (highlightCommentId) {
+        setActiveHighlightCommentId(highlightCommentId);
+      }
+      router.setParams({ openPostCommentsId: undefined, highlightCommentId: undefined });
+    }
+  }, [openPostCommentsId, highlightCommentId]);
+
   const selectedPost = selectedPostId ? posts.find((p:Post) => p._id===selectedPostId):null
 
   if (isLoading || isUserLoading) {
@@ -76,7 +95,14 @@ const PostsList = ({username}:{username?:string}) => {
           isLiked={checkIsLiked(post.likes, currentUser)}
         />
       ))}
-      <CommentsModal selectedPost={selectedPost}  onClose= {()=> setSelectedPostId(null)}  />
+      <CommentsModal
+        selectedPost={selectedPost}
+        onClose={() => {
+          setSelectedPostId(null);
+          setActiveHighlightCommentId(null);
+        }}
+        highlightCommentId={activeHighlightCommentId || undefined}
+      />
     </>
   );
 };

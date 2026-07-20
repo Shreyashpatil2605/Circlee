@@ -11,6 +11,17 @@ module.exports = {
         "dark-secondary": "#0A0A0A",
         "dark-tertiary": "#141414",
 
+        // Premium chat system colors
+        "chat-bg": "#0B0B12",
+        "chat-secondary": "#14141C",
+        "chat-card": "#171720",
+        "chat-divider": "rgba(255,255,255,0.06)",
+        "chat-text-primary": "#FFFFFF",
+        "chat-text-secondary": "#A7A7B5",
+        "chat-purple": "#6B4EFF",
+        "chat-purple-light": "#8D6CFF",
+        "chat-green": "#00E676",
+
         // Glass surfaces
         "glass-light": "rgba(20,20,20,0.6)",
         "glass-medium": "rgba(20,20,20,0.8)",

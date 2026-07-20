@@ -1,6 +1,6 @@
 import { Redirect } from "expo-router";
 import React, { useState } from "react";
-import { View } from "react-native";
+import { View, ActivityIndicator } from "react-native";
 import { useAuth } from "@clerk/clerk-expo";
 import { GlassBottomTabBar, TabBarItem } from "@/components/GlassBottomTabBar";
 import HomeScreen from "./index";
@@ -11,16 +11,22 @@ import ProfileScreen from "./profile";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useConversations } from "@/hooks/useMessages";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useNotifications } from "@/hooks/useNotifications";
 
 const Tabslayout = () => {
-  const { isSignedIn } = useAuth();
+  const { isLoaded, isSignedIn } = useAuth();
   const [activeTab, setActiveTab] = useState(0);
   const { conversations } = useConversations();
   const { currentUser } = useCurrentUser();
+  const { notifications } = useNotifications();
   const [hasViewedMessages, setHasViewedMessages] = useState(false);
+  
   const unreadCount = conversations.filter((conv: any) =>
     conv.unreadBy?.includes(currentUser?.clerkId),
   ).length;
+
+  const unreadNotificationsCount = notifications.filter((n: any) => !n.read).length;
+
   const TAB_ITEMS: TabBarItem[] = [
     { name: "home", icon: "home", label: "Home" },
     { name: "search", icon: "search", label: "Search" },
@@ -30,7 +36,12 @@ const Tabslayout = () => {
       label: "Messages",
       badge: unreadCount,
     },
-    { name: "notifications", icon: "bell", label: "Notifications" },
+    {
+      name: "notifications",
+      icon: "bell",
+      label: "Notifications",
+      badge: unreadNotificationsCount,
+    },
     { name: "profile", icon: "user", label: "Profile" },
   ];
   const handleTabPress = (index: number) => {
@@ -40,6 +51,14 @@ const Tabslayout = () => {
       setHasViewedMessages(true);
     }
   };
+
+  if (!isLoaded) {
+    return (
+      <View style={{ flex: 1, backgroundColor: "#0B0B12", justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#6B4EFF" />
+      </View>
+    );
+  }
 
   if (!isSignedIn) return <Redirect href="/(auth)" />;
 
