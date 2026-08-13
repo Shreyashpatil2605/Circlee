@@ -2,17 +2,18 @@ import React, { useState } from "react";
 import {
   View,
   Text,
-  TextInput,
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
-  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useSearchUsers } from "@/hooks/useSearchUsers";
 import { useDebounce } from "use-debounce";
+import ScreenHeader from "@/components/ui/ScreenHeader";
+import SearchBar from "@/components/ui/SearchBar";
+import Avatar from "@/components/ui/Avatar";
 
 const TRENDING_TOPICS = [
   { topic: "#ReactNative", tweets: "125K" },
@@ -24,36 +25,24 @@ const TRENDING_TOPICS = [
 
 const SearchScreen = () => {
   const [searchQuery, setSearchQuery] = useState("");
-
   const [debouncedQuery] = useDebounce(searchQuery, 500);
-
   const { users, isLoading } = useSearchUsers(debouncedQuery);
 
   return (
-    <SafeAreaView className="flex-1 bg-dark-bg" edges={["top"]}>
-      {/* Search Header */}
+    <SafeAreaView className="flex-1 bg-chat-bg" edges={["top"]}>
+      {/* Screen Header & Search Input */}
+      <ScreenHeader title="Explore" />
+      
       <View className="px-4 py-3">
-        <View className="flex-row items-center bg-glass-light rounded-full px-4 py-3 border border-border-glass-medium">
-          <Feather name="search" size={20} color="#0A84FF" />
-
-          <TextInput
-            placeholder="Search Circlee"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            className="flex-1 ml-3 text-base text-text-primary"
-            placeholderTextColor="#9CA3AF"
-          />
-
-          {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery("")}>
-              <Feather name="x" size={18} color="#9CA3AF" />
-            </TouchableOpacity>
-          )}
-        </View>
+        <SearchBar
+          placeholder="Search Circlee"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
       </View>
 
       <ScrollView
-        className="flex-1 bg-dark-bg"
+        className="flex-1 bg-chat-bg"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 100 }}
       >
@@ -65,7 +54,7 @@ const SearchScreen = () => {
               </View>
             ) : users.length === 0 ? (
               <View className="items-center mt-10">
-                <Text className="text-text-tertiary text-base">
+                <Text className="text-zinc-500 text-sm">
                   No users found
                 </Text>
               </View>
@@ -74,26 +63,28 @@ const SearchScreen = () => {
                 <TouchableOpacity
                   key={user._id}
                   onPress={() => router.push(`/${user.username}`)}
-                  className="flex-row items-center py-4 border-b border-border-glass-light"
+                  className="flex-row items-center py-3.5 border-b border-border-glass-light"
+                  activeOpacity={0.7}
                 >
-                  <Image
-                    source={{ uri: user.profilePicture }}
-                    className="w-12 h-12 rounded-full border border-border-glass-medium"
+                  <Avatar
+                    uri={user.profilePicture}
+                    size={48}
+                    borderClassName="border border-border-glass-light"
                   />
 
                   <View className="ml-3 flex-1">
-                    <Text className="text-text-primary font-bold text-base">
+                    <Text className="text-white font-bold text-base">
                       {user.firstName} {user.lastName}
                     </Text>
 
-                    <Text className="text-text-tertiary">
+                    <Text className="text-zinc-500 text-xs mt-0.5">
                       @{user.username}
                     </Text>
                   </View>
 
                   <Feather
                     name="chevron-right"
-                    size={18}
+                    size={16}
                     color="#6B7280"
                   />
                 </TouchableOpacity>
@@ -102,13 +93,7 @@ const SearchScreen = () => {
           </View>
         ) : (
           <View className="p-4">
-            <Text
-              className="text-xl font-bold text-text-primary mb-4"
-              style={{
-                textShadowColor: "#0A84FF",
-                textShadowRadius: 8,
-              }}
-            >
+            <Text className="text-base font-bold text-white mb-3">
               Trending for you
             </Text>
 
@@ -116,12 +101,13 @@ const SearchScreen = () => {
               <TouchableOpacity
                 key={index}
                 className="py-4 border-b border-border-glass-light"
+                activeOpacity={0.7}
               >
-                <Text className="font-bold text-text-primary text-lg">
+                <Text className="font-bold text-white text-base">
                   {item.topic}
                 </Text>
 
-                <Text className="text-text-tertiary text-sm mt-1">
+                <Text className="text-zinc-500 text-xs mt-1">
                   {item.tweets} Posts
                 </Text>
               </TouchableOpacity>

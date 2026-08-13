@@ -3,8 +3,9 @@ import React from "react";
 import { Post, User } from "@/types";
 import { formatDate, formatNumber } from "@/utils/formatters";
 import { AntDesign, Feather } from "@expo/vector-icons";
-import { BlurView } from "expo-blur";
 import { useRouter } from "expo-router";
+import GlassCard from "@/components/ui/GlassCard";
+import Avatar from "@/components/ui/Avatar";
 
 interface PostCardProps {
   post: Post;
@@ -14,6 +15,7 @@ interface PostCardProps {
   isLiked: boolean;
   currentUser: User;
 }
+
 const PostCard = ({
   currentUser,
   isLiked,
@@ -45,12 +47,14 @@ const PostCard = ({
   };
 
   return (
-    <View className="mb-3 mx-3 rounded-2xl overflow-hidden border border-border-glass-light">
-      <BlurView intensity={35} tint="dark" className="flex-row p-4">
+    <View className="mb-3 mx-3">
+      <GlassCard className="flex-row p-4">
         <TouchableOpacity onPress={handleUserPress}>
-          <Image
-            source={{ uri: post.user.profilePicture || "" }}
-            className="w-12 h-12 rounded-full mr-3 border border-accent-blue/30"
+          <Avatar
+            uri={post.user.profilePicture}
+            size={48}
+            className="mr-3"
+            borderClassName="border border-accent-blue/30"
           />
         </TouchableOpacity>
 
@@ -60,24 +64,24 @@ const PostCard = ({
               className="flex-row items-center flex-1"
               onPress={handleUserPress}
             >
-              <Text className="font-bold text-text-primary mr-1">
+              <Text className="font-bold text-white mr-1 text-[15px]">
                 {post.user.firstName} {post.user.lastName}
               </Text>
-              <Text className="text-text-tertiary mr-1">
+              <Text className="text-zinc-500 text-xs mr-1">
                 @{post.user.username}
               </Text>
-              <Text className="font-bold text-text-tertiary ml-5">
-                .{formatDate(post.createdAt)}
+              <Text className="text-zinc-500 text-xs ml-4">
+                · {formatDate(post.createdAt)}
               </Text>
             </TouchableOpacity>
             {isOwnPost && (
-              <TouchableOpacity onPress={handleDelete}>
-                <Feather name="trash" size={20} color="#6B7280" />
+              <TouchableOpacity onPress={handleDelete} className="p-1">
+                <Feather name="trash" size={16} color="#6B7280" />
               </TouchableOpacity>
             )}
           </View>
           {post.content && (
-            <Text className="text-text-secondary text-base leading-5 mb-3">
+            <Text className="text-chat-text-secondary text-sm leading-relaxed mb-3">
               {post.content}
             </Text>
           )}
@@ -94,24 +98,24 @@ const PostCard = ({
           )}
 
           {/* Actions */}
-          <View className="flex-row justify-between max-w-xs mt-3">
+          <View className="flex-row justify-between max-w-xs mt-2.5">
             <TouchableOpacity
-              className="flex-row items-center"
+              className="flex-row items-center p-1"
               onPress={() => onComment(post)}
             >
-              <Feather name="message-circle" size={18} color="#9CA3AF" />
-              <Text className="text-text-tertiary text-sm ml-2">
+              <Feather name="message-circle" size={18} color="#A7A7B5" />
+              <Text className="text-zinc-500 text-xs ml-2">
                 {formatNumber(post.comments?.length || 0)}
               </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity className="flex-row items-center">
-              <Feather name="repeat" size={17} color="#9CA3AF" />
-              <Text className="text-text-tertiary ml-2 text-sm">0</Text>
+            <TouchableOpacity className="flex-row items-center p-1">
+              <Feather name="repeat" size={17} color="#A7A7B5" />
+              <Text className="text-zinc-500 text-xs ml-2">0</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              className="flex-row items-center"
+              className="flex-row items-center p-1"
               onPress={() => onLike(post._id)}
             >
               {isLiked ? (
@@ -122,10 +126,10 @@ const PostCard = ({
                   style={{ textShadowColor: "#0A84FF", textShadowRadius: 8 }}
                 />
               ) : (
-                <Feather name="heart" size={18} color="#9CA3AF" />
+                <Feather name="heart" size={18} color="#A7A7B5" />
               )}
               <Text
-                className={`text-sm ml-2 ${isLiked ? "text-accent-blue font-bold" : "text-text-tertiary"}`}
+                className={`text-xs ml-2 ${isLiked ? "text-accent-blue font-bold" : "text-zinc-500"}`}
                 style={
                   isLiked
                     ? { textShadowColor: "#0A84FF", textShadowRadius: 10 }
@@ -137,7 +141,7 @@ const PostCard = ({
             </TouchableOpacity>
           </View>
         </View>
-      </BlurView>
+      </GlassCard>
     </View>
   );
 };

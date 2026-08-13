@@ -21,7 +21,8 @@ import PostsList from "@/components/PostsList";
 import { useProfile } from "@/hooks/useProfile";
 import EditProfileModel from "@/components/EditProfileModel";
 import { FollowListModal } from "@/components/FollowListModal";
-import { BlurView } from "expo-blur";
+import ScreenHeader from "@/components/ui/ScreenHeader";
+import Avatar from "@/components/ui/Avatar";
 
 const ProfileScreen = () => {
   const { currentUser, isLoading } = useCurrentUser();
@@ -49,34 +50,33 @@ const ProfileScreen = () => {
 
   if (isLoading) {
     return (
-      <View className="flex-1 bg-dark-bg items-center justify-center">
+      <View className="flex-1 bg-chat-bg items-center justify-center">
         <ActivityIndicator size="large" color="#0A84FF"></ActivityIndicator>
       </View>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-dark-bg" edges={["top"]}>
+    <SafeAreaView className="flex-1 bg-chat-bg" edges={["top"]}>
       {/* header */}
-      <BlurView
-        intensity={70}
-        tint="dark"
-        className="flex-row items-center justify-between px-4 py-4 border-b border-border-glass-light"
-      >
-        <View>
-          <Text className="font-bold text-xl text-text-primary">
-            {currentUser.firstName} {currentUser.lastName}
-          </Text>
-          <Text className="text-text-tertiary text-sm">
-            {userPosts.length} Posts
-          </Text>
-        </View>
-        <SignOutButton />
-      </BlurView>
+      <ScreenHeader
+        title=""
+        leftSlot={
+          <View>
+            <Text className="font-bold text-xl text-white">
+              {currentUser.firstName} {currentUser.lastName}
+            </Text>
+            <Text className="text-zinc-500 text-xs mt-0.5">
+              {userPosts.length} Posts
+            </Text>
+          </View>
+        }
+        rightSlot={<SignOutButton />}
+      />
 
       {/* ScrollView */}
       <ScrollView
-        className="flex-1 bg-dark-bg"
+        className="flex-1 bg-chat-bg"
         contentContainerStyle={{ paddingBottom: 120 + insets.bottom }}
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -101,30 +101,27 @@ const ProfileScreen = () => {
           resizeMode="cover"
         />
 
-        {/* profilePicture */}
+        {/* profilePicture & actions */}
         <View className="px-4 pb-4 border-b border-border-glass-light">
-          <View className="flex-row justify-between items-end -mt-16 mb-4">
-            <Image
-              source={{ uri: currentUser.profilePicture }}
-              className="w-32 h-32 rounded-full border-4 border-accent-blue"
-              style={{
-                shadowColor: "#0A84FF",
-                shadowOffset: { width: 0, height: 0 },
-                shadowOpacity: 0.5,
-                shadowRadius: 12,
-              }}
+          <View className="flex-row justify-between items-end -mt-14 mb-4">
+            <Avatar
+              uri={currentUser.profilePicture}
+              size={112}
+              borderClassName="border-4 border-accent-blue"
+              className="-mt-14"
             />
             <TouchableOpacity
               className="border border-accent-blue px-6 py-2 rounded-full"
               style={{
                 shadowColor: "#0A84FF",
-                shadowOffset: { width: 0, height: 0 },
-                shadowOpacity: 0.4,
-                shadowRadius: 8,
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.2,
+                shadowRadius: 6,
+                elevation: 2,
               }}
               onPress={openEditModel}
             >
-              <Text className="font-semibold text-accent-blue">
+              <Text className="font-semibold text-accent-blue text-sm">
                 Edit Profile
               </Text>
             </TouchableOpacity>
@@ -132,57 +129,56 @@ const ProfileScreen = () => {
 
           {/* currentUser.firstName // currentUser.lastName */}
           <View className="mb-4">
-            <View className="flex-row items-center mb-2">
-              <Text className="font-bold text-xl mr-2 text-text-primary">
+            <View className="flex-row items-center mb-1">
+              <Text className="font-bold text-xl mr-2 text-white">
                 {currentUser.firstName} {currentUser.lastName}
               </Text>
-              <Feather name="check-circle" size={20} color="#0A84FF" />
+              <Feather name="check-circle" size={18} color="#0A84FF" />
             </View>
 
             {/* {currentUser.username} */}
-            <Text className="text-text-tertiary mb-2">
+            <Text className="text-zinc-500 text-sm mb-2">
               @{currentUser.username}
             </Text>
-            <Text className="text-text-secondary mb-3">{currentUser.bio}</Text>
+            <Text className="text-chat-text-secondary text-sm leading-relaxed mb-3">{currentUser.bio}</Text>
 
             {/* location */}
-            <View className="flex-row items-center mb-2">
-              <Feather name="map-pin" size={16} color="#0A84FF" />
-              <Text className="ml-2 text-text-tertiary">
+            <View className="flex-row items-center mb-1.5">
+              <Feather name="map-pin" size={14} color="#0A84FF" style={{ marginRight: 6 }} />
+              <Text className="text-zinc-500 text-xs">
                 {currentUser.location}
               </Text>
             </View>
 
             {/* createdAt */}
-            <View className="flex-row items-center mb-3">
-              <Feather name="calendar" size={16} color="#0A84FF" />
-              <Text className="ml-2 text-text-tertiary">
-                {" "}
+            <View className="flex-row items-center mb-4.5">
+              <Feather name="calendar" size={14} color="#0A84FF" style={{ marginRight: 6 }} />
+              <Text className="text-zinc-500 text-xs">
                 Joined {format(new Date(currentUser.createdAt), "MMMM yyyy")}
               </Text>
             </View>
 
-            {/* following */}
-            <View className="flex-row">
+            {/* following & followers counts */}
+            <View className="flex-row mt-3">
               <TouchableOpacity
                 className="mr-6"
                 onPress={() => setFollowingModalVisible(true)}
               >
-                <Text className="text-text-secondary">
-                  <Text className="font-bold text-text-primary">
+                <Text className="text-chat-text-secondary text-sm">
+                  <Text className="font-bold text-white">
                     {currentUser.following?.length || 0}
                   </Text>
-                  <Text className="text-text-tertiary"> Following</Text>
+                  <Text className="text-zinc-500"> Following</Text>
                 </Text>
               </TouchableOpacity>
 
               {/* followers */}
               <TouchableOpacity onPress={() => setFollowersModalVisible(true)}>
-                <Text className="text-text-secondary">
-                  <Text className="font-bold text-text-primary">
+                <Text className="text-chat-text-secondary text-sm">
+                  <Text className="font-bold text-white">
                     {currentUser.followers?.length || 0}
                   </Text>
-                  <Text className="text-text-tertiary"> Followers</Text>
+                  <Text className="text-zinc-500"> Followers</Text>
                 </Text>
               </TouchableOpacity>
             </View>

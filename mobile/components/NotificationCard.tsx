@@ -1,5 +1,6 @@
 import React from "react";
 import { View, Text, Image, Dimensions } from "react-native";
+import Avatar from "@/components/ui/Avatar";
 import { Notification, NotificationType } from "@/types";
 import { formatDate } from "@/utils/formatters";
 import { Feather } from "@expo/vector-icons";
@@ -43,35 +44,35 @@ const NotificationCard = React.memo(({
         return {
           text: "liked your post",
           icon: "heart" as const,
-          gradient: ["#FF2D55", "#FF9500"] as [string, string],
+          gradient: ["#FF2D55", "#8D6CFF"] as [string, string],
           iconColor: "#FFFFFF",
         };
       case NotificationType.COMMENT:
         return {
           text: "commented on your post",
           icon: "message-circle" as const,
-          gradient: ["#9B51E0", "#E040FB"] as [string, string],
+          gradient: ["#6B4EFF", "#8D6CFF"] as [string, string],
           iconColor: "#FFFFFF",
         };
       case NotificationType.FOLLOW:
         return {
           text: "started following you",
           icon: "user-plus" as const,
-          gradient: ["#007AFF", "#00C7BE"] as [string, string],
+          gradient: ["#0A84FF", "#6B4EFF"] as [string, string],
           iconColor: "#FFFFFF",
         };
       case NotificationType.MESSAGE:
         return {
           text: "sent you a message",
           icon: "mail" as const,
-          gradient: ["#34C759", "#00C7BE"] as [string, string],
+          gradient: ["#0A84FF", "#00B0FF"] as [string, string],
           iconColor: "#FFFFFF",
         };
       case NotificationType.VOICE_MESSAGE:
         return {
           text: "sent you a voice message",
           icon: "mic" as const,
-          gradient: ["#FF9500", "#FFCC00"] as [string, string],
+          gradient: ["#6B4EFF", "#FF2D55"] as [string, string],
           iconColor: "#FFFFFF",
         };
       default:
@@ -149,8 +150,6 @@ const NotificationCard = React.memo(({
     opacity: withTiming(translateX.value < -2 ? 1 : 0, { duration: 100 }),
   }));
 
-  const defaultAvatar = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=120";
-
   return (
     <Animated.View
       entering={FadeInRight.duration(400).delay(index * 40)}
@@ -174,17 +173,18 @@ const NotificationCard = React.memo(({
       {/* Main Glassmorphic Notification Card */}
       <GestureDetector gesture={composedGesture}>
         <Animated.View style={animatedCardStyle}>
-          <BlurView intensity={28} tint="dark" className="flex-row p-4 border border-white/5 bg-black/25 rounded-2xl relative">
+          <BlurView intensity={28} tint="dark" className="flex-row p-4 border border-chat-divider bg-chat-card/45 rounded-2xl relative">
             {/* Unread Indicator Dot */}
             {!notification.read && (
-              <View className="absolute top-4 right-4 w-2.5 h-2.5 rounded-full bg-[#007AFF] z-10 shadow shadow-[#007AFF]/50" />
+              <View className="absolute top-4 right-4 w-2.5 h-2.5 rounded-full bg-accent-blue z-10 shadow shadow-accent-blue/50" />
             )}
 
             {/* Avatar block with status badge */}
             <View className="relative mr-3.5">
-              <Image
-                source={{ uri: notification.from.profilePicture || defaultAvatar }}
-                className="w-12 h-12 rounded-full border border-white/10"
+              <Avatar
+                uri={notification.from.profilePicture}
+                size={48}
+                borderClassName="border border-white/10"
               />
               <LinearGradient
                 colors={details.gradient}

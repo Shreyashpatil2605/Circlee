@@ -19,6 +19,7 @@ import * as Haptics from "expo-haptics";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
+import ScreenHeader from "@/components/ui/ScreenHeader";
 
 const NotificationScreen = () => {
   const {
@@ -224,25 +225,21 @@ const NotificationScreen = () => {
         </View>
 
         {/* Custom Header */}
-        <BlurView
-          intensity={40}
-          tint="dark"
-          className="flex-row items-center justify-between px-5 py-4 border-b border-white/5"
-        >
-          <Text className="text-xl font-bold text-white tracking-tight">
-            Activity
-          </Text>
-          <TouchableOpacity
-            className="flex-row items-center bg-white/5 border border-white/10 px-3.5 py-1.5 rounded-full active:bg-white/10"
-            onPress={() => {
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-              markAllAsRead();
-            }}
-          >
-            <Feather name="check-square" size={14} color="#A7A7B5" style={{ marginRight: 6 }} />
-            <Text className="text-zinc-400 text-xs font-bold">Mark all read</Text>
-          </TouchableOpacity>
-        </BlurView>
+        <ScreenHeader
+          title="Activity"
+          rightSlot={
+            <TouchableOpacity
+              className="flex-row items-center bg-white/5 border border-white/10 px-3.5 py-1.5 rounded-full active:bg-white/10"
+              onPress={() => {
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                markAllAsRead();
+              }}
+            >
+              <Feather name="check-square" size={14} color="#A7A7B5" style={{ marginRight: 6 }} />
+              <Text className="text-zinc-400 text-xs font-bold">Mark all read</Text>
+            </TouchableOpacity>
+          }
+        />
 
         {/* Filters Pill Bar */}
         <View className="flex-row gap-2 px-4 py-3 bg-transparent">
@@ -254,14 +251,14 @@ const NotificationScreen = () => {
                 onPress={() => handleFilterChange(pill.value)}
                 className={`px-5 py-2 rounded-full border ${
                   isActive
-                    ? "bg-white border-white"
+                    ? "bg-accent-blue border-accent-blue"
                     : "bg-white/5 border-white/5"
                 }`}
                 activeOpacity={0.8}
               >
                 <Text
                   className={`text-xs font-bold ${
-                    isActive ? "text-[#0B0B12]" : "text-zinc-400"
+                    isActive ? "text-white" : "text-zinc-400"
                   }`}
                 >
                   {pill.label}
