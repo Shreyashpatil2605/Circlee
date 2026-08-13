@@ -28,6 +28,7 @@ export default defineSchema({
         })
       )
     ),
+    pinnedFor: v.optional(v.array(v.string())),
   }),
 
   messages: defineTable({

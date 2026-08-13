@@ -39,6 +39,7 @@ import DateSeparator from "@/components/chat/DateSeparator";
 
 // Interactive Overlays & Sheets
 import { MessageActionSheet } from "@/components/chat/MessageActionSheet";
+import { ConversationActionSheet } from "@/components/chat/ConversationActionSheet";
 import TypingIndicator from "@/components/chat/TypingIndicator";
 import AttachmentSheet from "@/components/chat/AttachmentSheet";
 import ProfileDrawer from "@/components/chat/ProfileDrawer";
@@ -59,6 +60,10 @@ const MessageScreen = () => {
   const [replyingToMessage, setReplyingToMessage] = useState<any>(null);
   const [reactionsMap, setReactionsMap] = useState<Record<string, string[]>>({});
 
+  // Long press Conversation Action Sheet states
+  const [selectedConversationForSheet, setSelectedConversationForSheet] = useState<any>(null);
+  const [isConversationSheetVisible, setIsConversationSheetVisible] = useState(false);
+
   // Phase 3 Search & Pinned States
   const [isSearchingInChat, setIsSearchingInChat] = useState(false);
   const [chatSearchQuery, setChatSearchQuery] = useState("");
@@ -76,6 +81,7 @@ const MessageScreen = () => {
     markConversationRead,
     getOrCreateConversation,
     deleteConversation,
+    togglePinConversation,
   } = useConversations();
 
   const params = useLocalSearchParams();
@@ -185,10 +191,11 @@ const MessageScreen = () => {
     );
   };
 
+
   const handleDeleteChatConfirm = () => {
     Alert.alert(
       "Delete chat?",
-      "This conversation will be removed from your chat list. Your chat history will remain available to the other participant.",
+      "This conversation will be removed from your chat list.",
       [
         { text: "Cancel", style: "cancel" },
         {
@@ -201,16 +208,21 @@ const MessageScreen = () => {
   };
 
   const executeDeleteChat = async () => {
-    if (!selectedConversation?._id) return;
+    const targetConversation = selectedConversation || selectedConversationForSheet;
+    if (!targetConversation?._id) return;
     try {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-      const res = await deleteConversation(selectedConversation._id);
+      const res = await deleteConversation(targetConversation._id);
       if (res?.success) {
-        closeChatModal();
+        if (isChatOpen && selectedConversation?._id === targetConversation._id) {
+          closeChatModal();
+        }
         setSelectedConversation(null);
+        setSelectedConversationForSheet(null);
         setReplyingToMessage(null);
         setActiveMessageForReaction(null);
         setIsReactionPopupVisible(false);
+        setIsConversationSheetVisible(false);
         // Reset scroll refs
         hasScrolledInitially.current = false;
         isAtBottom.current = true;
@@ -222,8 +234,33 @@ const MessageScreen = () => {
     } catch (err) {
       console.error("Delete conversation error:", err);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Alert.alert("Couldn't delete chat", "Please try again.");
+      Alert.alert("Something went wrong", "Could not delete chat. Please try again.");
     }
+  };
+
+  const handleTogglePinConversation = async () => {
+    if (!selectedConversationForSheet) return;
+    try {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      await togglePinConversation(selectedConversationForSheet._id);
+    } catch (err) {
+      console.error("Toggle pin conversation error:", err);
+      Alert.alert("Something went wrong", "Could not pin/unpin chat. Please try again.");
+    }
+  };
+
+  const handleMuteConversation = () => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    Alert.alert(
+      "Mute notifications",
+      "Notification muting is not available yet.",
+      [{ text: "OK" }]
+    );
+  };
+
+  const handleDeleteConversationFromSheet = () => {
+    if (!selectedConversationForSheet) return;
+    handleDeleteChatConfirm();
   };
 
   useEffect(() => {
@@ -531,14 +568,21 @@ const MessageScreen = () => {
               paddingVertical: 10,
               paddingBottom: 40,
             }}
-            renderItem={({ item: conv, index }) => {
+            renderItem={({ item: conv }) => {
               const hasUnread = conv.unreadCount > 0;
-              const isPinned = index === 0;
-              const isMuted = index === 1;
+              const isPinned = conv.isPinned === true;
+              const isMuted = false;
 
               return (
                 <TouchableOpacity
                   onPress={() => openConversation(conv)}
+                  onLongPress={() => {
+                    if (conv) {
+                      setSelectedConversationForSheet(conv);
+                      setIsConversationSheetVisible(true);
+                    }
+                  }}
+                  delayLongPress={400}
                   activeOpacity={0.8}
                   className="flex-row items-center mx-4 my-1.5 p-3.5 bg-chat-card/45 border border-chat-divider rounded-2xl"
                 >
@@ -572,6 +616,9 @@ const MessageScreen = () => {
                   <View className="flex-1 justify-center">
                     <View className="flex-row items-center justify-between">
                       <View className="flex-row items-center flex-1 mr-2">
+                        {isPinned && (
+                          <MaterialCommunityIcons name="pin" size={14} color="#8D6CFF" style={{ marginRight: 4 }} />
+                        )}
                         <Text className="font-semibold text-chat-text-primary text-[15px]" numberOfLines={1}>
                           {conv.otherUser?.firstName} {conv.otherUser?.lastName}
                         </Text>
@@ -843,6 +890,18 @@ const MessageScreen = () => {
           visible={isProfileDrawerVisible}
           onClose={() => setIsProfileDrawerVisible(false)}
           otherUser={selectedConversation?.otherUser}
+        />
+
+        <ConversationActionSheet
+          visible={isConversationSheetVisible}
+          conversation={selectedConversationForSheet}
+          onClose={() => {
+            setIsConversationSheetVisible(false);
+            setSelectedConversationForSheet(null);
+          }}
+          onPin={handleTogglePinConversation}
+          onMute={handleMuteConversation}
+          onDelete={handleDeleteConversationFromSheet}
         />
       </SafeAreaView>
     </GestureHandlerRootView>

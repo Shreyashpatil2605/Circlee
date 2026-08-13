@@ -390,8 +390,11 @@ export const getConversations = query({
               .first()
           : null;
 
+        const isPinned = conv.pinnedFor?.includes(userId) ?? false;
+
         return {
           ...conv,
+          isPinned,
           unreadCount,
           lastMessage: lastMessageText,
           lastMessageAt: lastMessageTime,
@@ -411,10 +414,15 @@ export const getConversations = query({
       }),
     );
 
-    // Sort by dynamic lastMessageAt descending
-    return enrichedConversations.sort(
-      (a, b) => (b.lastMessageAt || 0) - (a.lastMessageAt || 0),
-    );
+    // Sort conversations:
+    // 1. Pinned conversations first.
+    // 2. Within pinned conversations, newest first.
+    // 3. Within unpinned conversations, newest first.
+    return enrichedConversations.sort((a, b) => {
+      if (a.isPinned && !b.isPinned) return -1;
+      if (!a.isPinned && b.isPinned) return 1;
+      return (b.lastMessageAt || 0) - (a.lastMessageAt || 0);
+    });
   },
 });
 
@@ -585,6 +593,51 @@ export const deleteConversation = mutation({
 
     return {
       success: true,
+    };
+  },
+});
+
+// Toggle Pin Conversation mutation
+export const togglePinConversation = mutation({
+  args: {
+    conversationId: v.id("conversations"),
+  },
+
+  async handler(ctx, args) {
+    const userId = await getAuthUserId(ctx);
+
+    if (!userId) {
+      throw new Error("Not authenticated");
+    }
+
+    const conversation = await ctx.db.get(args.conversationId);
+
+    if (!conversation) {
+      throw new Error("Conversation not found");
+    }
+
+    if (!conversation.participants.includes(userId)) {
+      throw new Error("Not authorized");
+    }
+
+    const pinnedFor = conversation.pinnedFor ?? [];
+    const isPinned = pinnedFor.includes(userId);
+    let newPinnedFor: string[];
+
+    if (isPinned) {
+      newPinnedFor = pinnedFor.filter((id) => id !== userId);
+    } else {
+      newPinnedFor = [...pinnedFor, userId];
+    }
+
+    await ctx.db.patch(args.conversationId, {
+      pinnedFor: newPinnedFor,
+    });
+
+    return {
+      success: true,
+      pinned: !isPinned,
+      isPinned: !isPinned,
     };
   },
 });

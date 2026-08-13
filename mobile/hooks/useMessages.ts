@@ -12,6 +12,7 @@ export const useConversations = () => {
 
   const markConversationRead = useMutation(api.messages.markConversationRead);
   const deleteConversationMutation = useMutation(api.messages.deleteConversation);
+  const togglePinConversationMutation = useMutation(api.messages.togglePinConversation);
 
   return {
     conversations,
@@ -19,6 +20,7 @@ export const useConversations = () => {
     getOrCreateConversation,
     markConversationRead,
     deleteConversation: (conversationId: any) => deleteConversationMutation({ conversationId }),
+    togglePinConversation: (conversationId: any) => togglePinConversationMutation({ conversationId }),
     isCreating: false,
     refetch: () => {},
   };
