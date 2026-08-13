@@ -19,6 +19,15 @@ export default defineSchema({
     lastMessageFrom: v.optional(v.string()),
     unreadBy: v.optional(v.array(v.string())),
     typingBy: v.optional(v.string()),
+    deletedFor: v.optional(v.array(v.string())),
+    deletedAt: v.optional(
+      v.array(
+        v.object({
+          userId: v.string(),
+          timestamp: v.number(),
+        })
+      )
+    ),
   }),
 
   messages: defineTable({
@@ -52,6 +61,8 @@ export default defineSchema({
         })
       )
     ),
+    deletedForEveryone: v.optional(v.boolean()),
+    deletedFor: v.optional(v.array(v.string())),
   })
     .index("by_conversation", ["conversationId"])
     .index("by_sender", ["senderId"]),

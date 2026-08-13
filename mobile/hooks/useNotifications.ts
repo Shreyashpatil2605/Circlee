@@ -113,6 +113,40 @@ export const useNotifications = () => {
     },
   });
 
+  const markConversationMessagesReadMutation = useMutation({
+    mutationFn: (conversationId: string) =>
+      api.put("/notifications/read-conversation", { conversationId }),
+    onMutate: async (conversationId) => {
+      await queryClient.cancelQueries({ queryKey: ["notifications"] });
+      const previousNotifications = queryClient.getQueryData(["notifications"]);
+
+      queryClient.setQueryData(["notifications"], (old: any) => {
+        if (!old) return old;
+        return {
+          ...old,
+          data: {
+            ...old.data,
+            notifications: old.data.notifications.map((n: any) =>
+              n.targetType === "Conversation" && n.targetId === conversationId
+                ? { ...n, read: true }
+                : n
+            ),
+          },
+        };
+      });
+
+      return { previousNotifications };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousNotifications) {
+        queryClient.setQueryData(["notifications"], context.previousNotifications);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    },
+  });
+
   const deleteNotification = (notificationId: string) => {
     deleteNotificationMutation.mutate(notificationId);
   };
@@ -125,6 +159,10 @@ export const useNotifications = () => {
     markAllNotificationsReadMutation.mutate();
   };
 
+  const markConversationMessagesRead = (conversationId: string) => {
+    markConversationMessagesReadMutation.mutate(conversationId);
+  };
+
   return {
     notifications: notificationsData || [],
     isLoading,
@@ -134,6 +172,7 @@ export const useNotifications = () => {
     deleteNotification,
     markAsRead,
     markAllAsRead,
+    markConversationMessagesRead,
     isDeleteNotification: deleteNotificationMutation.isPending,
   };
 };

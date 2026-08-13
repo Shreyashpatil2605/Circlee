@@ -26,6 +26,7 @@ interface MessageBubbleProps {
     type?: string;
     audioUrl?: string;
     attachments?: { type: string; url: string; metadata?: any }[];
+    deletedForEveryone?: boolean;
   };
   isOwnMessage: boolean;
   onLongPress?: () => void;
@@ -74,7 +75,10 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
 
+  const isDeleted = message.deletedForEveryone === true;
+
   const panGesture = Gesture.Pan()
+    .enabled(!isDeleted)
     .activeOffsetX([-10, 10])
     .onUpdate((event) => {
       if (event.translationX < 0) {
@@ -188,12 +192,33 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
           <TouchableOpacity
             activeOpacity={0.9}
             onLongPress={() => {
+              if (isDeleted) return;
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
               if (onLongPress) onLongPress();
             }}
             delayLongPress={250}
           >
-            {isVoiceMessage ? (
+            {isDeleted ? (
+              <View
+                className={isOwnMessage ? "bg-chat-purple/10 border border-chat-purple/20" : "bg-chat-card border border-chat-divider"}
+                style={[
+                  getBubbleStyle(),
+                  {
+                    paddingHorizontal: 16,
+                    paddingVertical: 10,
+                  },
+                ]}
+              >
+                <Text className="text-chat-text-secondary/70 text-[15px] italic">
+                  This message was deleted
+                </Text>
+                <View className="flex-row items-center justify-end mt-1.5 self-end">
+                  <Text className="text-[10px] text-chat-text-secondary/50">
+                    {formattedTime}
+                  </Text>
+                </View>
+              </View>
+            ) : isVoiceMessage ? (
               <VoiceBubble
                 message={message as any}
                 isOwnMessage={isOwnMessage}
@@ -253,7 +278,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
             )}
 
             {/* Reaction badge container (if reactions exist) */}
-            {reactions.length > 0 && (
+            {reactions.length > 0 && !isDeleted && (
               <View
                 className={`absolute -bottom-3 bg-chat-secondary border border-chat-divider rounded-full px-2 py-0.5 flex-row items-center gap-1 shadow-md ${
                   isOwnMessage ? "right-3" : "left-3"

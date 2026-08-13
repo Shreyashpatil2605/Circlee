@@ -11,11 +11,11 @@ import { Platform } from "react-native";
  */
 
 export const getApiBaseUrl = (): string => {
-  // const envUrl = process.env.EXPO_PUBLIC_API_URL?.trim();
+  const envUrl = process.env.EXPO_PUBLIC_API_URL?.trim();
 
-  // if (envUrl) {
-  //   return envUrl;
-  // }
+  if (envUrl) {
+    return envUrl;
+  }
 
   // Fallback based on platform
   if (Platform.OS === "android") {

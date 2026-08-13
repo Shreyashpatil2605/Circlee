@@ -151,3 +151,26 @@ export const createInternalNotification = asyncHandler(async (req, res) => {
   // Trigger Convex realtime signaling
   await triggerRealtimeNotification(toClerkId);
 });
+
+// markMessageNotificationsRead
+export const markMessageNotificationsRead = asyncHandler(async (req, res) => {
+  const { userId } = getAuth(req);
+  const { conversationId } = req.body;
+  const user = await User.findOne({ clerkId: userId });
+  if (!user) return res.status(404).json({ error: "User not found" });
+
+  await Notification.updateMany(
+    {
+      to: user._id,
+      targetType: "Conversation",
+      targetId: conversationId,
+      read: false,
+    },
+    { read: true }
+  );
+
+  // Trigger Convex realtime signaling to update client badge
+  await triggerRealtimeNotification(userId);
+
+  res.status(200).json({ success: true, message: "Conversation message notifications marked as read" });
+});

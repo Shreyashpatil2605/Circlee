@@ -8,6 +8,7 @@ interface ChatHeaderProps {
   onBackPress: () => void;
   onProfilePress?: () => void;
   onSearchPress?: () => void;
+  onMorePress?: () => void;
   otherUser: {
     firstName?: string;
     lastName?: string;
@@ -23,6 +24,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
   onBackPress,
   onProfilePress,
   onSearchPress,
+  onMorePress,
   otherUser,
   isTyping,
   lastSeenText = "Offline",
@@ -125,6 +127,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
             </TouchableOpacity>
 
             <TouchableOpacity
+              onPress={onMorePress}
               activeOpacity={0.7}
               className="p-1.5 rounded-full bg-chat-secondary/40"
             >

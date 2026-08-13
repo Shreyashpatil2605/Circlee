@@ -124,7 +124,7 @@ export const sendMessage = mutation({
       lastMessage: lastMsgContent,
       lastMessageAt: Date.now(),
       lastMessageFrom: userId,
-
+      deletedFor: [], // restore visibility for both users on a new message
       unreadBy: conversation.participants.filter(
         (participant) => participant !== userId,
       ),
@@ -247,6 +247,17 @@ export const getMessages = query({
       throw new Error("Not authorized");
     }
 
+    // Get current user's deletion timestamp
+    const userDeletion = (conversation.deletedAt ?? []).find(
+      (d: any) => d.userId === userId
+    );
+    const deletionTime = userDeletion ? userDeletion.timestamp : 0;
+
+    // If conversation is deleted for me, return []
+    if ((conversation.deletedFor ?? []).includes(userId)) {
+      return [];
+    }
+
     const messages = await ctx.db
       .query("messages")
       .withIndex("by_conversation", (q) =>
@@ -254,27 +265,49 @@ export const getMessages = query({
       )
       .order("asc")
       .collect();
-    console.log("MESSAGES:", JSON.stringify(messages, null, 2));
+
+    // Hide messages where deletedFor contains the current user's clerk ID/userId
+    // AND hide messages sent before the user's latest deletion timestamp
+    const visibleMessages = messages.filter(
+      (msg) =>
+        msg.createdAt > deletionTime &&
+        !(msg.deletedFor ?? []).includes(userId)
+    );
+
+    console.log("MESSAGES:", JSON.stringify(visibleMessages, null, 2));
 
     const enrichedMessages = await Promise.all(
-      messages.map(async (msg) => {
+      visibleMessages.map(async (msg) => {
         const sender = await ctx.db
           .query("users")
           .withIndex("by_clerkId", (q) => q.eq("clerkId", msg.senderId))
           .first();
 
+        const senderData = sender
+          ? {
+              id: sender._id,
+              clerkId: sender.clerkId,
+              firstName: sender.firstName,
+              lastName: sender.lastName,
+              username: sender.username,
+              profilePicture: sender.profilePicture,
+            }
+          : null;
+
+        if (msg.deletedForEveryone) {
+          return {
+            ...msg,
+            content: "This message was deleted",
+            type: "text",
+            audioUrl: undefined,
+            attachments: undefined,
+            sender: senderData,
+          };
+        }
+
         return {
           ...msg,
-          sender: sender
-            ? {
-                id: sender._id,
-                clerkId: sender.clerkId,
-                firstName: sender.firstName,
-                lastName: sender.lastName,
-                username: sender.username,
-                profilePicture: sender.profilePicture,
-              }
-            : null,
+          sender: senderData,
         };
       }),
     );
@@ -287,40 +320,82 @@ export const getMessages = query({
 export const getConversations = query({
   async handler(ctx) {
     const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      return [];
+    }
     console.log("===== GET CONVERSATIONS =====");
     console.log("CLERK USER:", userId);
     const conversations = await ctx.db.query("conversations").collect();
-    const userConversations = conversations
-      .filter((conv) => conv.participants.includes(userId))
-      .sort((a, b) => (b.lastMessageAt || 0) - (a.lastMessageAt || 0));
+    
+    // Hide conversations where deletedFor contains the current user's clerk ID/userId
+    const userConversations = conversations.filter((conv) =>
+      conv.participants.includes(userId) &&
+      !(conv.deletedFor ?? []).includes(userId),
+    );
+
     const enrichedConversations = await Promise.all(
       userConversations.map(async (conv) => {
         const messages = await ctx.db
           .query("messages")
           .withIndex("by_conversation", (q) => q.eq("conversationId", conv._id))
           .collect();
-        const unreadCount = messages.filter(
+
+        // Get this user's deletion time
+        const userDeletion = (conv.deletedAt ?? []).find(
+          (d: any) => d.userId === userId
+        );
+        const deletionTime = userDeletion ? userDeletion.timestamp : 0;
+
+        // Hide messages where deletedFor contains the current user's clerk ID/userId
+        // and also messages sent before the user's deletion timestamp
+        const visibleMessages = messages.filter(
+          (msg) =>
+            msg.createdAt > deletionTime &&
+            !(msg.deletedFor ?? []).includes(userId),
+        );
+
+        const unreadCount = visibleMessages.filter(
           (msg) =>
             msg.senderId !== userId && !(msg.readBy ?? []).includes(userId),
         ).length;
+
         const otherParticipantId = conv.participants.find((p) => p !== userId);
 
-        if (!otherParticipantId) {
-          return {
-            ...conv,
-            unreadCount,
-            otherUser: null,
-          };
+        // Dynamically compute preview for the remaining visible messages
+        const lastVisibleMsg = visibleMessages[visibleMessages.length - 1];
+        let lastMessageText = conv.lastMessage;
+        let lastMessageTime = conv.lastMessageAt;
+        let lastMessageFrom = conv.lastMessageFrom;
+
+        if (lastVisibleMsg) {
+          if (lastVisibleMsg.deletedForEveryone) {
+            lastMessageText = "This message was deleted";
+          } else {
+            const isVoice = lastVisibleMsg.type === "voice" || 
+              (lastVisibleMsg.attachments && lastVisibleMsg.attachments.some((a: any) => a.type === "voice"));
+            lastMessageText = isVoice ? "🎙️ Voice message" : lastVisibleMsg.content;
+          }
+          lastMessageTime = lastVisibleMsg.createdAt;
+          lastMessageFrom = lastVisibleMsg.senderId;
+        } else {
+          lastMessageText = "";
+          lastMessageTime = 0;
+          lastMessageFrom = undefined;
         }
 
-        const otherUser = await ctx.db
-          .query("users")
-          .withIndex("by_clerkId", (q) => q.eq("clerkId", otherParticipantId))
-          .first();
+        const otherUser = otherParticipantId
+          ? await ctx.db
+              .query("users")
+              .withIndex("by_clerkId", (q) => q.eq("clerkId", otherParticipantId))
+              .first()
+          : null;
 
         return {
           ...conv,
           unreadCount,
+          lastMessage: lastMessageText,
+          lastMessageAt: lastMessageTime,
+          lastMessageFrom,
           otherUser: otherUser
             ? {
                 id: otherUser._id,
@@ -336,15 +411,10 @@ export const getConversations = query({
       }),
     );
 
-    console.log(
-      "UNREAD:",
-      enrichedConversations.map((c) => ({
-        user: c.otherUser?.username,
-        unreadCount: c.unreadCount,
-      })),
+    // Sort by dynamic lastMessageAt descending
+    return enrichedConversations.sort(
+      (a, b) => (b.lastMessageAt || 0) - (a.lastMessageAt || 0),
     );
-
-    return enrichedConversations;
   },
 });
 
@@ -371,6 +441,11 @@ export const watchConversation = query({
       throw new Error("Not authorized");
     }
 
+    // Return null if conversation is deleted/hidden for me
+    if ((conversation.deletedFor ?? []).includes(userId)) {
+      return null;
+    }
+
     return conversation;
   },
 });
@@ -393,5 +468,123 @@ export const updateTyping = mutation({
     });
 
     return true;
+  },
+});
+
+// Delete Message mutation
+export const deleteMessage = mutation({
+  args: {
+    messageId: v.id("messages"),
+    type: v.union(v.literal("me"), v.literal("everyone")),
+  },
+
+  async handler(ctx, args) {
+    const userId = await getAuthUserId(ctx);
+
+    if (!userId) {
+      throw new Error("Not authenticated");
+    }
+
+    const message = await ctx.db.get(args.messageId);
+
+    if (!message) {
+      throw new Error("Message not found");
+    }
+
+    const conversation = await ctx.db.get(message.conversationId);
+
+    if (!conversation) {
+      throw new Error("Conversation not found");
+    }
+
+    if (!conversation.participants.includes(userId)) {
+      throw new Error("Not authorized");
+    }
+
+    if (args.type === "everyone") {
+      // For "everyone", user MUST be the original sender
+      if (message.senderId !== userId) {
+        throw new Error("Only the sender can delete a message for everyone");
+      }
+
+      // Mark the message as deleted for everyone and clear sensitive content
+      await ctx.db.patch(args.messageId, {
+        deletedForEveryone: true,
+        content: "This message was deleted",
+        audioUrl: undefined,
+        attachments: undefined,
+      });
+
+      // Update the conversation's preview if this was the latest message
+      if (conversation.lastMessageAt === message.createdAt) {
+        await ctx.db.patch(message.conversationId, {
+          lastMessage: "This message was deleted",
+        });
+      }
+    } else if (args.type === "me") {
+      // Add current user's clerk ID to deletedFor
+      const deletedFor = message.deletedFor ?? [];
+      if (!deletedFor.includes(userId)) {
+        deletedFor.push(userId);
+        await ctx.db.patch(args.messageId, {
+          deletedFor,
+        });
+      }
+    }
+
+    return {
+      success: true,
+      type: args.type,
+    };
+  },
+});
+
+// Delete Conversation mutation
+export const deleteConversation = mutation({
+  args: {
+    conversationId: v.id("conversations"),
+  },
+
+  async handler(ctx, args) {
+    const userId = await getAuthUserId(ctx);
+
+    if (!userId) {
+      throw new Error("Not authenticated");
+    }
+
+    const conversation = await ctx.db.get(args.conversationId);
+
+    if (!conversation) {
+      throw new Error("Conversation not found");
+    }
+
+    if (!conversation.participants.includes(userId)) {
+      throw new Error("Not authorized");
+    }
+
+    // Add current user to deletedFor
+    const deletedFor = conversation.deletedFor ?? [];
+    if (!deletedFor.includes(userId)) {
+      deletedFor.push(userId);
+    }
+
+    // Add/update current user's deletion timestamp in deletedAt
+    const deletedAt = conversation.deletedAt ?? [];
+    const existingIndex = deletedAt.findIndex((d) => d.userId === userId);
+    const now = Date.now();
+    if (existingIndex > -1) {
+      deletedAt[existingIndex].timestamp = now;
+    } else {
+      deletedAt.push({ userId, timestamp: now });
+    }
+
+    await ctx.db.patch(args.conversationId, {
+      deletedFor,
+      deletedAt,
+    });
+
+    return {
+      success: true,
+    };
   },
 });

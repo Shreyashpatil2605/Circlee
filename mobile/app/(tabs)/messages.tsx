@@ -9,13 +9,16 @@ import {
   FlatList,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from "react-native";
 import React, { useEffect, useRef, useState } from "react";
+import * as Clipboard from "expo-clipboard";
 import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 import { useConversations, useMessages } from "@/hooks/useMessages";
+import { useNotifications } from "@/hooks/useNotifications";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
@@ -24,7 +27,7 @@ import { useApiClient, userApi } from "@/utils/api";
 import { LinearGradient } from "expo-linear-gradient";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import * as Haptics from "expo-haptics";
-import Animated, { SlideInDown, SlideOutUp } from "react-native-reanimated";
+import Animated, { SlideInDown } from "react-native-reanimated";
 import { useLocalSearchParams, router } from "expo-router";
 
 // Design System Imports
@@ -35,7 +38,7 @@ import MessageBubble from "@/components/chat/MessageBubble";
 import DateSeparator from "@/components/chat/DateSeparator";
 
 // Interactive Overlays & Sheets
-import ReactionPopup from "@/components/chat/ReactionPopup";
+import { MessageActionSheet } from "@/components/chat/MessageActionSheet";
 import TypingIndicator from "@/components/chat/TypingIndicator";
 import AttachmentSheet from "@/components/chat/AttachmentSheet";
 import ProfileDrawer from "@/components/chat/ProfileDrawer";
@@ -65,12 +68,14 @@ const MessageScreen = () => {
 
   const { currentUser } = useCurrentUser();
   const api = useApiClient();
+  const { markConversationMessagesRead } = useNotifications();
 
   const {
     conversations,
     isLoading: isLoadingConversations,
     markConversationRead,
     getOrCreateConversation,
+    deleteConversation,
   } = useConversations();
 
   const params = useLocalSearchParams();
@@ -107,7 +112,14 @@ const MessageScreen = () => {
     isSending,
     updateTyping,
     conversation,
+    deleteMessage,
   } = useMessages(selectedConversation?._id || "");
+
+  useEffect(() => {
+    if (isChatOpen && selectedConversation?._id && messages.length > 0) {
+      markConversationMessagesRead(selectedConversation._id);
+    }
+  }, [messages.length, isChatOpen, selectedConversation]);
 
   const openConversation = async (conversation: any) => {
     try {
@@ -115,6 +127,8 @@ const MessageScreen = () => {
       await markConversationRead({
         conversationId: conversation._id,
       });
+
+      markConversationMessagesRead(conversation._id);
 
       setSelectedConversation(conversation);
 
@@ -141,7 +155,90 @@ const MessageScreen = () => {
     setReplyingToMessage(null);
     setIsSearchingInChat(false);
     setChatSearchQuery("");
+    prevConversationRef.current = null;
   };
+
+  const handleHeaderMorePress = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    Alert.alert(
+      "Chat Options",
+      undefined,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Search Messages",
+          onPress: () => setIsSearchingInChat(!isSearchingInChat),
+        },
+        {
+          text: "Mute Notifications",
+          onPress: () => {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            Alert.alert("Muted", "Notifications muted for this conversation.");
+          },
+        },
+        {
+          text: "Delete Chat",
+          style: "destructive",
+          onPress: handleDeleteChatConfirm,
+        },
+      ]
+    );
+  };
+
+  const handleDeleteChatConfirm = () => {
+    Alert.alert(
+      "Delete chat?",
+      "This conversation will be removed from your chat list. Your chat history will remain available to the other participant.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: executeDeleteChat,
+        },
+      ]
+    );
+  };
+
+  const executeDeleteChat = async () => {
+    if (!selectedConversation?._id) return;
+    try {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      const res = await deleteConversation(selectedConversation._id);
+      if (res?.success) {
+        closeChatModal();
+        setSelectedConversation(null);
+        setReplyingToMessage(null);
+        setActiveMessageForReaction(null);
+        setIsReactionPopupVisible(false);
+        // Reset scroll refs
+        hasScrolledInitially.current = false;
+        isAtBottom.current = true;
+        prevMessagesLengthRef.current = 0;
+        latestMessageIdRef.current = null;
+      } else {
+        throw new Error("Mutation did not return success");
+      }
+    } catch (err) {
+      console.error("Delete conversation error:", err);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      Alert.alert("Couldn't delete chat", "Please try again.");
+    }
+  };
+
+  useEffect(() => {
+    // If the conversation was previously active/open and now it transitioned to null,
+    // it means it was deleted.
+    if (isChatOpen && conversation === null && prevConversationRef.current !== null) {
+      closeChatModal();
+      // Reset scroll refs
+      hasScrolledInitially.current = false;
+      isAtBottom.current = true;
+      prevMessagesLengthRef.current = 0;
+      latestMessageIdRef.current = null;
+    }
+    prevConversationRef.current = conversation;
+  }, [conversation, isChatOpen]);
 
   const getMessageDateLabel = (timestamp: number) => {
     const date = new Date(timestamp);
@@ -162,16 +259,98 @@ const MessageScreen = () => {
     conversation?.typingBy === selectedConversation?.otherUser?.clerkId;
   
   const flatListRef = useRef<FlatList>(null);
+  const hasScrolledInitially = useRef(false);
+  const isAtBottom = useRef(true);
+  const prevMessagesLengthRef = useRef(0);
+  const latestMessageIdRef = useRef<string | null>(null);
+  const initialScrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const prevConversationRef = useRef<any>(null);
 
-  useEffect(() => {
-    if (messages && messages.length > 0) {
-      setTimeout(() => {
-        flatListRef.current?.scrollToEnd({
-          animated: true,
-        });
+  const scrollToBottom = (animated = false) => {
+    if (!flatListRef.current || !messages || messages.length === 0) return;
+    const firstMsg = messages[0];
+    const lastMsg = messages[messages.length - 1];
+    console.log(`[CHAT SCROLL] conversationId: ${selectedConversation?._id}`);
+    console.log(`[CHAT SCROLL] message count: ${messages.length}`);
+    console.log(`[CHAT SCROLL] first message: ${firstMsg ? `${firstMsg.sender?.firstName || "Unknown"}: ${firstMsg.content?.substring(0, 20)}` : "none"}`);
+    console.log(`[CHAT SCROLL] last message: ${lastMsg ? `${lastMsg.sender?.firstName || "Unknown"}: ${lastMsg.content?.substring(0, 20)}` : "none"}`);
+    console.log(`[CHAT SCROLL] scrolling to latest`);
+    flatListRef.current.scrollToEnd({ animated });
+  };
+
+  const handleScroll = (event: any) => {
+    const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
+    const distanceFromBottom = contentSize.height - layoutMeasurement.height - contentOffset.y;
+    isAtBottom.current = distanceFromBottom < 100;
+  };
+
+  const handleContentSizeChange = () => {
+    if (!hasScrolledInitially.current && messages && messages.length > 0) {
+      scrollToBottom(false);
+      if (initialScrollTimeoutRef.current) {
+        clearTimeout(initialScrollTimeoutRef.current);
+      }
+      initialScrollTimeoutRef.current = setTimeout(() => {
+        scrollToBottom(false);
+        hasScrolledInitially.current = true;
       }, 100);
     }
-  }, [messages, isTyping]);
+  };
+
+  useEffect(() => {
+    if (selectedConversation?._id) {
+      hasScrolledInitially.current = false;
+      isAtBottom.current = true;
+      prevMessagesLengthRef.current = 0;
+      latestMessageIdRef.current = null;
+      if (initialScrollTimeoutRef.current) {
+        clearTimeout(initialScrollTimeoutRef.current);
+        initialScrollTimeoutRef.current = null;
+      }
+    }
+  }, [selectedConversation?._id]);
+
+  useEffect(() => {
+    if (!messages || messages.length === 0) {
+      prevMessagesLengthRef.current = 0;
+      latestMessageIdRef.current = null;
+      return;
+    }
+
+    const latestMessage = messages[messages.length - 1];
+    const isOwnMessage = latestMessage?.sender?.clerkId === currentUser?.clerkId;
+
+    if (latestMessage && latestMessage._id !== latestMessageIdRef.current) {
+      if (hasScrolledInitially.current) {
+        if (isAtBottom.current || isOwnMessage) {
+          requestAnimationFrame(() => {
+            scrollToBottom(true);
+          });
+        }
+      }
+      latestMessageIdRef.current = latestMessage._id;
+    }
+
+    prevMessagesLengthRef.current = messages.length;
+  }, [messages, currentUser]);
+
+  const prevIsTypingRef = useRef(isTyping);
+  useEffect(() => {
+    if (isTyping && !prevIsTypingRef.current && hasScrolledInitially.current && isAtBottom.current) {
+      requestAnimationFrame(() => {
+        scrollToBottom(true);
+      });
+    }
+    prevIsTypingRef.current = isTyping;
+  }, [isTyping]);
+
+  useEffect(() => {
+    return () => {
+      if (initialScrollTimeoutRef.current) {
+        clearTimeout(initialScrollTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const isRecentlyActive =
     selectedUserProfile?.lastSeen &&
@@ -197,6 +376,85 @@ const MessageScreen = () => {
       ...prev,
       [msgId]: [emoji],
     }));
+  };
+
+  const handleReplyMessage = () => {
+    if (!activeMessageForReaction) return;
+    setReplyingToMessage(activeMessageForReaction);
+  };
+
+  const handleCopyMessage = async () => {
+    if (!activeMessageForReaction) return;
+    await Clipboard.setStringAsync(activeMessageForReaction.content);
+  };
+
+  const handleDeleteMessage = () => {
+    if (!activeMessageForReaction) return;
+
+    const isOwnMessage = activeMessageForReaction.senderId === currentUser?.clerkId;
+
+    if (isOwnMessage) {
+      Alert.alert(
+        "Delete message?",
+        undefined,
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Delete for me",
+            onPress: async () => {
+              try {
+                await deleteMessage(activeMessageForReaction._id, "me");
+              } catch (err) {
+                console.error("Delete for me error:", err);
+              }
+            },
+          },
+          {
+            text: "Delete for everyone",
+            style: "destructive",
+            onPress: () => {
+              Alert.alert(
+                "Delete for everyone?",
+                "This message will be removed for everyone in this conversation.",
+                [
+                  { text: "Cancel", style: "cancel" },
+                  {
+                    text: "Delete",
+                    style: "destructive",
+                    onPress: async () => {
+                      try {
+                        await deleteMessage(activeMessageForReaction._id, "everyone");
+                      } catch (err) {
+                        console.error("Delete for everyone error:", err);
+                      }
+                    },
+                  },
+                ]
+              );
+            },
+          },
+        ]
+      );
+    } else {
+      Alert.alert(
+        "Delete message?",
+        "Delete this message for you?",
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Delete for me",
+            style: "destructive",
+            onPress: async () => {
+              try {
+                await deleteMessage(activeMessageForReaction._id, "me");
+              } catch (err) {
+                console.error("Delete for me error:", err);
+              }
+            },
+          },
+        ]
+      );
+    }
   };
 
   const handleSwipeToReply = (message: any) => {
@@ -384,6 +642,7 @@ const MessageScreen = () => {
                 onBackPress={closeChatModal}
                 onProfilePress={() => setIsProfileDrawerVisible(true)}
                 onSearchPress={() => setIsSearchingInChat(!isSearchingInChat)}
+                onMorePress={handleHeaderMorePress}
                 otherUser={selectedConversation?.otherUser}
                 isTyping={isTyping}
                 lastSeenText={lastSeenText}
@@ -459,6 +718,9 @@ const MessageScreen = () => {
                     paddingBottom: replyingToMessage ? 170 : 110,
                     paddingVertical: 10,
                   }}
+                  onContentSizeChange={handleContentSizeChange}
+                  onScroll={handleScroll}
+                  scrollEventThrottle={16}
                   renderItem={({ item: message, index }) => {
                     const previousMessage = index > 0 ? messages[index - 1] : null;
                     const nextMessage = index < messages.length - 1 ? messages[index + 1] : null;
@@ -561,10 +823,14 @@ const MessageScreen = () => {
         </Modal>
 
         {/* Phase 2 & 3 Overlays & Sheets */}
-        <ReactionPopup
+        <MessageActionSheet
           visible={isReactionPopupVisible}
           onClose={() => setIsReactionPopupVisible(false)}
+          message={activeMessageForReaction}
           onSelectReaction={handleSelectReaction}
+          onReply={handleReplyMessage}
+          onCopy={handleCopyMessage}
+          onDelete={handleDeleteMessage}
         />
 
         <AttachmentSheet

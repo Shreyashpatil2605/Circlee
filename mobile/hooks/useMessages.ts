@@ -11,13 +11,14 @@ export const useConversations = () => {
   );
 
   const markConversationRead = useMutation(api.messages.markConversationRead);
-
+  const deleteConversationMutation = useMutation(api.messages.deleteConversation);
 
   return {
     conversations,
     isLoading: conversations === undefined,
     getOrCreateConversation,
     markConversationRead,
+    deleteConversation: (conversationId: any) => deleteConversationMutation({ conversationId }),
     isCreating: false,
     refetch: () => {},
   };
@@ -26,7 +27,7 @@ export const useConversations = () => {
 export const useMessages = (conversationId?: any) => {
   const [messageText, setMessageText] = useState("");
 
-  const messages =
+  const messagesQuery =
     useQuery(
       api.messages.getMessages,
       conversationId
@@ -34,7 +35,9 @@ export const useMessages = (conversationId?: any) => {
             conversationId,
           }
         : "skip",
-    ) ?? [];
+    );
+  const messages = messagesQuery ?? [];
+  const isLoadingMessages = messagesQuery === undefined;
 
   const sendMessageAction = useAction(api.messages.sendMessageAction);
   const updateTyping = useMutation(api.messages.updateTyping);
@@ -67,6 +70,12 @@ export const useMessages = (conversationId?: any) => {
       setMessageText("");
     }
   };
+  const deleteMessageMutation = useMutation(api.messages.deleteMessage);
+
+  const deleteMessage = async (messageId: any, type: "me" | "everyone") => {
+    return await deleteMessageMutation({ messageId, type });
+  };
+
   const conversation = useQuery(
     api.messages.watchConversation,
     conversationId ? { conversationId } : "skip",
@@ -74,12 +83,13 @@ export const useMessages = (conversationId?: any) => {
 
   return {
     messages,
-    isLoadingMessages: false,
+    isLoadingMessages,
     messageText,
     conversation,
     setMessageText,
     sendMessage,
     isSending: false,
     updateTyping,
+    deleteMessage,
   };
 };

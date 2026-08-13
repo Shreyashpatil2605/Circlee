@@ -6,6 +6,7 @@ import {
   markNotificationRead,
   markAllNotificationsRead,
   createInternalNotification,
+  markMessageNotificationsRead,
 } from "../controllers/notification.controller.js";
 
 const router = express.Router();
@@ -13,6 +14,7 @@ const router = express.Router();
 router.get("/", protectRoute, getNotification);
 router.post("/internal-create", createInternalNotification);
 router.put("/read-all", protectRoute, markAllNotificationsRead);
+router.put("/read-conversation", protectRoute, markMessageNotificationsRead);
 router.put("/:notificationId/read", protectRoute, markNotificationRead);
 router.delete("/:notificationId", protectRoute, deleteNotification);
 
