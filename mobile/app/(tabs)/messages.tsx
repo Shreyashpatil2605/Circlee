@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  BackHandler
 } from "react-native";
 import React, { useEffect, useRef, useState } from "react";
 import * as Clipboard from "expo-clipboard";
@@ -276,6 +277,23 @@ const MessageScreen = () => {
     // it means it was deleted.
     if (isChatOpen && conversation === null && prevConversationRef.current !== null) {
       closeChatModal();
+      useEffect(() => {
+  const backAction = () => {
+    if (isChatOpen) {
+      closeChatModal();
+      return true;
+    }
+
+    return false;
+  };
+
+  const backHandler = BackHandler.addEventListener(
+    "hardwareBackPress",
+    backAction
+  );
+
+  return () => backHandler.remove();
+}, [isChatOpen]);
       // Reset scroll refs
       hasScrolledInitially.current = false;
       isAtBottom.current = true;
@@ -681,6 +699,7 @@ const MessageScreen = () => {
           visible={isChatOpen}
           animationType="slide"
           presentationStyle="pageSheet"
+          onRequestClose={closeChatModal}
         >
           <GestureHandlerRootView style={{ flex: 1 }}>
             <KeyboardAvoidingView

@@ -1,3 +1,4 @@
+import { useRef, useMemo } from "react";
 import { useAuth } from "@clerk/clerk-expo";
 import axios, { AxiosInstance } from "axios";
 import { API_BASE_URL } from "../config/api.config";
@@ -18,7 +19,13 @@ export const createApiClient = (
 
 export const useApiClient = (): AxiosInstance => {
   const { getToken } = useAuth();
-  return createApiClient(getToken);
+  const getTokenRef = useRef(getToken);
+  getTokenRef.current = getToken;
+
+  return useMemo(() => {
+    const stableGetToken = () => getTokenRef.current();
+    return createApiClient(stableGetToken);
+  }, []);
 };
 
 export const userApi = {
