@@ -1,9 +1,9 @@
 import asyncHandler from "express-async-handler";
 import User from "../models/user.model.js";
 import { clerkClient, getAuth } from "@clerk/express";
-import Notification, { NotificationType } from "../models/notification.model.js";
 import cloudinary from "../config/cloudinary.js";
-import { triggerRealtimeNotification } from "./notification.controller.js";
+import { createNotificationHelper } from "./notification.controller.js";
+import { NotificationType } from "../models/notification.model.js";
 
 // getUserProfile
 export const getUserProfile = asyncHandler(async (req, res) => {
@@ -196,32 +196,13 @@ export const followUser = asyncHandler(async (req, res) => {
       $push: { followers: currentUser._id },
     });
 
-    const wantsFollows = targetUser.notificationPreferences?.follows !== false;
-    if (wantsFollows) {
-      let notification = await Notification.findOne({
-        from: currentUser._id,
-        to: targetUserId,
-        type: NotificationType.FOLLOW,
-        read: false,
-      });
-
-      if (notification) {
-        notification.createdAt = new Date();
-        await notification.save();
-      } else {
-        await Notification.create({
-          from: currentUser._id,
-          to: targetUserId,
-          type: NotificationType.FOLLOW,
-          targetType: "Profile",
-          targetId: currentUser.username,
-        });
-      }
-
-      if (targetUser.clerkId) {
-        await triggerRealtimeNotification(targetUser.clerkId);
-      }
-    }
+    await createNotificationHelper({
+      fromUserId: currentUser._id,
+      toUserId: targetUserId,
+      type: NotificationType.FOLLOW,
+      targetType: "Profile",
+      targetId: currentUser.username,
+    });
   }
 
   // Fetch updated user data

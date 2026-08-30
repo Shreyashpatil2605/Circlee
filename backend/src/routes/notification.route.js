@@ -7,6 +7,8 @@ import {
   markAllNotificationsRead,
   createInternalNotification,
   markMessageNotificationsRead,
+  registerPushToken,
+  deregisterPushToken,
 } from "../controllers/notification.controller.js";
 
 const router = express.Router();
@@ -17,6 +19,10 @@ router.put("/read-all", protectRoute, markAllNotificationsRead);
 router.put("/read-conversation", protectRoute, markMessageNotificationsRead);
 router.put("/:notificationId/read", protectRoute, markNotificationRead);
 router.delete("/:notificationId", protectRoute, deleteNotification);
+
+// Push Token registration/deregistration
+router.post("/push-token", protectRoute, registerPushToken);
+router.delete("/push-token", protectRoute, deregisterPushToken);
 
 export default router;
 

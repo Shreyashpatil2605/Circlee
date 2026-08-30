@@ -24,6 +24,7 @@ import { BlurView } from "expo-blur";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { format, formatDistanceToNow, isToday, isYesterday } from "date-fns";
 import { useApiClient, userApi } from "@/utils/api";
+import { activeChatTracker } from "@/utils/activeChatTracker";
 import { LinearGradient } from "expo-linear-gradient";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import * as Haptics from "expo-haptics";
@@ -126,6 +127,13 @@ const MessageScreen = () => {
       markConversationMessagesRead(selectedConversation._id);
     }
   }, [messages.length, isChatOpen, selectedConversation]);
+
+  useEffect(() => {
+    activeChatTracker.currentConversationId = isChatOpen && selectedConversation?._id ? selectedConversation._id : null;
+    return () => {
+      activeChatTracker.currentConversationId = null;
+    };
+  }, [isChatOpen, selectedConversation]);
 
   const openConversation = async (conversation: any) => {
     try {

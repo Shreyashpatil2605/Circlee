@@ -3,6 +3,7 @@ import User from "../models/user.model.js";
 import Notification, { NotificationType } from "../models/notification.model.js";
 import asyncHandler from "express-async-handler";
 import { ConvexHttpClient } from "convex/browser";
+import { sendPushNotification } from "../services/pushNotification.service.js";
 
 // Helper to trigger Convex realtime signals
 export const triggerRealtimeNotification = async (clerkId) => {
@@ -13,6 +14,94 @@ export const triggerRealtimeNotification = async (clerkId) => {
     console.log("Realtime notification event triggered on Convex for user:", clerkId);
   } catch (error) {
     console.error("Error triggering realtime notification on Convex:", error);
+  }
+};
+
+/**
+ * Unified notification helper that handles MongoDB record creation,
+ * Convex real-time signaling, and Expo push delivery.
+ */
+export const createNotificationHelper = async ({
+  fromUserId,
+  toUserId,
+  type,
+  targetType,
+  targetId,
+  post = null,
+  comment = null,
+  content = null,
+}) => {
+  try {
+    // 1. Prevent self-notifications
+    if (fromUserId.toString() === toUserId.toString()) {
+      return null;
+    }
+
+    // 2. Validate receiver
+    const receiver = await User.findById(toUserId);
+    if (!receiver) {
+      console.error(`[NOTIFICATION HELPER] Receiver user not found: ${toUserId}`);
+      return null;
+    }
+
+    const sender = await User.findById(fromUserId);
+    if (!sender) {
+      console.error(`[NOTIFICATION HELPER] Sender user not found: ${fromUserId}`);
+      return null;
+    }
+
+    // 3. Check notification preferences
+    let prefKey = "";
+    if (type === "LIKE") prefKey = "likes";
+    else if (type === "COMMENT") prefKey = "comments";
+    else if (type === "FOLLOW") prefKey = "follows";
+    else if (type === "MESSAGE") prefKey = "messages";
+    else if (type === "VOICE_MESSAGE") prefKey = "voice";
+
+    if (prefKey && receiver.notificationPreferences && receiver.notificationPreferences[prefKey] === false) {
+      console.log(`[NOTIFICATION HELPER] Notification type ${type} disabled by preference for user: ${receiver.username}`);
+      return null;
+    }
+
+    // 4. Deduplication logic: update timestamp if duplicate unread notification exists
+    let notification = await Notification.findOne({
+      from: fromUserId,
+      to: toUserId,
+      type,
+      targetId,
+      read: false,
+    });
+
+    if (notification) {
+      notification.createdAt = new Date();
+      await notification.save();
+      console.log(`[NOTIFICATION HELPER] Deduplicated notification type ${type} for user: ${receiver.username}`);
+    } else {
+      notification = await Notification.create({
+        from: fromUserId,
+        to: toUserId,
+        type,
+        targetType,
+        targetId,
+        post,
+        comment,
+      });
+      console.log(`[NOTIFICATION HELPER] Created new notification type ${type} for user: ${receiver.username}`);
+    }
+
+    // 5. Trigger Convex real-time signaling
+    await triggerRealtimeNotification(receiver.clerkId);
+
+    // 6. Deliver Expo push notification (Fire-and-forget)
+    sendPushNotification(receiver, sender, notification, content).catch((pushErr) => {
+      console.error("[NOTIFICATION HELPER] Error sending Expo push notification:", pushErr);
+    });
+
+    return notification;
+  } catch (error) {
+    console.error("[NOTIFICATION HELPER] Error in createNotificationHelper:", error);
+    // Never block core business flows if notifications fail
+    return null;
   }
 };
 
@@ -93,11 +182,13 @@ export const markAllNotificationsRead = asyncHandler(async (req, res) => {
 // createInternalNotification (Server-to-Server)
 export const createInternalNotification = asyncHandler(async (req, res) => {
   const secret = req.headers["x-internal-secret"];
-  if (secret !== "circlee_super_secret_token_123") {
+  const expectedSecret = process.env.INTERNAL_SECRET || "circlee_super_secret_token_123";
+  
+  if (secret !== expectedSecret) {
     return res.status(401).json({ error: "Unauthorized server-to-server action" });
   }
 
-  const { fromClerkId, toClerkId, type, targetType, targetId } = req.body;
+  const { fromClerkId, toClerkId, type, targetType, targetId, content } = req.body;
 
   const sender = await User.findOne({ clerkId: fromClerkId });
   const receiver = await User.findOne({ clerkId: toClerkId });
@@ -106,50 +197,20 @@ export const createInternalNotification = asyncHandler(async (req, res) => {
     return res.status(404).json({ error: "Sender or receiver not found" });
   }
 
-  // Prevent self-notifications
-  if (sender._id.toString() === receiver._id.toString()) {
-    return res.status(200).json({ message: "Self-notification ignored" });
-  }
-
-  // Check receiver preference
-  let prefKey = "";
-  if (type === NotificationType.LIKE) prefKey = "likes";
-  else if (type === NotificationType.COMMENT) prefKey = "comments";
-  else if (type === NotificationType.FOLLOW) prefKey = "follows";
-  else if (type === NotificationType.MESSAGE) prefKey = "messages";
-  else if (type === NotificationType.VOICE_MESSAGE) prefKey = "voice";
-
-  if (prefKey && receiver.notificationPreferences && receiver.notificationPreferences[prefKey] === false) {
-    return res.status(200).json({ message: "Notification disabled by user preference" });
-  }
-
-  // Deduplication check: check if an unread notification with same details exists
-  let notification = await Notification.findOne({
-    from: sender._id,
-    to: receiver._id,
+  const notification = await createNotificationHelper({
+    fromUserId: sender._id,
+    toUserId: receiver._id,
     type,
+    targetType,
     targetId,
-    read: false,
+    content,
   });
 
-  if (notification) {
-    // Deduplicate: update timestamp
-    notification.createdAt = new Date();
-    await notification.save();
-    res.status(200).json({ message: "Notification updated (deduplicated)", notification });
-  } else {
-    notification = await Notification.create({
-      from: sender._id,
-      to: receiver._id,
-      type,
-      targetType,
-      targetId,
-    });
-    res.status(201).json({ message: "Notification created", notification });
+  if (!notification) {
+    return res.status(200).json({ message: "Notification ignored or self-notification detected" });
   }
 
-  // Trigger Convex realtime signaling
-  await triggerRealtimeNotification(toClerkId);
+  res.status(201).json({ message: "Notification created", notification });
 });
 
 // markMessageNotificationsRead
@@ -173,4 +234,68 @@ export const markMessageNotificationsRead = asyncHandler(async (req, res) => {
   await triggerRealtimeNotification(userId);
 
   res.status(200).json({ success: true, message: "Conversation message notifications marked as read" });
+});
+
+// registerPushToken
+export const registerPushToken = asyncHandler(async (req, res) => {
+  const { userId } = getAuth(req);
+  const { token, platform, deviceId } = req.body;
+
+  if (!token || !platform || !deviceId) {
+    return res.status(400).json({ error: "Token, platform, and deviceId are required" });
+  }
+
+  const user = await User.findOne({ clerkId: userId });
+  if (!user) return res.status(404).json({ error: "User not found" });
+
+  // 1. Remove this token from any other user who might have previously registered it
+  await User.updateMany(
+    { "pushTokens.token": token },
+    { $pull: { pushTokens: { token } } }
+  );
+
+  // 2. Add or update the token in the current user's array
+  const existingTokenIndex = user.pushTokens.findIndex(
+    (t) => t.token === token || t.deviceId === deviceId
+  );
+
+  if (existingTokenIndex > -1) {
+    user.pushTokens[existingTokenIndex].token = token;
+    user.pushTokens[existingTokenIndex].platform = platform;
+    user.pushTokens[existingTokenIndex].deviceId = deviceId;
+    user.pushTokens[existingTokenIndex].updatedAt = new Date();
+  } else {
+    user.pushTokens.push({
+      token,
+      platform,
+      deviceId,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+  }
+
+  user.markModified("pushTokens");
+  await user.save();
+
+  res.status(200).json({ success: true, message: "Push token registered successfully" });
+});
+
+// deregisterPushToken
+export const deregisterPushToken = asyncHandler(async (req, res) => {
+  const { userId } = getAuth(req);
+  const { token, deviceId } = req.body;
+
+  const user = await User.findOne({ clerkId: userId });
+  if (!user) return res.status(404).json({ error: "User not found" });
+
+  if (token) {
+    user.pushTokens = user.pushTokens.filter((t) => t.token !== token);
+  } else if (deviceId) {
+    user.pushTokens = user.pushTokens.filter((t) => t.deviceId !== deviceId);
+  }
+
+  user.markModified("pushTokens");
+  await user.save();
+
+  res.status(200).json({ success: true, message: "Push token deregistered successfully" });
 });

@@ -15,6 +15,7 @@ import { useEffect } from "react";
 import { usePresence } from "@/hooks/usePresence";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import RealtimeNotificationTracker from "@/components/RealtimeNotificationTracker";
+import PushNotificationManager from "@/components/PushNotificationManager";
 
 const queryclient = new QueryClient();
 
@@ -98,6 +99,7 @@ export default function RootLayout() {
               <PresenceTracker />
               <ConvexUserSync />
               <RealtimeNotificationTracker />
+              <PushNotificationManager />
 
               <View className="flex-1 bg-white">
                 <Stack

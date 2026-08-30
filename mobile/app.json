@@ -20,7 +20,8 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.shreyashpatil.circlee"
+      "package": "com.shreyashpatil.circlee",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "output": "static",
@@ -41,12 +42,14 @@
         }
       ],
       "expo-web-browser",
+      "expo-notifications",
       [
         "expo-audio",
         {
           "microphonePermission": "Allow Circlee to access your microphone to record and send voice messages."
         }
-      ]
+      ],
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true,

@@ -157,13 +157,14 @@ export const sendMessageAction = action({
       attachments: args.attachments,
     });
 
-    if (result.isFirstUnread) {
+        if (result.isFirstUnread) {
       try {
+        const secret = process.env.INTERNAL_SECRET || "circlee_super_secret_token_123";
         const response = await fetch(`${args.apiUrl}/api/notifications/internal-create`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "x-internal-secret": "circlee_super_secret_token_123",
+            "x-internal-secret": secret,
           },
           body: JSON.stringify({
             fromClerkId: result.senderId,
@@ -171,6 +172,7 @@ export const sendMessageAction = action({
             type: args.type === "voice" ? "VOICE_MESSAGE" : "MESSAGE",
             targetType: "Conversation",
             targetId: args.conversationId,
+            content: args.content,
           }),
         });
         console.log("Internal message notification create HTTP status:", response.status);

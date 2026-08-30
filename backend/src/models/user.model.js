@@ -27,6 +27,15 @@ const userSchema = new mongoose.Schema(
       voice: { type: Boolean, default: true },
       follows: { type: Boolean, default: true },
     },
+    pushTokens: [
+      {
+        token: { type: String, required: true },
+        platform: { type: String, required: true },
+        deviceId: { type: String, required: true },
+        createdAt: { type: Date, default: Date.now },
+        updatedAt: { type: Date, default: Date.now }
+      }
+    ],
   },
 
   { timestamps: true },

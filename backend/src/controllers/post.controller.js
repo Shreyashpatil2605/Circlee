@@ -4,9 +4,9 @@ import User from "../models/user.model.js";
 import { getAuth } from "@clerk/express";
 import cloudinary from "../config/cloudinary.js";
 
-import Notification, { NotificationType } from "../models/notification.model.js";
 import Comment from "../models/comment.model.js";
-import { triggerRealtimeNotification } from "./notification.controller.js";
+import { createNotificationHelper } from "./notification.controller.js";
+import { NotificationType } from "../models/notification.model.js";
 
 export const getPosts = asyncHandler(async (req, res) => {
   const posts = await Post.find()
@@ -170,38 +170,14 @@ export const likePost = asyncHandler(async (req, res) => {
 
     // create notification if not liking own post
     if (post.user.toString() !== user._id.toString()) {
-      const targetUser = await User.findById(post.user);
-      if (targetUser) {
-        const wantsLikes = targetUser.notificationPreferences?.likes !== false;
-        if (wantsLikes) {
-          // Check for existing unread like notification
-          let notification = await Notification.findOne({
-            from: user._id,
-            to: targetUser._id,
-            type: NotificationType.LIKE,
-            targetId: postId,
-            read: false,
-          });
-
-          if (notification) {
-            notification.createdAt = new Date();
-            await notification.save();
-          } else {
-            await Notification.create({
-              from: user._id,
-              to: targetUser._id,
-              type: NotificationType.LIKE,
-              targetType: "Post",
-              targetId: postId,
-              post: postId,
-            });
-          }
-
-          if (targetUser.clerkId) {
-            await triggerRealtimeNotification(targetUser.clerkId);
-          }
-        }
-      }
+      await createNotificationHelper({
+        fromUserId: user._id,
+        toUserId: post.user,
+        type: NotificationType.LIKE,
+        targetType: "Post",
+        targetId: postId,
+        post: postId,
+      });
     }
   }
 
