@@ -11,7 +11,7 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const officialSymbol = require("@/assets/images/circlee-symbol-square.png");
+const officialSymbol = require("@/assets/images/circlee-symbol.png");
 
 interface CinematicAnimatedIntroProps {
   onFinish: () => void;
@@ -212,9 +212,9 @@ export default function CinematicAnimatedIntro({ onFinish }: CinematicAnimatedIn
           ]}
         >
           <LinearGradient
-            colors={["#2563EB", "#D946EF"]}
-            start={{ x: 0.5, y: 0 }}
-            end={{ x: 0.5, y: 1 }}
+            colors={["#1900FE", "#8B00FE", "#F801FF"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0.8, y: 1 }}
             style={StyleSheet.absoluteFillObject}
           />
         </Animated.View>
@@ -237,9 +237,9 @@ export default function CinematicAnimatedIntro({ onFinish }: CinematicAnimatedIn
           ]}
         >
           <LinearGradient
-            colors={["#3B82F6", "#C026D3"]}
+            colors={["#0F00FE", "#7C00FE", "#EA00FE"]}
             start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
+            end={{ x: 0.8, y: 0.9 }}
             style={StyleSheet.absoluteFillObject}
           />
         </Animated.View>
@@ -262,9 +262,9 @@ export default function CinematicAnimatedIntro({ onFinish }: CinematicAnimatedIn
           ]}
         >
           <LinearGradient
-            colors={["#E11D48", "#F97316"]}
+            colors={["#F801FF", "#FF007E", "#FF7200"]}
             start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
+            end={{ x: 0.9, y: 0.8 }}
             style={StyleSheet.absoluteFillObject}
           />
         </Animated.View>
