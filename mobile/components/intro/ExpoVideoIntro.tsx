@@ -30,12 +30,25 @@ export default function ExpoVideoIntro({ onFinish, onError }: ExpoVideoIntroProp
     });
 
     const statusSubscription = player.addListener("statusChange", (payload) => {
-      if (payload.status === "error") {
+      if (payload.status === "readyToPlay") {
+        try {
+          player.play();
+        } catch {
+          // ignore
+        }
+      } else if (payload.status === "error") {
         console.warn("ExpoVideo error:", payload.error);
         onError?.(payload.error);
         handleFinish();
       }
     });
+
+    // Ensure playback starts immediately
+    try {
+      player.play();
+    } catch {
+      // ignore
+    }
 
     // Safety timeout (4.8 seconds)
     const timeout = setTimeout(() => {
