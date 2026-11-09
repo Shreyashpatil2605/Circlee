@@ -1,7 +1,6 @@
 import { Redirect, Stack } from "expo-router";
 import { useAuth } from "@clerk/clerk-expo";
 import { View, ActivityIndicator } from "react-native";
-import { introSession } from "@/utils/introSession";
 
 export default function AuthRoutesLayout() {
   const { isLoaded, isSignedIn } = useAuth();
@@ -16,11 +15,6 @@ export default function AuthRoutesLayout() {
 
   if (isSignedIn) {
     return <Redirect href={"/(tabs)"} />;
-  }
-
-  // Play cinematic intro video once per application launch
-  if (!introSession.hasPlayed()) {
-    return <Redirect href={"/intro"} />;
   }
 
   return <Stack screenOptions={{ headerShown: false }} />;

@@ -9,6 +9,7 @@ import {
   Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { useAuth } from "@clerk/clerk-expo";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { introSession } from "@/utils/introSession";
 import { Feather } from "@expo/vector-icons";
@@ -37,32 +38,37 @@ if (isNativeExpoVideoAvailable) {
 
 export default function IntroScreen() {
   const router = useRouter();
+  const { isSignedIn } = useAuth();
   const insets = useSafeAreaInsets();
   const hasNavigatedRef = useRef(false);
 
-  // Transition to authentication welcome screen
-  const navigateToAuth = useCallback(() => {
+  // Transition to authentication welcome screen or main tabs
+  const navigateNext = useCallback(() => {
     if (hasNavigatedRef.current) return;
     hasNavigatedRef.current = true;
 
     // Mark intro as played for this session
     introSession.markPlayed();
 
-    // Navigate to existing Welcome/Login screen
-    router.replace("/(auth)");
-  }, [router]);
+    // Navigate to tabs if already signed in, or auth welcome screen
+    if (isSignedIn) {
+      router.replace("/(tabs)");
+    } else {
+      router.replace("/(auth)");
+    }
+  }, [isSignedIn, router]);
 
   // Android hardware back button handler
   useEffect(() => {
     const backHandler = BackHandler.addEventListener("hardwareBackPress", () => {
-      navigateToAuth();
+      navigateNext();
       return true;
     });
 
     return () => {
       backHandler.remove();
     };
-  }, [navigateToAuth]);
+  }, [navigateNext]);
 
   const handleSkip = () => {
     try {
@@ -70,7 +76,7 @@ export default function IntroScreen() {
     } catch {
       // Ignored if haptics unavailable
     }
-    navigateToAuth();
+    navigateNext();
   };
 
   return (
@@ -80,11 +86,11 @@ export default function IntroScreen() {
       {/* Video View (when native module is compiled into binary) OR Cinematic Animated Sequence */}
       {ExpoVideoIntroComponent ? (
         <ExpoVideoIntroComponent
-          onFinish={navigateToAuth}
-          onError={navigateToAuth}
+          onFinish={navigateNext}
+          onError={navigateNext}
         />
       ) : (
-        <CinematicAnimatedIntro onFinish={navigateToAuth} />
+        <CinematicAnimatedIntro onFinish={navigateNext} />
       )}
 
       {/* Premium Glassmorphism Skip Button */}
