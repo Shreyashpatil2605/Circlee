@@ -7,7 +7,7 @@ import { registerForPushNotifications } from "@/utils/registerForPushNotificatio
 import { activeChatTracker } from "@/utils/activeChatTracker";
 
 export default function PushNotificationManager() {
-  const { isSignedIn, isLoaded } = useAuth();
+  const { isSignedIn, isLoaded, getToken } = useAuth();
   const rootNavigation = useRootNavigationState();
   const isRouterReady = !!rootNavigation?.key;
   const api = useApiClient();
@@ -18,6 +18,8 @@ export default function PushNotificationManager() {
   // 1. Register Token once authenticated
   useEffect(() => {
     if (!isLoaded || !isSignedIn) return;
+
+    let isCancelled = false;
 
     const registerToken = async () => {
       try {
@@ -30,6 +32,22 @@ export default function PushNotificationManager() {
         // Avoid registering the same token repeatedly in the same session
         if (registeredTokenRef.current === token) return;
 
+        // Ensure Clerk session token is ready before sending protected request
+        let authToken: string | null = null;
+        for (let attempt = 1; attempt <= 3; attempt++) {
+          authToken = await getToken();
+          if (authToken || isCancelled) break;
+          console.log(`Clerk auth token not ready yet. Retrying attempt ${attempt}/3...`);
+          await new Promise((res) => setTimeout(res, 1000));
+        }
+
+        if (!authToken) {
+          console.warn("Could not retrieve Clerk auth token for push notification registration.");
+          return;
+        }
+
+        if (isCancelled) return;
+
         console.log("Sending push token to backend for registration...");
         await api.post("/notifications/push-token", {
           token,
@@ -39,13 +57,24 @@ export default function PushNotificationManager() {
 
         registeredTokenRef.current = token;
         console.log("Push token registered successfully.");
-      } catch (error) {
-        console.error("Failed to register push token with backend:", error);
+      } catch (error: any) {
+        if (error?.response?.status === 401) {
+          console.warn(
+            "Backend returned 401 Unauthorized for push-token. Check that Vercel Deployment Protection is disabled and user is logged in.",
+            error?.response?.data || error?.message
+          );
+        } else {
+          console.error("Failed to register push token with backend:", error);
+        }
       }
     };
 
     registerToken();
-  }, [isLoaded, isSignedIn, api]);
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [isLoaded, isSignedIn, api, getToken]);
 
   // 2. Configure Foreground Notification Handler
   useEffect(() => {
