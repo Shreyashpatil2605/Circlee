@@ -15,7 +15,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useSocialAuth } from "@/hooks/useSocialAuth";
 import { FontAwesome5 } from "@expo/vector-icons";
 
-const authHeroImage = require("../../assets/images/auth1.png");
+const authHeroImage = require("../../assets/images/auth-hero.png");
 const circleeSymbol = require("../../assets/images/circlee-symbol.png");
 
 export default function WelcomeScreen() {
@@ -61,7 +61,7 @@ export default function WelcomeScreen() {
           <Image
             source={authHeroImage}
             style={styles.heroImage}
-            resizeMode="cover"
+            resizeMode="contain"
           />
         </View>
 
