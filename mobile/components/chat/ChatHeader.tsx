@@ -1,7 +1,8 @@
 import React from "react";
 import { View, Text, TouchableOpacity, Image } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BlurView } from "expo-blur";
-import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
+import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 
 interface ChatHeaderProps {
@@ -15,6 +16,7 @@ interface ChatHeaderProps {
     username?: string;
     profilePicture?: string;
     isOnline?: boolean;
+    lastSeen?: number;
   } | null;
   isTyping: boolean;
   lastSeenText?: string;
@@ -33,7 +35,9 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
     ? `${otherUser.firstName || ""} ${otherUser.lastName || ""}`.trim()
     : "Chat";
 
-  const isOnline = otherUser?.isOnline;
+  const isOnline = Boolean(otherUser?.isOnline) || Boolean(otherUser?.lastSeen && Date.now() - Number(otherUser.lastSeen) < 60000);
+
+  const insets = useSafeAreaInsets();
 
   const handleSearchPress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -41,11 +45,16 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
   };
 
   return (
-    <View className="absolute top-0 left-0 right-0 z-50 overflow-hidden border-b border-chat-divider">
+    <View className="w-full z-50 overflow-hidden border-b border-chat-divider bg-chat-bg">
       <BlurView
         intensity={70}
         tint="dark"
-        style={{ paddingHorizontal: 16, paddingTop: 40, paddingBottom: 14, backgroundColor: "rgba(11, 11, 18, 0.4)" }}
+        style={{
+          paddingHorizontal: 16,
+          paddingTop: Math.max(insets.top, 14),
+          paddingBottom: 12,
+          backgroundColor: "rgba(11, 11, 18, 0.85)",
+        }}
       >
         <View className="flex-row items-center justify-between">
           {/* Left Section: Back & Avatar */}

@@ -1,5 +1,16 @@
 {
+  "name": "circlee",
+  "private": true,
+  "workspaces": [
+    "mobile",
+    "backend"
+  ],
+  "scripts": {
+    "postinstall": "patch-package",
+    "convex:dev": "convex dev"
+  },
   "dependencies": {
-    "convex": "^1.39.1"
+    "convex": "^1.39.1",
+    "patch-package": "^8.0.1"
   }
 }

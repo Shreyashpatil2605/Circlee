@@ -28,7 +28,7 @@ export const TypingIndicator: React.FC = () => {
     );
 
     // Stagger dot 2 by starting it with sequence offset
-    setTimeout(() => {
+    const timer1 = setTimeout(() => {
       dot2Y.value = withRepeat(
         withSequence(
           withTiming(-5, { duration: 400 }),
@@ -40,7 +40,7 @@ export const TypingIndicator: React.FC = () => {
     }, 150);
 
     // Stagger dot 3 by starting it with sequence offset
-    setTimeout(() => {
+    const timer2 = setTimeout(() => {
       dot3Y.value = withRepeat(
         withSequence(
           withTiming(-5, { duration: 400 }),
@@ -52,6 +52,8 @@ export const TypingIndicator: React.FC = () => {
     }, 300);
 
     return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
       dot1Y.value = 0;
       dot2Y.value = 0;
       dot3Y.value = 0;

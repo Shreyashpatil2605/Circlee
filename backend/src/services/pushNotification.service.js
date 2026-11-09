@@ -50,6 +50,13 @@ export const sendPushNotification = async (receiver, sender, notification, conte
         title = "New Voice Message";
         body = `${sender.firstName} sent you a voice message`;
         break;
+      case "RESHARE":
+        body = `${sender.firstName} ${sender.lastName} reshared your post`;
+        break;
+      case "REACTION":
+        title = "New Message Reaction";
+        body = `${sender.firstName} reacted ${notification.content || contentText || "❤️"} to your message`;
+        break;
       default:
         body = `New activity from ${sender.firstName}`;
     }
@@ -62,7 +69,7 @@ export const sendPushNotification = async (receiver, sender, notification, conte
       notificationId: notification._id.toString(),
     };
 
-    if (notification.type === "LIKE" || notification.type === "COMMENT") {
+    if (notification.type === "LIKE" || notification.type === "COMMENT" || notification.type === "RESHARE") {
       dataPayload.postId = notification.post ? notification.post.toString() : notification.targetId;
       if (notification.type === "COMMENT") {
         dataPayload.commentId = notification.comment ? notification.comment.toString() : notification.targetId;
@@ -70,6 +77,11 @@ export const sendPushNotification = async (receiver, sender, notification, conte
     } else if (notification.type === "MESSAGE" || notification.type === "VOICE_MESSAGE") {
       dataPayload.conversationId = notification.targetId;
       dataPayload.senderClerkId = sender.clerkId;
+    } else if (notification.type === "REACTION") {
+      dataPayload.conversationId = notification.targetId;
+      dataPayload.messageId = notification.messageId;
+      dataPayload.senderClerkId = sender.clerkId;
+      dataPayload.emoji = notification.content || contentText;
     } else if (notification.type === "FOLLOW") {
       dataPayload.username = sender.username;
     }

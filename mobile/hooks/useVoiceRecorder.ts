@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useAudioRecorder, useAudioRecorderState, AudioModule, setAudioModeAsync, RecordingPresets } from "expo-audio";
 import { AppState, AppStateStatus } from "react-native";
 
@@ -61,7 +61,7 @@ export const useVoiceRecorder = (maxDurationSeconds: number = 300) => {
     }
   }, [recorderState]);
 
-  const stopAndSave = async () => {
+  const stopAndSave = useCallback(async () => {
     console.log("[HOOK] stopAndSave called");
     try {
       const elapsed = Date.now() - recordingStartTimestampRef.current;
@@ -78,7 +78,7 @@ export const useVoiceRecorder = (maxDurationSeconds: number = 300) => {
       console.error("[HOOK] Failed to stop recording:", e);
       setStatus("idle");
     }
-  };
+  }, [recorder]);
 
   // Monitor max duration limit
   const durationSeconds = durationMillis / 1000;
@@ -86,7 +86,7 @@ export const useVoiceRecorder = (maxDurationSeconds: number = 300) => {
     if (status === "recording" && durationSeconds >= maxDurationSeconds) {
       stopAndSave();
     }
-  }, [durationSeconds, status, maxDurationSeconds]);
+  }, [durationSeconds, status, maxDurationSeconds, stopAndSave]);
 
   // Monitor AppState to handle background / incoming call interruptions
   useEffect(() => {
@@ -97,7 +97,7 @@ export const useVoiceRecorder = (maxDurationSeconds: number = 300) => {
     };
     const subscription = AppState.addEventListener("change", handleAppStateChange);
     return () => subscription.remove();
-  }, [status]);
+  }, [status, stopAndSave]);
 
   const start = async () => {
     console.log("[HOOK] start called");

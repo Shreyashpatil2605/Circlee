@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { View, Text, TouchableOpacity, Dimensions, StyleSheet } from "react-native";
 import Animated, {
   FadeInLeft,
@@ -27,14 +27,18 @@ interface MessageBubbleProps {
     audioUrl?: string;
     attachments?: { type: string; url: string; metadata?: any }[];
     deletedForEveryone?: boolean;
+    reactions?: { emoji: string; userId: string }[];
   };
   isOwnMessage: boolean;
   onLongPress?: () => void;
   onSwipe?: (message: any) => void;
-  reactions?: string[];
+  reactions?: { emoji: string; userId: string }[] | string[];
+  currentUserId?: string;
+  onReactionPress?: (emoji: string) => void;
   isGroupedWithPrevious?: boolean;
   isGroupedWithNext?: boolean;
   searchQuery?: string;
+  isHighlighted?: boolean;
 }
 
 const { width } = Dimensions.get("window");
@@ -50,9 +54,12 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   onLongPress,
   onSwipe,
   reactions = [],
+  currentUserId,
+  onReactionPress,
   isGroupedWithPrevious = false,
   isGroupedWithNext = false,
   searchQuery = "",
+  isHighlighted = false,
 }) => {
   const formattedTime = format(new Date(message.createdAt), "p");
   const readCount = message.readBy?.length || 1;
@@ -77,6 +84,38 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
 
   const isDeleted = message.deletedForEveryone === true;
 
+  // Compute grouped reactions with counts and current-user participation
+  const rawReactions = reactions && reactions.length > 0 ? reactions : message.reactions || [];
+
+  const groupedReactions = useMemo(() => {
+    if (!rawReactions || !Array.isArray(rawReactions) || rawReactions.length === 0) {
+      return [];
+    }
+
+    const map = new Map<string, { count: number; hasUserReacted: boolean }>();
+
+    for (const item of rawReactions) {
+      if (!item) continue;
+      const emoji = typeof item === "string" ? item : item.emoji;
+      const userId = typeof item === "string" ? null : item.userId;
+
+      if (!emoji) continue;
+
+      const existing = map.get(emoji) || { count: 0, hasUserReacted: false };
+      existing.count += 1;
+      if (currentUserId && userId && userId === currentUserId) {
+        existing.hasUserReacted = true;
+      }
+      map.set(emoji, existing);
+    }
+
+    return Array.from(map.entries()).map(([emoji, data]) => ({
+      emoji,
+      count: data.count,
+      hasUserReacted: data.hasUserReacted,
+    }));
+  }, [rawReactions, currentUserId]);
+
   const panGesture = Gesture.Pan()
     .enabled(!isDeleted)
     .activeOffsetX([-10, 10])
@@ -98,7 +137,6 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         runOnJS(triggerSwipeCallback)();
       }
       translateX.value = withSpring(0);
-      hasTriggeredHaptic.value = false;
     });
 
   const animatedBubbleStyle = useAnimatedStyle(() => ({
@@ -106,8 +144,8 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   }));
 
   const animatedIconStyle = useAnimatedStyle(() => {
-    const opacity = translateX.value < SWIPE_THRESHOLD ? 1 : Math.min(Math.abs(translateX.value) / 50, 0.6);
-    const scale = translateX.value < SWIPE_THRESHOLD ? 1.1 : 0.8 + (Math.min(Math.abs(translateX.value), 50) / 50) * 0.2;
+    const opacity = Math.min(Math.abs(translateX.value) / Math.abs(SWIPE_THRESHOLD), 1);
+    const scale = Math.min(Math.abs(translateX.value) / Math.abs(SWIPE_THRESHOLD), 1);
     return {
       opacity,
       transform: [{ scale }],
@@ -115,8 +153,8 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   });
 
   const getBubbleStyle = () => {
-    const defaultRadius = 24;
-    const connectedRadius = 8;
+    const defaultRadius = 18;
+    const connectedRadius = 4;
 
     if (isOwnMessage) {
       return {
@@ -173,7 +211,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         entering={enteringAnimation}
         className="px-4 flex-row relative"
         style={{
-          marginBottom: isGroupedWithNext ? 2 : 10,
+          marginBottom: (isGroupedWithNext ? 2 : 8) + (groupedReactions.length > 0 ? 12 : 0),
           justifyContent: isOwnMessage ? "flex-end" : "flex-start",
         }}
       >
@@ -188,7 +226,22 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         </Animated.View>
 
         {/* Message Content Container */}
-        <Animated.View style={[animatedBubbleStyle, { maxWidth: width * 0.78 }]}>
+        <Animated.View
+          style={[
+            animatedBubbleStyle,
+            { maxWidth: width * 0.78 },
+            isHighlighted && {
+              borderRadius: 22,
+              borderWidth: 2,
+              borderColor: "#A855F7",
+              shadowColor: "#A855F7",
+              shadowOffset: { width: 0, height: 0 },
+              shadowOpacity: 0.8,
+              shadowRadius: 10,
+              elevation: 6,
+            },
+          ]}
+        >
           <TouchableOpacity
             activeOpacity={0.9}
             onLongPress={() => {
@@ -277,17 +330,43 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
               </View>
             )}
 
-            {/* Reaction badge container (if reactions exist) */}
-            {reactions.length > 0 && !isDeleted && (
+            {/* Reaction badges container (if reactions exist) */}
+            {groupedReactions.length > 0 && !isDeleted && (
               <View
-                className={`absolute -bottom-3 bg-chat-secondary border border-chat-divider rounded-full px-2 py-0.5 flex-row items-center gap-1 shadow-md ${
-                  isOwnMessage ? "right-3" : "left-3"
+                className={`absolute -bottom-3.5 flex-row items-center gap-1.5 z-20 ${
+                  isOwnMessage ? "right-2" : "left-2"
                 }`}
               >
-                {reactions.map((emoji, index) => (
-                  <Text key={index} className="text-xs">
-                    {emoji}
-                  </Text>
+                {groupedReactions.map((group) => (
+                  <TouchableOpacity
+                    key={group.emoji}
+                    activeOpacity={0.75}
+                    onPress={() => onReactionPress?.(group.emoji)}
+                    hitSlop={{ top: 6, bottom: 6, left: 4, right: 4 }}
+                    style={{
+                      shadowColor: group.hasUserReacted ? "#8B5CF6" : "#000000",
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: group.hasUserReacted ? 0.35 : 0.2,
+                      shadowRadius: 4,
+                      elevation: 3,
+                    }}
+                    className={`flex-row items-center px-2 py-0.5 rounded-full border ${
+                      group.hasUserReacted
+                        ? "bg-[#6B4EFF]/25 border-[#8B5CF6]"
+                        : "bg-[#1B1B25] border-[#272733]"
+                    }`}
+                  >
+                    <Text className="text-xs">{group.emoji}</Text>
+                    <Text
+                      className={`text-[11px] ml-1 font-bold ${
+                        group.hasUserReacted
+                          ? "text-[#C4B5FD]"
+                          : "text-[#A1A1AA]"
+                      }`}
+                    >
+                      {group.count}
+                    </Text>
+                  </TouchableOpacity>
                 ))}
               </View>
             )}

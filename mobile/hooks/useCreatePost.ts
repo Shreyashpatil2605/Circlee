@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Alert } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useApiClient } from "../utils/api";
+import { modalService } from "@/context/ModalContext";
 
 export const useCreatePost = () => {
   const [content, setContent] = useState("");
@@ -50,10 +50,10 @@ export const useCreatePost = () => {
       setContent("");
       setSelectedImage(null);
       queryClient.invalidateQueries({ queryKey: ["posts"] });
-      Alert.alert("Success", "Post created successfully!");
+      modalService.showToast("Post published successfully!", "success");
     },
     onError: (error: any) => {
-      Alert.alert("Error", "Failed to create post. Please try again");
+      modalService.showToast("Failed to create post. Please try again.", "error");
       console.log("Status:", error?.response?.status);
       console.log("Data:", error?.response?.data);
       console.log("Message:", error?.message);
@@ -67,10 +67,14 @@ export const useCreatePost = () => {
 
     if (permissionResult.status !== "granted") {
       const source = useCamera ? "camera" : "photo library";
-      Alert.alert(
-        "Permission needed",
-        `Please grant permission to access your ${source}`,
-      );
+      modalService.showAlert({
+        title: "Permission Needed",
+        description: `Please grant permission to access your ${source} in your device settings.`,
+        icon: "camera",
+        type: "warning",
+        confirmText: "OK",
+        cancelText: "Cancel",
+      });
       return;
     }
 
@@ -92,9 +96,9 @@ export const useCreatePost = () => {
 
   const createPost = () => {
     if (!content.trim() && !selectedImage) {
-      Alert.alert(
-        "Empty Post",
+      modalService.showToast(
         "Please write something or add an image before posting!",
+        "warning"
       );
       return;
     }

@@ -1,6 +1,5 @@
-import React, { useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import * as Notifications from "expo-notifications";
-import { Platform } from "react-native";
 import { useAuth } from "@clerk/clerk-expo";
 import { useRootNavigationState, router } from "expo-router";
 import { useApiClient } from "@/utils/api";
@@ -55,13 +54,13 @@ export default function PushNotificationManager() {
         const data = notification.request.content.data;
         console.log("Foreground notification handler received:", data);
 
-        // Suppress message and voice message notifications if the user is in that conversation
+        // Suppress message, voice message, and reaction notifications if the user is in that conversation
         if (
-          (data?.type === "MESSAGE" || data?.type === "VOICE_MESSAGE") &&
+          (data?.type === "MESSAGE" || data?.type === "VOICE_MESSAGE" || data?.type === "REACTION") &&
           data?.conversationId &&
           data?.conversationId === activeChatTracker.currentConversationId
         ) {
-          console.log("Suppressing active chat message notification.");
+          console.log("Suppressing active chat message/reaction notification.");
           return {
             shouldShowAlert: false,
             shouldPlaySound: false,
@@ -174,10 +173,15 @@ export default function PushNotificationManager() {
 
         case "MESSAGE":
         case "VOICE_MESSAGE":
+        case "REACTION":
           if (senderClerkId) {
             router.push({
               pathname: "/messages",
-              params: { senderClerkId },
+              params: {
+                senderClerkId,
+                conversationId: data.conversationId,
+                messageId: data.messageId,
+              },
             });
           } else {
             console.warn("Missing senderClerkId for chat routing.");

@@ -303,12 +303,14 @@ export const getMessages = query({
             type: "text",
             audioUrl: undefined,
             attachments: undefined,
+            reactions: [],
             sender: senderData,
           };
         }
 
         return {
           ...msg,
+          reactions: msg.reactions ?? [],
           sender: senderData,
         };
       }),
@@ -410,6 +412,7 @@ export const getConversations = query({
                 username: otherUser.username,
                 profilePicture: otherUser.profilePicture,
                 isOnline: otherUser.isOnline,
+                lastSeen: otherUser.lastSeen,
               }
             : null,
         };
@@ -531,6 +534,13 @@ export const deleteMessage = mutation({
           lastMessage: "This message was deleted",
         });
       }
+
+      // If this was the pinned message, clear it
+      if (conversation.pinnedMessage?.messageId === args.messageId) {
+        await ctx.db.patch(message.conversationId, {
+          pinnedMessage: undefined,
+        });
+      }
     } else if (args.type === "me") {
       // Add current user's clerk ID to deletedFor
       const deletedFor = message.deletedFor ?? [];
@@ -641,5 +651,359 @@ export const togglePinConversation = mutation({
       pinned: !isPinned,
       isPinned: !isPinned,
     };
+  },
+});
+// Clear Chat mutation (clears message history for the requesting user only)
+export const clearChat = mutation({
+  args: {
+    conversationId: v.id("conversations"),
+  },
+  async handler(ctx, args) {
+    const userId = await getAuthUserId(ctx);
+
+    if (!userId) {
+      throw new Error("Not authenticated");
+    }
+
+    const conversation = await ctx.db.get(args.conversationId);
+
+    if (!conversation) {
+      throw new Error("Conversation not found");
+    }
+
+    if (!conversation.participants.includes(userId)) {
+      throw new Error("Not authorized");
+    }
+
+    // Set deletion timestamp for requesting user to hide all messages prior to now
+    const deletedAt = conversation.deletedAt ?? [];
+    const existingIndex = deletedAt.findIndex((d) => d.userId === userId);
+    const now = Date.now();
+    if (existingIndex > -1) {
+      deletedAt[existingIndex].timestamp = now;
+    } else {
+      deletedAt.push({ userId, timestamp: now });
+    }
+
+    // Ensure conversation remains in user's chat list (not in deletedFor)
+    const deletedFor = (conversation.deletedFor ?? []).filter((id) => id !== userId);
+
+    // Clear unread flag for this user
+    const unreadBy = (conversation.unreadBy ?? []).filter((id) => id !== userId);
+
+    await ctx.db.patch(args.conversationId, {
+      deletedAt,
+      deletedFor,
+      unreadBy,
+    });
+
+    return {
+      success: true,
+      clearedAt: now,
+    };
+  },
+});
+
+// Pin Message in Conversation
+export const pinMessage = mutation({
+  args: {
+    conversationId: v.id("conversations"),
+    messageId: v.id("messages"),
+  },
+  async handler(ctx, args) {
+    const userId = await getAuthUserId(ctx);
+
+    if (!userId) {
+      throw new Error("Not authenticated");
+    }
+
+    const conversation = await ctx.db.get(args.conversationId);
+    if (!conversation) {
+      throw new Error("Conversation not found");
+    }
+
+    if (!conversation.participants.includes(userId)) {
+      throw new Error("Not authorized");
+    }
+
+    const message = await ctx.db.get(args.messageId);
+    if (!message || message.conversationId !== args.conversationId) {
+      throw new Error("Message not found in this conversation");
+    }
+
+    if (message.deletedForEveryone) {
+      throw new Error("Cannot pin a deleted message");
+    }
+
+    const sender = await ctx.db
+      .query("users")
+      .withIndex("by_clerkId", (q) => q.eq("clerkId", message.senderId))
+      .first();
+
+    const senderName = sender
+      ? `${sender.firstName || ""} ${sender.lastName || ""}`.trim() || sender.username
+      : "User";
+
+    const isVoice = message.type === "voice" || 
+      (message.attachments && (message.attachments as any[]).some((a) => a.type === "voice"));
+
+    const displayContent = isVoice ? "🎙️ Voice message" : (message.content || "Attachment");
+
+    const pinnedData = {
+      messageId: args.messageId,
+      content: displayContent,
+      senderName,
+      pinnedBy: userId,
+      pinnedAt: Date.now(),
+    };
+
+    await ctx.db.patch(args.conversationId, {
+      pinnedMessage: pinnedData,
+    });
+
+    return {
+      success: true,
+      pinnedMessage: pinnedData,
+    };
+  },
+});
+
+// Unpin Message in Conversation
+export const unpinMessage = mutation({
+  args: {
+    conversationId: v.id("conversations"),
+  },
+  async handler(ctx, args) {
+    const userId = await getAuthUserId(ctx);
+
+    if (!userId) {
+      throw new Error("Not authenticated");
+    }
+
+    const conversation = await ctx.db.get(args.conversationId);
+    if (!conversation) {
+      throw new Error("Conversation not found");
+    }
+
+    if (!conversation.participants.includes(userId)) {
+      throw new Error("Not authorized");
+    }
+
+    await ctx.db.patch(args.conversationId, {
+      pinnedMessage: undefined,
+    });
+
+    return {
+      success: true,
+    };
+  },
+});
+
+// Toggle Pin Message in Conversation
+export const togglePinMessage = mutation({
+  args: {
+    conversationId: v.id("conversations"),
+    messageId: v.id("messages"),
+  },
+  async handler(ctx, args) {
+    const userId = await getAuthUserId(ctx);
+
+    if (!userId) {
+      throw new Error("Not authenticated");
+    }
+
+    const conversation = await ctx.db.get(args.conversationId);
+    if (!conversation) {
+      throw new Error("Conversation not found");
+    }
+
+    if (!conversation.participants.includes(userId)) {
+      throw new Error("Not authorized");
+    }
+
+    if (conversation.pinnedMessage?.messageId === args.messageId) {
+      // Unpin if currently pinned
+      await ctx.db.patch(args.conversationId, {
+        pinnedMessage: undefined,
+      });
+      return {
+        success: true,
+        isPinned: false,
+      };
+    } else {
+      // Pin new message
+      const message = await ctx.db.get(args.messageId);
+      if (!message || message.conversationId !== args.conversationId) {
+        throw new Error("Message not found in this conversation");
+      }
+
+      if (message.deletedForEveryone) {
+        throw new Error("Cannot pin a deleted message");
+      }
+
+      const sender = await ctx.db
+        .query("users")
+        .withIndex("by_clerkId", (q) => q.eq("clerkId", message.senderId))
+        .first();
+
+      const senderName = sender
+        ? `${sender.firstName || ""} ${sender.lastName || ""}`.trim() || sender.username
+        : "User";
+
+      const isVoice = message.type === "voice" || 
+        (message.attachments && (message.attachments as any[]).some((a) => a.type === "voice"));
+
+      const displayContent = isVoice ? "🎙️ Voice message" : (message.content || "Attachment");
+
+      const pinnedData = {
+        messageId: args.messageId,
+        content: displayContent,
+        senderName,
+        pinnedBy: userId,
+        pinnedAt: Date.now(),
+      };
+
+      await ctx.db.patch(args.conversationId, {
+        pinnedMessage: pinnedData,
+      });
+
+      return {
+        success: true,
+        isPinned: true,
+        pinnedMessage: pinnedData,
+      };
+    }
+  },
+});
+
+
+const ALLOWED_REACTIONS = ["❤️", "🔥", "😂", "👍", "👏", "🎉"];
+
+// Toggle Reaction on a message
+export const toggleReaction = mutation({
+  args: {
+    messageId: v.id("messages"),
+    emoji: v.string(),
+  },
+
+  async handler(ctx, args) {
+    const userId = await getAuthUserId(ctx);
+
+    if (!userId) {
+      throw new Error("Not authenticated");
+    }
+
+    if (!ALLOWED_REACTIONS.includes(args.emoji)) {
+      throw new Error("Invalid reaction emoji");
+    }
+
+    const message = await ctx.db.get(args.messageId);
+
+    if (!message) {
+      throw new Error("Message not found");
+    }
+
+    if (message.deletedForEveryone) {
+      throw new Error("Cannot react to a deleted message");
+    }
+
+    const conversation = await ctx.db.get(message.conversationId);
+
+    if (!conversation) {
+      throw new Error("Conversation not found");
+    }
+
+    if (!conversation.participants.includes(userId)) {
+      throw new Error("Not authorized to react to messages in this conversation");
+    }
+
+    const currentReactions = message.reactions ?? [];
+    const existingIndex = currentReactions.findIndex((r) => r.userId === userId);
+
+    let updatedReactions: { emoji: string; userId: string }[];
+    let actionType: "added" | "changed" | "removed";
+
+    if (existingIndex >= 0) {
+      const existing = currentReactions[existingIndex];
+      if (existing.emoji === args.emoji) {
+        // Same emoji selected again: remove reaction
+        updatedReactions = currentReactions.filter((r) => r.userId !== userId);
+        actionType = "removed";
+      } else {
+        // Different emoji selected: replace previous reaction with new emoji
+        updatedReactions = currentReactions.map((r) =>
+          r.userId === userId ? { emoji: args.emoji, userId } : r
+        );
+        actionType = "changed";
+      }
+    } else {
+      // First reaction by this user: append to list
+      updatedReactions = [...currentReactions, { emoji: args.emoji, userId }];
+      actionType = "added";
+    }
+
+    await ctx.db.patch(args.messageId, {
+      reactions: updatedReactions,
+    });
+
+    const isSelfReaction = message.senderId === userId;
+    const shouldNotify = !isSelfReaction && (actionType === "added" || actionType === "changed");
+
+    return {
+      success: true,
+      reactions: updatedReactions,
+      actionType,
+      shouldNotify,
+      messageId: args.messageId,
+      conversationId: message.conversationId,
+      messageSenderId: message.senderId,
+      reactorId: userId,
+      emoji: args.emoji,
+      messageContent: message.content || (message.type === "voice" ? "Voice message" : ""),
+    };
+  },
+});
+
+// Toggle Reaction Action: persists reaction and triggers notification if applicable
+export const toggleReactionAction = action({
+  args: {
+    messageId: v.id("messages"),
+    emoji: v.string(),
+    apiUrl: v.string(),
+  },
+
+  async handler(ctx, args) {
+    const result: any = await ctx.runMutation(api.messages.toggleReaction, {
+      messageId: args.messageId,
+      emoji: args.emoji,
+    });
+
+    if (result && result.shouldNotify) {
+      try {
+        const secret = process.env.INTERNAL_SECRET || "circlee_super_secret_token_123";
+        const response = await fetch(`${args.apiUrl}/api/notifications/internal-create`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-internal-secret": secret,
+          },
+          body: JSON.stringify({
+            fromClerkId: result.reactorId,
+            toClerkId: result.messageSenderId,
+            type: "REACTION",
+            targetType: "Conversation",
+            targetId: result.conversationId,
+            messageId: result.messageId,
+            messagePreview: result.messageContent,
+            content: result.emoji,
+          }),
+        });
+        console.log("Internal reaction notification create HTTP status:", response.status);
+      } catch (err) {
+        console.error("Failed to trigger reaction notification creation:", err);
+      }
+    }
+
+    return result;
   },
 });

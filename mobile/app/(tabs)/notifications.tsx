@@ -9,7 +9,6 @@ import React, { useState, useCallback, useMemo } from "react";
 import { useNotifications } from "@/hooks/useNotifications";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
-import { BlurView } from "expo-blur";
 import NoNotificationsFound from "@/components/NoNotificationsFound";
 import { Notification, NotificationType } from "@/types";
 import NotificationCard from "@/components/NotificationCard";
@@ -80,7 +79,11 @@ const NotificationScreen = () => {
       case "Conversation":
         router.push({
           pathname: "/messages",
-          params: { senderClerkId: notification.from.clerkId },
+          params: {
+            senderClerkId: notification.from.clerkId,
+            conversationId: notification.targetId,
+            messageId: notification.messageId,
+          },
         });
         break;
       default:

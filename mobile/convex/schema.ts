@@ -10,6 +10,7 @@ export default defineSchema({
     username: v.string(),
     profilePicture: v.string(),
     isOnline: v.optional(v.boolean()),
+    lastSeen: v.optional(v.number()),
   }).index("by_clerkId", ["clerkId"]),
 
   conversations: defineTable({
@@ -29,6 +30,15 @@ export default defineSchema({
       )
     ),
     pinnedFor: v.optional(v.array(v.string())),
+    pinnedMessage: v.optional(
+      v.object({
+        messageId: v.id("messages"),
+        content: v.string(),
+        senderName: v.optional(v.string()),
+        pinnedBy: v.string(),
+        pinnedAt: v.number(),
+      })
+    ),
   }),
 
   messages: defineTable({
@@ -64,6 +74,14 @@ export default defineSchema({
     ),
     deletedForEveryone: v.optional(v.boolean()),
     deletedFor: v.optional(v.array(v.string())),
+    reactions: v.optional(
+      v.array(
+        v.object({
+          emoji: v.string(),
+          userId: v.string(),
+        })
+      )
+    ),
   })
     .index("by_conversation", ["conversationId"])
     .index("by_sender", ["senderId"]),
@@ -73,4 +91,3 @@ export default defineSchema({
     createdAt: v.number(),
   }).index("by_receiver", ["toUserId"]),
 });
-

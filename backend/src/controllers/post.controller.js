@@ -18,7 +18,8 @@ export const getPosts = asyncHandler(async (req, res) => {
         path: "user",
         select: "username firstName lastName profilePicture",
       },
-    });
+    })
+    .populate("reshares", "username firstName lastName profilePicture");
 
   res.status(200).json({ posts });
 });
@@ -34,7 +35,8 @@ export const getPost = asyncHandler(async (req, res) => {
         path: "user",
         select: "username firstName lastName profilePicture",
       },
-    });
+    })
+    .populate("reshares", "username firstName lastName profilePicture");
 
   if (!post) return res.status(404).json({ error: "Post not found" });
 
@@ -47,7 +49,9 @@ export const getUsersPosts = asyncHandler(async (req, res) => {
   const user = await User.findOne({ username });
   if (!user) return res.status(404).json({ error: "User not found" });
 
-  const posts = await Post.find({ user: user._id })
+  const posts = await Post.find({
+    $or: [{ user: user._id }, { reshares: user._id }],
+  })
     .sort({ createdAt: -1 })
     .populate("user", "username firstName lastName profilePicture")
     .populate({
@@ -56,7 +60,33 @@ export const getUsersPosts = asyncHandler(async (req, res) => {
         path: "user",
         select: "username firstName lastName profilePicture",
       },
-    });
+    })
+    .populate("reshares", "username firstName lastName profilePicture");
+
+  res.status(200).json({ posts });
+});
+
+export const getSavedPosts = asyncHandler(async (req, res) => {
+  const { userId } = getAuth(req);
+
+  const user = await User.findOne({ clerkId: userId });
+  if (!user) {
+    return res.status(404).json({ error: "User not found" });
+  }
+
+  const posts = await Post.find({
+    _id: { $in: user.savedPosts || [] },
+  })
+    .sort({ createdAt: -1 })
+    .populate("user", "username firstName lastName profilePicture")
+    .populate({
+      path: "comments",
+      populate: {
+        path: "user",
+        select: "username firstName lastName profilePicture",
+      },
+    })
+    .populate("reshares", "username firstName lastName profilePicture");
 
   res.status(200).json({ posts });
 });
@@ -65,22 +95,6 @@ export const createPost = asyncHandler(async (req, res) => {
   const { userId } = getAuth(req);
   const { content } = req.body;
   const imageFile = req.file;
-
-  console.log("========== CREATE POST DEBUG ==========");
-  console.log("USER ID:", userId);
-  console.log("CONTENT LENGTH:", content?.length || 0);
-  console.log("HAS IMAGE FILE:", Boolean(imageFile));
-  if (imageFile) {
-    console.log("IMAGE MIME:", imageFile.mimetype);
-    console.log("IMAGE SIZE:", imageFile.size);
-  }
-  console.log("======================================");
-
-
-  console.log("========== CREATE POST ==========");
-  console.log("BODY:", req.body);
-  console.log("FILE:", req.file);
-  console.log("================================");
 
   if (!content && !imageFile) {
     return res
@@ -96,9 +110,8 @@ export const createPost = asyncHandler(async (req, res) => {
   // upload image to Cloudinary if provided
   if (imageFile) {
     try {
-      // convert buffer to base64 for cloudinary
       const base64Image = `data:${imageFile.mimetype};base64,${imageFile.buffer.toString(
-        "base64",
+        "base64"
       )}`;
 
       const uploadResponse = await cloudinary.uploader.upload(base64Image, {
@@ -112,26 +125,10 @@ export const createPost = asyncHandler(async (req, res) => {
       });
       imageUrl = uploadResponse.secure_url;
     } catch (uploadError) {
-      console.error("========== CLOUDINARY ERROR ==========");
-      console.error(uploadError);
-      console.error("MESSAGE:", uploadError?.message);
-      console.error("HTTP CODE:", uploadError?.http_code);
-      console.error("ERROR DETAILS:", uploadError?.error);
-      console.error("FULL DETAILS:", {
-        message: uploadError?.message,
-        httpCode: uploadError?.http_code,
-        error: uploadError?.error,
-      });
-      console.error("=====================================");
-
+      console.error("Cloudinary upload failed:", uploadError);
       return res.status(400).json({
         error: "Failed to upload image",
-        details:
-          uploadError?.message ||
-          uploadError?.error?.message ||
-          uploadError?.error?.description ||
-          uploadError?.http_code ||
-          "Cloudinary upload failed",
+        details: uploadError?.message || "Cloudinary upload failed",
       });
     }
   }
@@ -155,7 +152,9 @@ export const likePost = asyncHandler(async (req, res) => {
   if (!user || !post)
     return res.status(404).json({ error: "User or post not found" });
 
-  const isLiked = post.likes.includes(user._id);
+  const isLiked = post.likes.some(
+    (id) => id.toString() === user._id.toString()
+  );
 
   if (isLiked) {
     // unlike
@@ -186,6 +185,88 @@ export const likePost = asyncHandler(async (req, res) => {
   });
 });
 
+export const resharePost = asyncHandler(async (req, res) => {
+  const { userId } = getAuth(req);
+  const { postId } = req.params;
+
+  const user = await User.findOne({ clerkId: userId });
+  const post = await Post.findById(postId);
+
+  if (!user || !post) {
+    return res.status(404).json({ error: "User or post not found" });
+  }
+
+  const isReshared = (post.reshares || []).some(
+    (id) => id.toString() === user._id.toString()
+  );
+
+  if (isReshared) {
+    // undo reshare
+    await Post.findByIdAndUpdate(postId, {
+      $pull: { reshares: user._id },
+    });
+  } else {
+    // add reshare ($addToSet prevents duplicates)
+    await Post.findByIdAndUpdate(postId, {
+      $addToSet: { reshares: user._id },
+    });
+
+    // create notification if not resharing own post
+    if (post.user.toString() !== user._id.toString()) {
+      await createNotificationHelper({
+        fromUserId: user._id,
+        toUserId: post.user,
+        type: NotificationType.RESHARE,
+        targetType: "Post",
+        targetId: postId,
+        post: postId,
+      });
+    }
+  }
+
+  res.status(200).json({
+    message: isReshared
+      ? "Post unreshared successfully"
+      : "Post reshared successfully",
+    isReshared: !isReshared,
+  });
+});
+
+export const savePost = asyncHandler(async (req, res) => {
+  const { userId } = getAuth(req);
+  const { postId } = req.params;
+
+  const user = await User.findOne({ clerkId: userId });
+  const post = await Post.findById(postId);
+
+  if (!user || !post) {
+    return res.status(404).json({ error: "User or post not found" });
+  }
+
+  const isSaved = (user.savedPosts || []).some(
+    (id) => id.toString() === post._id.toString()
+  );
+
+  if (isSaved) {
+    // remove from saved posts
+    await User.findByIdAndUpdate(user._id, {
+      $pull: { savedPosts: post._id },
+    });
+  } else {
+    // add to saved posts ($addToSet prevents duplicates)
+    await User.findByIdAndUpdate(user._id, {
+      $addToSet: { savedPosts: post._id },
+    });
+  }
+
+  res.status(200).json({
+    message: isSaved
+      ? "Post removed from saved posts"
+      : "Post saved successfully",
+    isSaved: !isSaved,
+  });
+});
+
 export const deletePost = asyncHandler(async (req, res) => {
   const { userId } = getAuth(req);
   const { postId } = req.params;
@@ -204,6 +285,12 @@ export const deletePost = asyncHandler(async (req, res) => {
 
   // delete all comments on this post
   await Comment.deleteMany({ post: postId });
+
+  // clean up saved post references across all users
+  await User.updateMany(
+    { savedPosts: postId },
+    { $pull: { savedPosts: postId } }
+  );
 
   // delete the post
   await Post.findByIdAndDelete(postId);

@@ -170,15 +170,17 @@ export const getCurrentUser = asyncHandler(async (req, res) => {
 export const followUser = asyncHandler(async (req, res) => {
   const { userId } = getAuth(req);
   const { targetUserId } = req.params;
-  if (userId === targetUserId) {
-    return res.status(400).json({ message: "User cannot follow yourself" });
-  }
   const currentUser = await User.findOne({ clerkId: userId });
   const targetUser = await User.findById(targetUserId);
   if (!currentUser || !targetUser) {
     return res.status(404).json({ message: "User not found" });
   }
-  const isFollowing = currentUser.following.includes(targetUserId);
+  if (currentUser._id.toString() === targetUserId.toString()) {
+    return res.status(400).json({ message: "User cannot follow yourself" });
+  }
+  const isFollowing = currentUser.following.some(
+    (id) => id.toString() === targetUserId.toString(),
+  );
   if (isFollowing) {
     //unfollow
     await User.findByIdAndUpdate(currentUser._id, {
@@ -266,4 +268,26 @@ export const updatePresence = asyncHandler(async (req, res) => {
     isOnline: user.isOnline,
     lastSeen: user.lastSeen,
   });
+});
+
+// getSuggestedUsers
+export const getSuggestedUsers = asyncHandler(async (req, res) => {
+  let excludeIds = [];
+  try {
+    const { userId } = getAuth(req);
+    if (userId) {
+      const currentUser = await User.findOne({ clerkId: userId });
+      if (currentUser) {
+        excludeIds = [currentUser._id, ...(currentUser.following || [])];
+      }
+    }
+  } catch (err) {
+    console.error("Error retrieving auth in getSuggestedUsers:", err);
+  }
+
+  const users = await User.find({ _id: { $nin: excludeIds } })
+    .limit(12)
+    .select("username firstName lastName profilePicture bio followers following");
+
+  res.status(200).json({ users });
 });

@@ -1,6 +1,6 @@
 import { useSSO } from "@clerk/clerk-expo";
 import { useState } from "react";
-import { Alert } from "react-native";
+import { modalService } from "@/context/ModalContext";
 
 export const useSocialAuth = () => {
   const [isLoading, setIsloading] = useState(false);
@@ -16,9 +16,9 @@ export const useSocialAuth = () => {
     } catch (err) {
       console.log("Error in social auth", err);
       const provider = strategy === "oauth_google" ? "Google" : "Apple";
-      Alert.alert(
-        "Error",
-        `Failed to sign in with ${provider}. please try again`,
+      modalService.showToast(
+        `Failed to sign in with ${provider}. Please try again.`,
+        "error"
       );
     } finally {
       setIsloading(false);

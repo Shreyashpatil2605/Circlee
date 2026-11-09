@@ -1,0 +1,12 @@
+node_modules/
+**/node_modules/
+.expo/
+.git/
+.env.local
+*.log
+dist/
+eas-inspect/
+eas-prebuild-inspect/
+eas-prebuild-debug/
+desktop.ini
+.DS_Store

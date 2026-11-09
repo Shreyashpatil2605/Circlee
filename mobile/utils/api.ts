@@ -41,6 +41,9 @@ export const userApi = {
     api.get(`/users/${userId}/followers`),
   getFollowing: (api: AxiosInstance, userId: string) =>
     api.get(`/users/${userId}/following`),
+  getSuggestedUsers: (api: AxiosInstance) => api.get("/users/suggested"),
+  searchUsers: (api: AxiosInstance, query: string) =>
+    api.get(`/users/search?q=${encodeURIComponent(query)}`),
 
   updatePresence: (api: AxiosInstance, isOnline: boolean) =>
     api.put("/users/presence", {
@@ -57,10 +60,15 @@ export const postApi = {
     },
   ) => api.post("/posts", data),
   getPosts: (api: AxiosInstance) => api.get("/posts"),
+  getSavedPosts: (api: AxiosInstance) => api.get("/posts/saved"),
   getUserPosts: (api: AxiosInstance, username: string) =>
     api.get(`/posts/user/${username}`),
   likePost: (api: AxiosInstance, postId: string) =>
     api.post(`/posts/${postId}/like`),
+  resharePost: (api: AxiosInstance, postId: string) =>
+    api.post(`/posts/${postId}/reshare`),
+  savePost: (api: AxiosInstance, postId: string) =>
+    api.post(`/posts/${postId}/save`),
   deletePost: (api: AxiosInstance, postId: string) =>
     api.delete(`/posts/${postId}`),
 };

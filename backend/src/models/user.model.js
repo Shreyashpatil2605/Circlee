@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+
 const userSchema = new mongoose.Schema(
   {
     clerkId: { type: String, required: true, unique: true },
@@ -12,7 +13,8 @@ const userSchema = new mongoose.Schema(
     location: { type: String, default: "" },
     followers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     following: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-        isOnline: {
+    savedPosts: [{ type: mongoose.Schema.Types.ObjectId, ref: "Post" }],
+    isOnline: {
       type: Boolean,
       default: false,
     },
@@ -33,12 +35,11 @@ const userSchema = new mongoose.Schema(
         platform: { type: String, required: true },
         deviceId: { type: String, required: true },
         createdAt: { type: Date, default: Date.now },
-        updatedAt: { type: Date, default: Date.now }
-      }
+        updatedAt: { type: Date, default: Date.now },
+      },
     ],
   },
-
-  { timestamps: true },
+  { timestamps: true }
 );
 
 const User = mongoose.model("User", userSchema);

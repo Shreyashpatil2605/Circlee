@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+
 const postSchema = new mongoose.Schema(
   {
     user: {
@@ -20,6 +21,12 @@ const postSchema = new mongoose.Schema(
         ref: "User",
       },
     ],
+    reshares: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
     comments: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -31,5 +38,6 @@ const postSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
 const Post = mongoose.model("Post", postSchema);
 export default Post;

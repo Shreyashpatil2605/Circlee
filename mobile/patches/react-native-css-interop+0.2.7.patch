@@ -1,0 +1,140 @@
+diff --git a/node_modules/react-native-css-interop/dist/runtime/native/render-component.js b/node_modules/react-native-css-interop/dist/runtime/native/render-component.js
+index 88d2ec1..23c4ad4 100644
+--- a/node_modules/react-native-css-interop/dist/runtime/native/render-component.js
++++ b/node_modules/react-native-css-interop/dist/runtime/native/render-component.js
+@@ -122,22 +122,37 @@ function printUpgradeWarning(warning, originalProps) {
+     console.log(`CssInterop upgrade warning.\n\n${warning}.\n\nThis warning was caused by a component with the props:\n${stringify(originalProps)}\n\nIf adding or removing sibling components caused this warning you should add a unique "key" prop to your components. https://react.dev/learn/rendering-lists#keeping-list-items-in-order-with-key\n`);
+ }
+ function stringify(object) {
+-    const seen = new WeakSet();
+-    return JSON.stringify(object, function replace(_, value) {
+-        if (!(value !== null && typeof value === "object")) {
+-            return value;
+-        }
+-        if (seen.has(value)) {
+-            return "[Circular]";
+-        }
+-        seen.add(value);
+-        const newValue = Array.isArray(value) ? [] : {};
+-        for (const entry of Object.entries(value)) {
+-            newValue[entry[0]] = replace(entry[0], entry[1]);
+-        }
+-        seen.delete(value);
+-        return newValue;
+-    }, 2);
++    try {
++        const seen = new WeakSet();
++        return JSON.stringify(object, function replace(_, value) {
++            if (!(value !== null && typeof value === "object")) {
++                return value;
++            }
++            if (seen.has(value)) {
++                return "[Circular]";
++            }
++            if (value && (value.$typeof || value.navigation || value.navigator || value._currentValue !== undefined)) {
++                return "[Non-serializable Object]";
++            }
++            seen.add(value);
++            const newValue = Array.isArray(value) ? [] : {};
++            try {
++                for (const entry of Object.entries(value)) {
++                    try {
++                        newValue[entry[0]] = replace(entry[0], entry[1]);
++                    } catch (e) {
++                        newValue[entry[0]] = "[Error accessing property]";
++                    }
++                }
++            } catch (e) {
++                return "[Un-iterable Object]";
++            }
++            seen.delete(value);
++            return newValue;
++        }, 2);
++    } catch (error) {
++        return `[Serialization failed: ${error.message}]`;
++    }
+ }
+ function getDebugReplacer() {
+     const seen = new WeakSet();
+diff --git a/node_modules/react-native-css-interop/src/runtime/native/render-component.tsx b/node_modules/react-native-css-interop/src/runtime/native/render-component.tsx
+index 341db1c..d903489 100644
+--- a/node_modules/react-native-css-interop/src/runtime/native/render-component.tsx
++++ b/node_modules/react-native-css-interop/src/runtime/native/render-component.tsx
+@@ -244,32 +244,51 @@ function printUpgradeWarning(
+ }
+ 
+ function stringify(object: any) {
+-  const seen = new WeakSet();
+-  return JSON.stringify(
+-    object,
+-    function replace(_, value) {
+-      if (!(value !== null && typeof value === "object")) {
+-        return value;
+-      }
+-
+-      if (seen.has(value)) {
+-        return "[Circular]";
+-      }
+-
+-      seen.add(value);
+-
+-      const newValue: any = Array.isArray(value) ? [] : {};
+-
+-      for (const entry of Object.entries(value)) {
+-        newValue[entry[0]] = replace(entry[0], entry[1]);
+-      }
+-
+-      seen.delete(value);
+-
+-      return newValue;
+-    },
+-    2,
+-  );
++  try {
++    const seen = new WeakSet();
++    return JSON.stringify(
++      object,
++      function replace(_, value) {
++        if (!(value !== null && typeof value === "object")) {
++          return value;
++        }
++
++        if (seen.has(value)) {
++          return "[Circular]";
++        }
++
++        if (
++          value.$$typeof ||
++          value.navigation ||
++          value.navigator ||
++          value._currentValue !== undefined
++        ) {
++          return "[Non-serializable Object]";
++        }
++
++        seen.add(value);
++        const newValue: any = Array.isArray(value) ? [] : {};
++
++        try {
++          for (const entry of Object.entries(value)) {
++            try {
++              newValue[entry[0]] = replace(entry[0], entry[1]);
++            } catch (e) {
++              newValue[entry[0]] = "[Error accessing property]";
++            }
++          }
++        } catch (e) {
++          return "[Un-iterable Object]";
++        }
++
++        seen.delete(value);
++        return newValue;
++      },
++      2,
++    );
++  } catch (error) {
++    return `[Serialization failed: ${error.message}]`;
++  }
+ }
+ 
+ // const ForwardRefSymbol = Symbol.for("react.forward_ref");

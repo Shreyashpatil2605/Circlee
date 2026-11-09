@@ -1,6 +1,6 @@
 import { useApiClient, userApi } from "@/utils/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Alert } from "react-native";
+import { modalService } from "@/context/ModalContext";
 
 export const useFollowUser = () => {
   const api = useApiClient();
@@ -14,11 +14,6 @@ export const useFollowUser = () => {
     onSuccess: (data: any, targetUserId: string) => {
       console.log("Follow success:", data.data);
       
-      const isNowFollowing = !data.data.isFollowing; // true if now following, false if unfollowed
-      
-      // Invalidate instead of manual cache patching to avoid shape/type mismatches
-      // and ensure real-time consistency when navigating back.
-      // data?.data?.user is the current authenticated user (per your API logging).
       const currentUserId = data?.data?.user?._id;
 
       // Re-fetch target user's follower/following lists
@@ -32,8 +27,6 @@ export const useFollowUser = () => {
 
       // Re-fetch current auth user
       queryClient.invalidateQueries({ queryKey: ["authUser"], refetchType: "all" });
-
-      // Also refetch profile query if it's mounted
     },
     onError: (error: any) => {
       console.log("Follow error details:", {
@@ -41,9 +34,9 @@ export const useFollowUser = () => {
         data: error.response?.data,
         message: error.message,
       });
-      Alert.alert(
-        "Error",
+      modalService.showToast(
         error.response?.data?.message || error.message || "Failed to follow user",
+        "error"
       );
     },
   });

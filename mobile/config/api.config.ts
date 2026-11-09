@@ -18,7 +18,7 @@ export const getApiBaseUrl = (): string => {
   // Fallback based on platform
   if (Platform.OS === "android") {
     // Android emulator uses 10.0.2.2 to refer to the host machine
-    return "http://10.207.9.108:5001";//Wireless LAN adapter Wi-Fi: IPv4 Address.
+    return "http://192.168.1.7:5001";//Wireless LAN adapter Wi-Fi: IPv4 Address.
   } else if (Platform.OS === "ios") {
     // iOS simulator can use localhost
     return "http://localhost:5001";

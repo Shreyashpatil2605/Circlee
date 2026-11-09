@@ -3,7 +3,6 @@ import {
   ActivityIndicator,
   Image,
   Text,
-  Touchable,
   TouchableOpacity,
   View,
 } from "react-native";

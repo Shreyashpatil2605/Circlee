@@ -75,6 +75,20 @@ const NotificationCard = React.memo(({
           gradient: ["#6B4EFF", "#FF2D55"] as [string, string],
           iconColor: "#FFFFFF",
         };
+      case NotificationType.RESHARE:
+        return {
+          text: "reshared your post",
+          icon: "repeat" as const,
+          gradient: ["#8B5CF6", "#6B4EFF"] as [string, string],
+          iconColor: "#FFFFFF",
+        };
+      case NotificationType.REACTION:
+        return {
+          text: `reacted ${notification.content || "❤️"} to your message`,
+          icon: "heart" as const,
+          gradient: ["#EC4899", "#8B5CF6"] as [string, string],
+          iconColor: "#FFFFFF",
+        };
       default:
         return {
           text: "",
@@ -244,6 +258,16 @@ const NotificationCard = React.memo(({
                   </Text>
                   <Text className="text-zinc-200 text-xs italic leading-relaxed" numberOfLines={2}>
                     &ldquo;{notification.comment.content}&rdquo;
+                  </Text>
+                </View>
+              )}
+
+              {/* Optional Message Preview for Reactions */}
+              {notification.type === NotificationType.REACTION && !!notification.messagePreview && (
+                <View className="bg-white/5 rounded-xl p-3 mb-1 border border-white/5 overflow-hidden">
+                  <BlurView intensity={5} tint="light" className="absolute inset-0" />
+                  <Text className="text-zinc-300 text-xs italic leading-relaxed" numberOfLines={2}>
+                    &ldquo;{notification.messagePreview}&rdquo;
                   </Text>
                 </View>
               )}

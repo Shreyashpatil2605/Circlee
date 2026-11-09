@@ -1,23 +1,8 @@
-diff --git a/node_modules/react-native-css-interop/.cache/android.js b/node_modules/react-native-css-interop/.cache/android.js
-new file mode 100644
-index 0000000..e69de29
-diff --git a/node_modules/react-native-css-interop/.cache/ios.js b/node_modules/react-native-css-interop/.cache/ios.js
-new file mode 100644
-index 0000000..e69de29
-diff --git a/node_modules/react-native-css-interop/.cache/macos.js b/node_modules/react-native-css-interop/.cache/macos.js
-new file mode 100644
-index 0000000..e69de29
-diff --git a/node_modules/react-native-css-interop/.cache/native.js b/node_modules/react-native-css-interop/.cache/native.js
-new file mode 100644
-index 0000000..e69de29
-diff --git a/node_modules/react-native-css-interop/.cache/windows.js b/node_modules/react-native-css-interop/.cache/windows.js
-new file mode 100644
-index 0000000..e69de29
 diff --git a/node_modules/react-native-css-interop/dist/runtime/native/render-component.js b/node_modules/react-native-css-interop/dist/runtime/native/render-component.js
-index eba25ec..7e2865c 100644
+index 88d2ec1..23c4ad4 100644
 --- a/node_modules/react-native-css-interop/dist/runtime/native/render-component.js
 +++ b/node_modules/react-native-css-interop/dist/runtime/native/render-component.js
-@@ -121,22 +121,38 @@ function printUpgradeWarning(warning, originalProps) {
+@@ -122,22 +122,37 @@ function printUpgradeWarning(warning, originalProps) {
      console.log(`CssInterop upgrade warning.\n\n${warning}.\n\nThis warning was caused by a component with the props:\n${stringify(originalProps)}\n\nIf adding or removing sibling components caused this warning you should add a unique "key" prop to your components. https://react.dev/learn/rendering-lists#keeping-list-items-in-order-with-key\n`);
  }
  function stringify(object) {
@@ -46,8 +31,7 @@ index eba25ec..7e2865c 100644
 +            if (seen.has(value)) {
 +                return "[Circular]";
 +            }
-+            // Avoid traversing react internal objects, context objects, and navigation objects
-+            if (value && (value.$$typeof || value.navigation || value.navigator || value._currentValue !== undefined)) {
++            if (value && (value.$typeof || value.navigation || value.navigator || value._currentValue !== undefined)) {
 +                return "[Non-serializable Object]";
 +            }
 +            seen.add(value);
@@ -73,10 +57,10 @@ index eba25ec..7e2865c 100644
  function getDebugReplacer() {
      const seen = new WeakSet();
 diff --git a/node_modules/react-native-css-interop/src/runtime/native/render-component.tsx b/node_modules/react-native-css-interop/src/runtime/native/render-component.tsx
-index cfb9a9e..8a98b6f 100644
+index 341db1c..d903489 100644
 --- a/node_modules/react-native-css-interop/src/runtime/native/render-component.tsx
 +++ b/node_modules/react-native-css-interop/src/runtime/native/render-component.tsx
-@@ -235,32 +235,49 @@ function printUpgradeWarning(
+@@ -244,32 +244,51 @@ function printUpgradeWarning(
  }
  
  function stringify(object: any) {
@@ -87,6 +71,25 @@ index cfb9a9e..8a98b6f 100644
 -      if (!(value !== null && typeof value === "object")) {
 -        return value;
 -      }
+-
+-      if (seen.has(value)) {
+-        return "[Circular]";
+-      }
+-
+-      seen.add(value);
+-
+-      const newValue: any = Array.isArray(value) ? [] : {};
+-
+-      for (const entry of Object.entries(value)) {
+-        newValue[entry[0]] = replace(entry[0], entry[1]);
+-      }
+-
+-      seen.delete(value);
+-
+-      return newValue;
+-    },
+-    2,
+-  );
 +  try {
 +    const seen = new WeakSet();
 +    return JSON.stringify(
@@ -95,26 +98,21 @@ index cfb9a9e..8a98b6f 100644
 +        if (!(value !== null && typeof value === "object")) {
 +          return value;
 +        }
- 
--      if (seen.has(value)) {
--        return "[Circular]";
--      }
++
 +        if (seen.has(value)) {
 +          return "[Circular]";
 +        }
- 
--      seen.add(value);
-+        // Avoid traversing react internal objects, context objects, and navigation objects
-+        if (value && (value.$$typeof || value.navigation || value.navigator || value._currentValue !== undefined)) {
++
++        if (
++          value.$$typeof ||
++          value.navigation ||
++          value.navigator ||
++          value._currentValue !== undefined
++        ) {
 +          return "[Non-serializable Object]";
 +        }
- 
--      const newValue: any = Array.isArray(value) ? [] : {};
++
 +        seen.add(value);
- 
--      for (const entry of Object.entries(value)) {
--        newValue[entry[0]] = replace(entry[0], entry[1]);
--      }
 +        const newValue: any = Array.isArray(value) ? [] : {};
 +
 +        try {
@@ -128,19 +126,13 @@ index cfb9a9e..8a98b6f 100644
 +        } catch (e) {
 +          return "[Un-iterable Object]";
 +        }
- 
--      seen.delete(value);
++
 +        seen.delete(value);
- 
--      return newValue;
--    },
--    2,
--  );
 +        return newValue;
 +      },
 +      2,
 +    );
-+  } catch (error: any) {
++  } catch (error) {
 +    return `[Serialization failed: ${error.message}]`;
 +  }
  }

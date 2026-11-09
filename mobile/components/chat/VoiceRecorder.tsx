@@ -1,5 +1,4 @@
 import React from "react";
-import { Alert } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   useAnimatedStyle,
@@ -8,6 +7,7 @@ import Animated, {
   runOnJS,
 } from "react-native-reanimated";
 import { Feather } from "@expo/vector-icons";
+import { modalService } from "@/context/ModalContext";
 
 interface VoiceRecorderProps {
   onStart: () => void;
@@ -33,9 +33,10 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
   const recordingStarted = useSharedValue(false);
 
   const showHoldHint = () => {
-    Alert.alert(
-      "Hold to record",
-      "Press and hold the microphone button to record. Swipe up to lock, or swipe left to cancel."
+    modalService.showToast(
+      "Press and hold the mic to record. Swipe up to lock, or swipe left to cancel.",
+      "info",
+      "Hold to record"
     );
   };
 

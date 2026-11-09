@@ -6,6 +6,8 @@ export const NotificationType = {
   FOLLOW: "FOLLOW",
   MESSAGE: "MESSAGE",
   VOICE_MESSAGE: "VOICE_MESSAGE",
+  RESHARE: "RESHARE",
+  REACTION: "REACTION",
 };
 
 const notificationSchema = new mongoose.Schema(
@@ -34,6 +36,18 @@ const notificationSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    messageId: {
+      type: String,
+      default: null,
+    },
+    content: {
+      type: String,
+      default: null,
+    },
+    messagePreview: {
+      type: String,
+      default: null,
+    },
     post: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Post",
@@ -53,9 +67,8 @@ const notificationSchema = new mongoose.Schema(
       default: false,
     },
   },
-  { timestamps: true },
+  { timestamps: true }
 );
 
 const Notification = mongoose.model("Notification", notificationSchema);
 export default Notification;
-

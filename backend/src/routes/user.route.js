@@ -8,11 +8,14 @@ import {
   getFollowers,
   getFollowing,
   updatePresence,
+  getSuggestedUsers,
 } from "../controllers/user.controller.js";
 import { protectRoute } from "../middleware/auth.middleware.js";
 import upload from "../middleware/upload.middleware.js";
 import { searchUsers } from "../controllers/search.controller.js";
 const router = express.Router();
+router.get("/suggested", getSuggestedUsers);
+router.get("/search", searchUsers);
 router.get("/profile/:username", getUserProfile);
 router.post("/sync", protectRoute, syncUser);
 router.get("/me", protectRoute, getCurrentUser);

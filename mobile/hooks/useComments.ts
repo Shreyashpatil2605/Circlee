@@ -1,7 +1,7 @@
 import { commentApi, useApiClient } from "@/utils/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Alert } from "react-native";
+import { modalService } from "@/context/ModalContext";
 
 export const useComments = () => {
   const [commentText, setCommentText] = useState("");
@@ -23,11 +23,12 @@ export const useComments = () => {
     onSuccess: () => {
       setCommentText("");
       queryClient.invalidateQueries({ queryKey: ["posts"] });
+      modalService.showToast("Comment posted", "success");
     },
-    onError: (error:any) => {
-      Alert.alert("Error", "Failed to post comment. Try again.");
-      console.log(error.response?.data)
-      console.log(error.response?.status)
+    onError: (error: any) => {
+      modalService.showToast("Failed to post comment. Try again.", "error");
+      console.log(error.response?.data);
+      console.log(error.response?.status);
     },
   });
 
@@ -38,9 +39,10 @@ export const useComments = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["posts"] });
+      modalService.showToast("Comment deleted", "info");
     },
     onError: (error: any) => {
-      Alert.alert("Error", "Failed to delete comment. Try again.");
+      modalService.showToast("Failed to delete comment. Try again.", "error");
       console.log(error.response?.data);
       console.log(error.response?.status);
     },
@@ -48,25 +50,23 @@ export const useComments = () => {
 
   const createComment = (postId: string) => {
     if (!commentText.trim()) {
-      Alert.alert("Empty Comment", "Please write something before posting");
+      modalService.showToast("Please write something before posting", "warning");
       return;
     }
     createCommentMutation.mutate({ postId, content: commentText.trim() });
   };
 
   const deleteComment = (commentId: string) => {
-    Alert.alert(
-      "Delete Comment",
-      "Are you sure you want to delete this comment?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          onPress: () => deleteCommentMutation.mutate(commentId),
-          style: "destructive",
-        },
-      ]
-    );
+    modalService.showAlert({
+      title: "Delete Comment?",
+      description: "Are you sure you want to delete this comment?",
+      icon: "trash-2",
+      type: "danger",
+      isDestructive: true,
+      confirmText: "Delete",
+      cancelText: "Cancel",
+      onConfirm: () => deleteCommentMutation.mutate(commentId),
+    });
   };
 
   return {
@@ -74,6 +74,8 @@ export const useComments = () => {
     setCommentText,
     createComment,
     deleteComment,
+    isCreating: createCommentMutation.isPending,
+    isDeleting: deleteCommentMutation.isPending,
     isCreatingComment: createCommentMutation.isPending,
     isDeletingComment: deleteCommentMutation.isPending,
   };

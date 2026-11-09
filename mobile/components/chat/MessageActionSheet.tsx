@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { View, Text, TouchableOpacity, Modal, StyleSheet, TouchableWithoutFeedback, Platform } from "react-native";
 import Animated, { SlideInDown, SlideOutDown } from "react-native-reanimated";
 import { BlurView } from "expo-blur";
-import { Feather } from "@expo/vector-icons";
+import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 
 interface MessageActionSheetProps {
@@ -15,11 +15,15 @@ interface MessageActionSheetProps {
     senderId: string;
     type?: string;
     attachments?: { type: string; url: string; metadata?: any }[];
+    reactions?: { emoji: string; userId: string }[];
   } | null;
   onSelectReaction: (emoji: string) => void;
   onReply: () => void;
   onCopy: () => void;
   onDelete: () => void;
+  onTogglePin?: () => void;
+  isPinned?: boolean;
+  currentUserId?: string;
 }
 
 const REACTIONS = ["❤️", "🔥", "😂", "👍", "👏", "🎉"];
@@ -32,6 +36,9 @@ export const MessageActionSheet: React.FC<MessageActionSheetProps> = ({
   onReply,
   onCopy,
   onDelete,
+  onTogglePin,
+  isPinned = false,
+  currentUserId,
 }) => {
   useEffect(() => {
     if (visible) {
@@ -40,6 +47,10 @@ export const MessageActionSheet: React.FC<MessageActionSheetProps> = ({
   }, [visible]);
 
   if (!visible || !message) return null;
+
+  const userCurrentReaction = message.reactions?.find(
+    (r) => r.userId === currentUserId
+  )?.emoji;
 
   const isVoiceMessage =
     message.type === "voice" ||
@@ -85,16 +96,34 @@ export const MessageActionSheet: React.FC<MessageActionSheetProps> = ({
               <View className="w-10 h-1 bg-chat-text-secondary/30 rounded-full mb-6 self-center" />
 
               <View className="flex-row justify-between mb-6 px-2">
-                {REACTIONS.map((emoji) => (
-                  <TouchableOpacity
-                    key={emoji}
-                    onPress={() => handleSelectReaction(emoji)}
-                    activeOpacity={0.6}
-                    className="w-12 h-12 rounded-full bg-chat-secondary/40 items-center justify-center border border-chat-divider/30"
-                  >
-                    <Text className="text-2xl">{emoji}</Text>
-                  </TouchableOpacity>
-                ))}
+                {REACTIONS.map((emoji) => {
+                  const isSelected = userCurrentReaction === emoji;
+                  return (
+                    <TouchableOpacity
+                      key={emoji}
+                      onPress={() => handleSelectReaction(emoji)}
+                      activeOpacity={0.6}
+                      className={`w-12 h-12 rounded-full items-center justify-center border ${
+                        isSelected
+                          ? "bg-chat-purple/30 border-chat-purple shadow-lg"
+                          : "bg-chat-secondary/40 border-chat-divider/30"
+                      }`}
+                      style={
+                        isSelected
+                          ? {
+                              shadowColor: "#8B5CF6",
+                              shadowOffset: { width: 0, height: 2 },
+                              shadowOpacity: 0.5,
+                              shadowRadius: 6,
+                              elevation: 4,
+                            }
+                          : undefined
+                      }
+                    >
+                      <Text className="text-2xl">{emoji}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
 
               <View className="bg-chat-card/50 border border-chat-divider rounded-2xl overflow-hidden mb-2">
@@ -119,6 +148,21 @@ export const MessageActionSheet: React.FC<MessageActionSheetProps> = ({
                       <Feather name="copy" size={16} color="#00B0FF" />
                     </View>
                     <Text className="text-chat-text-primary text-base font-medium ml-4">Copy Text</Text>
+                  </TouchableOpacity>
+                )}
+
+                {onTogglePin && (
+                  <TouchableOpacity
+                    onPress={() => handlePressAction(onTogglePin)}
+                    className="flex-row items-center px-5 py-4 border-b border-chat-divider/50"
+                    activeOpacity={0.7}
+                  >
+                    <View className="w-8 h-8 rounded-lg bg-amber-500/15 items-center justify-center border border-amber-500/30">
+                      <MaterialCommunityIcons name="pin" size={16} color="#FFB300" />
+                    </View>
+                    <Text className="text-chat-text-primary text-base font-medium ml-4">
+                      {isPinned ? "Unpin Message" : "Pin Message"}
+                    </Text>
                   </TouchableOpacity>
                 )}
 

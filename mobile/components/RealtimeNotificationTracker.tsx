@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useUser } from "@clerk/clerk-expo";
 import { useQuery as useConvexQuery } from "convex/react";
 import { api } from "../convex/_generated/api";

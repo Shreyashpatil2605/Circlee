@@ -14,8 +14,10 @@ import {
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 import SignOutButton from "@/components/SignOutButton";
-import { Feather } from "@expo/vector-icons";
+import { Feather, FontAwesome } from "@expo/vector-icons";
 import { format } from "date-fns";
+import * as Haptics from "expo-haptics";
+import { useRouter } from "expo-router";
 import { usePosts } from "@/hooks/usePosts";
 import PostsList from "@/components/PostsList";
 import { useProfile } from "@/hooks/useProfile";
@@ -25,6 +27,7 @@ import ScreenHeader from "@/components/ui/ScreenHeader";
 import Avatar from "@/components/ui/Avatar";
 
 const ProfileScreen = () => {
+  const router = useRouter();
   const { currentUser, isLoading } = useCurrentUser();
   const insets = useSafeAreaInsets();
   const [followersModalVisible, setFollowersModalVisible] = useState(false);
@@ -51,10 +54,14 @@ const ProfileScreen = () => {
   if (isLoading) {
     return (
       <View className="flex-1 bg-chat-bg items-center justify-center">
-        <ActivityIndicator size="large" color="#0A84FF"></ActivityIndicator>
+        <ActivityIndicator size="large" color="#0A84FF" />
       </View>
     );
   }
+
+  const savedPostsCount = Array.isArray(currentUser?.savedPosts)
+    ? currentUser.savedPosts.length
+    : 0;
 
   return (
     <SafeAreaView className="flex-1 bg-chat-bg" edges={["top"]}>
@@ -140,11 +147,18 @@ const ProfileScreen = () => {
             <Text className="text-zinc-500 text-sm mb-2">
               @{currentUser.username}
             </Text>
-            <Text className="text-chat-text-secondary text-sm leading-relaxed mb-3">{currentUser.bio}</Text>
+            <Text className="text-chat-text-secondary text-sm leading-relaxed mb-3">
+              {currentUser.bio}
+            </Text>
 
             {/* location */}
             <View className="flex-row items-center mb-1.5">
-              <Feather name="map-pin" size={14} color="#0A84FF" style={{ marginRight: 6 }} />
+              <Feather
+                name="map-pin"
+                size={14}
+                color="#0A84FF"
+                style={{ marginRight: 6 }}
+              />
               <Text className="text-zinc-500 text-xs">
                 {currentUser.location}
               </Text>
@@ -152,7 +166,12 @@ const ProfileScreen = () => {
 
             {/* createdAt */}
             <View className="flex-row items-center mb-4.5">
-              <Feather name="calendar" size={14} color="#0A84FF" style={{ marginRight: 6 }} />
+              <Feather
+                name="calendar"
+                size={14}
+                color="#0A84FF"
+                style={{ marginRight: 6 }}
+              />
               <Text className="text-zinc-500 text-xs">
                 Joined {format(new Date(currentUser.createdAt), "MMMM yyyy")}
               </Text>
@@ -184,6 +203,50 @@ const ProfileScreen = () => {
             </View>
           </View>
         </View>
+
+        {/* Saved Posts Shortcut */}
+        <View className="px-4 py-3 border-b border-border-glass-light">
+          <TouchableOpacity
+            activeOpacity={0.75}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              router.push("/saved-posts");
+            }}
+            className="flex-row items-center justify-between bg-[#14141C] border border-[#272733] rounded-2xl p-3.5"
+            style={{
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.25,
+              shadowRadius: 4,
+              elevation: 2,
+            }}
+          >
+            <View className="flex-row items-center flex-1 mr-2">
+              <View className="w-10 h-10 rounded-xl bg-[#8B5CF6]/15 items-center justify-center mr-3 border border-[#8B5CF6]/30">
+                <FontAwesome name="bookmark" size={17} color="#8B5CF6" />
+              </View>
+              <View className="flex-1">
+                <Text className="text-white font-semibold text-base">
+                  Saved Posts
+                </Text>
+                <Text className="text-zinc-400 text-xs mt-0.5">
+                  {savedPostsCount === 1
+                    ? "1 saved post"
+                    : `${savedPostsCount} saved posts`}
+                </Text>
+              </View>
+            </View>
+            <View className="flex-row items-center">
+              <View className="bg-[#1B1B25] border border-[#272733] px-2.5 py-1 rounded-full mr-2">
+                <Text className="text-zinc-300 font-semibold text-xs">
+                  {savedPostsCount}
+                </Text>
+              </View>
+              <Feather name="chevron-right" size={18} color="#71717A" />
+            </View>
+          </TouchableOpacity>
+        </View>
+
         <PostsList username={currentUser?.username} />
       </ScrollView>
       <EditProfileModel

@@ -12,6 +12,7 @@ interface ConversationActionSheetProps {
   onPin: () => void;
   onMute: () => void;
   onDelete: () => void;
+  onClearChat?: () => void;
 }
 
 export const ConversationActionSheet: React.FC<ConversationActionSheetProps> = ({
@@ -21,6 +22,7 @@ export const ConversationActionSheet: React.FC<ConversationActionSheetProps> = (
   onPin,
   onMute,
   onDelete,
+  onClearChat,
 }) => {
   useEffect(() => {
     if (visible) {
@@ -94,6 +96,19 @@ export const ConversationActionSheet: React.FC<ConversationActionSheetProps> = (
                   </View>
                   <Text className="text-chat-text-primary text-base font-medium ml-4">Mute Notifications</Text>
                 </TouchableOpacity>
+
+                {onClearChat && (
+                  <TouchableOpacity
+                    onPress={() => handlePressAction(onClearChat)}
+                    className="flex-row items-center px-5 py-4 border-b border-chat-divider/50"
+                    activeOpacity={0.7}
+                  >
+                    <View className="w-8 h-8 rounded-lg bg-orange-500/15 items-center justify-center border border-orange-500/30">
+                      <Feather name="message-square" size={16} color="#FF9100" />
+                    </View>
+                    <Text className="text-orange-400 text-base font-medium ml-4">Clear Chat</Text>
+                  </TouchableOpacity>
+                )}
 
                 <TouchableOpacity
                   onPress={() => handlePressAction(onDelete)}

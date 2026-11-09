@@ -1,8 +1,8 @@
-import "react-native-gesture-handler";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { ClerkProvider, useAuth } from "@clerk/clerk-expo";
 import { tokenCache } from "@clerk/clerk-expo/token-cache";
 import { Stack } from "expo-router";
-import { View } from "react-native";
+import { View, AppState } from "react-native";
 import "../global.css";
 import ConvexUserSync from "@/components/ConvexUserSync";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -10,12 +10,11 @@ import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { ConvexReactClient } from "convex/react";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
-import { AppState } from "react-native";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { usePresence } from "@/hooks/usePresence";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
 import RealtimeNotificationTracker from "@/components/RealtimeNotificationTracker";
 import PushNotificationManager from "@/components/PushNotificationManager";
+import { ModalProvider } from "@/context/ModalContext";
 
 const queryclient = new QueryClient();
 
@@ -32,30 +31,22 @@ function DebugAuth() {
   return null;
 }
 
-function ConvexClerkProvider({ children }: { children: React.ReactNode}) {
-  const auth = useAuth();
-
-  return (
-    <ConvexProviderWithClerk client={convex} useAuth={() => auth}>
-      {children}
-    </ConvexProviderWithClerk>
-  );
-}
-
 //PresenceTracker
 
 function PresenceTracker() {
   const { updatePresence } = usePresence();
   const { isSignedIn } = useAuth();
+  const updatePresenceRef = useRef(updatePresence);
+  updatePresenceRef.current = updatePresence;
 
   useEffect(() => {
     if (!isSignedIn) return;
 
-    updatePresence(true);
+    updatePresenceRef.current(true);
 
     // Heartbeat every 30 seconds
     const interval = setInterval(() => {
-      updatePresence(true);
+      updatePresenceRef.current(true);
     }, 30000);
 
     const subscription = AppState.addEventListener("change", (nextState) => {
@@ -63,17 +54,17 @@ function PresenceTracker() {
 
       if (nextState === "active") {
         console.log("SETTING ONLINE");
-        updatePresence(true);
+        updatePresenceRef.current(true);
       }
 
       if (nextState === "background" || nextState === "inactive") {
         console.log("SETTING OFFLINE");
-        updatePresence(false);
+        updatePresenceRef.current(false);
       }
     });
 
     return () => {
-      updatePresence(false);
+      updatePresenceRef.current(false);
       clearInterval(interval);
       subscription.remove();
     };
@@ -92,30 +83,39 @@ export default function RootLayout() {
           tokenCache={tokenCache}
           publishableKey={process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}
         >
-          <ConvexClerkProvider>
+          <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
             <QueryClientProvider client={queryclient}>
-              {/* DEBUG AUTH */}
-              <DebugAuth />
-              <PresenceTracker />
-              <ConvexUserSync />
-              <RealtimeNotificationTracker />
-              <PushNotificationManager />
+              <ModalProvider>
+                {/* DEBUG AUTH */}
+                <DebugAuth />
+                <PresenceTracker />
+                <ConvexUserSync />
+                <RealtimeNotificationTracker />
+                <PushNotificationManager />
 
-              <View className="flex-1 bg-white">
-                <Stack
-                  screenOptions={{
-                    headerShown: false,
-                    contentStyle: { backgroundColor: "#FFFFFF" },
-                  }}
-                >
-                  <Stack.Screen name="(auth)" />
-                  <Stack.Screen name="(tabs)" />
-                </Stack>
+                <View className="flex-1 bg-white">
+                  <Stack
+                    screenOptions={{
+                      headerShown: false,
+                      contentStyle: { backgroundColor: "#FFFFFF" },
+                    }}
+                  >
+                    <Stack.Screen name="(auth)" />
+                    <Stack.Screen name="(tabs)" />
+                    <Stack.Screen
+                      name="saved-posts"
+                      options={{
+                        headerShown: false,
+                        contentStyle: { backgroundColor: "#0B0B10" },
+                      }}
+                    />
+                  </Stack>
 
-                <StatusBar style="dark" />
-              </View>
+                  <StatusBar style="dark" />
+                </View>
+              </ModalProvider>
             </QueryClientProvider>
-          </ConvexClerkProvider>
+          </ConvexProviderWithClerk>
         </ClerkProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
