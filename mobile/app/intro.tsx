@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useRef, useCallback, useEffect } from "react";
 import {
   View,
   Text,
@@ -6,24 +6,39 @@ import {
   StyleSheet,
   StatusBar,
   BackHandler,
-  Animated,
   Platform,
 } from "react-native";
-import { useVideoPlayer, VideoView } from "expo-video";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { introSession } from "@/utils/introSession";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import { requireOptionalNativeModule } from "expo-modules-core";
 
-const introVideoSource = require("@/assets/videos/intro.mp4");
+import CinematicAnimatedIntro from "@/components/intro/CinematicAnimatedIntro";
+
+// Check if the native ExpoVideo module is compiled into the running application binary
+const isNativeExpoVideoAvailable = !!requireOptionalNativeModule("ExpoVideo");
+
+let ExpoVideoIntroComponent: React.ComponentType<{
+  onFinish: () => void;
+  onError?: (error: any) => void;
+}> | null = null;
+
+if (isNativeExpoVideoAvailable) {
+  try {
+    // Only load expo-video if the native C++/Kotlin module exists in the binary
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    ExpoVideoIntroComponent = require("@/components/intro/ExpoVideoIntro").default;
+  } catch {
+    ExpoVideoIntroComponent = null;
+  }
+}
 
 export default function IntroScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const hasNavigatedRef = useRef(false);
-  const fadeAnim = useRef(new Animated.Value(1)).current;
-  const [hasError, setHasError] = useState(false);
 
   // Transition to authentication welcome screen
   const navigateToAuth = useCallback(() => {
@@ -33,65 +48,21 @@ export default function IntroScreen() {
     // Mark intro as played for this session
     introSession.markPlayed();
 
-    // Smooth fade out before replacing route
-    Animated.timing(fadeAnim, {
-      toValue: 0,
-      duration: 250,
-      useNativeDriver: true,
-    }).start(() => {
-      router.replace("/(auth)");
-    });
-  }, [fadeAnim, router]);
+    // Navigate to existing Welcome/Login screen
+    router.replace("/(auth)");
+  }, [router]);
 
-  // Video player configuration using expo-video
-  const player = useVideoPlayer(introVideoSource, (p) => {
-    p.loop = false;
-    p.muted = true;
-    p.play();
-  });
-
-  // Listen to video completion and status events
+  // Android hardware back button handler
   useEffect(() => {
-    // 1. Playback completed handler
-    const playToEndSubscription = player.addListener("playToEnd", () => {
-      navigateToAuth();
-    });
-
-    // 2. Error and status change handler
-    const statusSubscription = player.addListener("statusChange", (payload) => {
-      if (payload.status === "error") {
-        console.warn("Video playback encountered an issue, transitioning to Welcome screen:", payload.error);
-        setHasError(true);
-        navigateToAuth();
-      }
-    });
-
-    // 3. Safety fallback timer (5 seconds) to ensure flow is never blocked
-    const safetyTimeout = setTimeout(() => {
-      if (!hasNavigatedRef.current) {
-        console.log("Intro duration reached, transitioning...");
-        navigateToAuth();
-      }
-    }, 4800);
-
-    // 4. Android back button handler (acts as skip)
     const backHandler = BackHandler.addEventListener("hardwareBackPress", () => {
       navigateToAuth();
       return true;
     });
 
     return () => {
-      clearTimeout(safetyTimeout);
-      playToEndSubscription.remove();
-      statusSubscription.remove();
       backHandler.remove();
-      try {
-        player.pause();
-      } catch {
-        // Safe release on unmount
-      }
     };
-  }, [player, navigateToAuth]);
+  }, [navigateToAuth]);
 
   const handleSkip = () => {
     try {
@@ -103,23 +74,17 @@ export default function IntroScreen() {
   };
 
   return (
-    <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
+    <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#000000" translucent />
 
-      {/* Main Full-Screen Video Layer */}
-      <VideoView
-        player={player}
-        style={styles.video}
-        contentFit="cover"
-        nativeControls={false}
-        allowsFullscreen={false}
-      />
-
-      {/* Fallback View if error occurs */}
-      {hasError && (
-        <View style={styles.fallbackContainer}>
-          <Text style={styles.fallbackText}>Circlee</Text>
-        </View>
+      {/* Video View (when native module is compiled into binary) OR Cinematic Animated Sequence */}
+      {ExpoVideoIntroComponent ? (
+        <ExpoVideoIntroComponent
+          onFinish={navigateToAuth}
+          onError={navigateToAuth}
+        />
+      ) : (
+        <CinematicAnimatedIntro onFinish={navigateToAuth} />
       )}
 
       {/* Premium Glassmorphism Skip Button */}
@@ -137,14 +102,14 @@ export default function IntroScreen() {
           activeOpacity={0.75}
           style={styles.skipButton}
           accessibilityRole="button"
-          accessibilityLabel="Skip intro video"
+          accessibilityLabel="Skip intro"
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
         >
           <Text style={styles.skipText}>Skip</Text>
           <Feather name="chevron-right" size={14} color="#A855F7" style={styles.skipIcon} />
         </TouchableOpacity>
       </View>
-    </Animated.View>
+    </View>
   );
 }
 
@@ -152,22 +117,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#000000",
-  },
-  video: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "#000000",
-  },
-  fallbackContainer: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "#000000",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  fallbackText: {
-    color: "#FFFFFF",
-    fontSize: 28,
-    fontWeight: "800",
-    letterSpacing: 2,
   },
   skipContainer: {
     position: "absolute",
