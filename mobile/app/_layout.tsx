@@ -97,9 +97,10 @@ export default function RootLayout() {
                   <Stack
                     screenOptions={{
                       headerShown: false,
-                      contentStyle: { backgroundColor: "#FFFFFF" },
+                      contentStyle: { backgroundColor: "#000000" },
                     }}
                   >
+                    <Stack.Screen name="intro" options={{ headerShown: false, animation: "fade" }} />
                     <Stack.Screen name="(auth)" />
                     <Stack.Screen name="(tabs)" />
                     <Stack.Screen
