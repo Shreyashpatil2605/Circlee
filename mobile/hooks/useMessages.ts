@@ -62,8 +62,11 @@ export const useMessages = (conversationId?: any) => {
     attachments?: any[]
   ) => {
     if (!conversationId) return;
-    const content = customContent !== undefined ? customContent : messageText;
-    if (!content.trim() && !attachments) return;
+    const content = (customContent !== undefined ? customContent : messageText).trim();
+    if (!content && !attachments) return;
+
+    // Immediately clear input field for snappy UX
+    setMessageText("");
 
     try {
       await sendMessageAction({
@@ -76,38 +79,41 @@ export const useMessages = (conversationId?: any) => {
       });
     } catch (sendErr) {
       console.warn("[useMessages] sendMessageAction failed, falling back to sendMessageMutation:", sendErr);
-      await sendMessageMutation({
-        conversationId,
-        content,
-        type,
-        audioUrl,
-        attachments,
-      });
-    }
-
-    // Client-side fallback for message notification
-    const recipientId = conversation?.participants?.find((p: string) => p !== currentUserId);
-    if (recipientId) {
       try {
-        await apiClient.post("/notifications/message", {
-          toClerkId: recipientId,
+        await sendMessageMutation({
           conversationId,
-          content: content || (type === "voice" ? "Voice message" : "Sent a message"),
-          type: type || "text",
+          content,
+          type,
+          audioUrl,
+          attachments,
         });
-      } catch (notifyErr) {
-        console.warn("[useMessages] Failed to trigger message notification via API:", notifyErr);
+      } catch (mutationErr) {
+        console.error("[useMessages] Failed to send message:", mutationErr);
+        // Restore input text if send completely failed
+        if (!attachments) {
+          setMessageText(content);
+        }
+        throw mutationErr;
       }
     }
 
-    await updateTyping({
+    // Client-side fallback for message notification (fire and forget, non-blocking)
+    const recipientId = conversation?.participants?.find((p: string) => p !== currentUserId);
+    if (recipientId) {
+      apiClient.post("/notifications/message", {
+        toClerkId: recipientId,
+        conversationId,
+        content: content || (type === "voice" ? "Voice message" : "Sent a message"),
+        type: type || "text",
+      }).catch((notifyErr) => {
+        console.warn("[useMessages] Failed to trigger message notification via API:", notifyErr);
+      });
+    }
+
+    updateTyping({
       conversationId,
       isTyping: false,
-    });
-
-    if (customContent === undefined) {
-      setMessageText("");
-    }
+    }).catch(() => {});
   };
 
   const deleteMessageMutation = useMutation(api.messages.deleteMessage);

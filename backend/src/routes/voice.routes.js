@@ -6,5 +6,6 @@ import upload from "../middleware/audioUpload.middleware.js";
 const router = express.Router();
 
 router.post("/", protectRoute, upload.single("file"), uploadMedia);
+router.post("/voice", protectRoute, upload.single("file"), uploadMedia);
 
 export default router;

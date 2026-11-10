@@ -301,16 +301,34 @@ export const ChatInput: React.FC<ChatInputProps> = ({
 
     try {
       const formData = new FormData();
-      const filename = recordedUri.split("/").pop() || "recording.m4a";
+      const rawFilename = recordedUri.split("/").pop() || "recording.m4a";
+      const cleanFilename = rawFilename.includes(".") ? rawFilename : `${rawFilename}.m4a`;
+
       formData.append("file", {
         uri: recordedUri,
-        name: filename,
+        name: cleanFilename,
         type: "audio/m4a",
       } as any);
 
-      const response = await api.post("/uploads/voice", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      if (durationSeconds) {
+        formData.append("duration", String(durationSeconds));
+      }
+
+      // Try /uploads first (matching backend route), fallback to /uploads/voice if 404
+      let response;
+      try {
+        response = await api.post("/uploads", formData, {
+          transformRequest: (data) => data,
+        });
+      } catch (primaryErr: any) {
+        if (primaryErr?.response?.status === 404) {
+          response = await api.post("/uploads/voice", formData, {
+            transformRequest: (data) => data,
+          });
+        } else {
+          throw primaryErr;
+        }
+      }
 
       const audioUrl = response.data?.url || response.data?.secure_url;
       if (!audioUrl) throw new Error("No URL returned from upload server");
@@ -329,8 +347,8 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       }
 
       handleDiscardRecording();
-    } catch (err) {
-      console.error("Voice upload failed:", err);
+    } catch (err: any) {
+      console.error("Voice upload failed:", err?.response?.data || err?.message || err);
       setStatus("failed");
     }
   };
@@ -340,6 +358,8 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   };
 
   const handleTextSend = () => {
+    if (!hasText || isSending) return;
+    textInputRef.current?.clear();
     onSend();
   };
 

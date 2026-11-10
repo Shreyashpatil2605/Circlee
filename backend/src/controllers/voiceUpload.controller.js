@@ -12,24 +12,31 @@ export const uploadMedia = asyncHandler(async (req, res) => {
   let folder = "messages/general";
   let resourceType = "raw";
 
-  if (file.mimetype.startsWith("audio/") || 
-      file.originalname.endsWith(".m4a") || 
-      file.originalname.endsWith(".caf") || 
-      file.originalname.endsWith(".mp3") || 
-      file.originalname.endsWith(".wav")) {
+  const mimeType = (file.mimetype || "").toLowerCase();
+  const originalName = (file.originalname || "").toLowerCase();
+
+  if (
+    mimeType.startsWith("audio/") ||
+    originalName.endsWith(".m4a") ||
+    originalName.endsWith(".caf") ||
+    originalName.endsWith(".mp3") ||
+    originalName.endsWith(".wav") ||
+    originalName.endsWith(".aac")
+  ) {
     folder = "messages/audio";
     resourceType = "video"; // Cloudinary requires 'video' resource_type for audio
-  } else if (file.mimetype.startsWith("image/")) {
+  } else if (mimeType.startsWith("image/")) {
     folder = "messages/images";
     resourceType = "image";
-  } else if (file.mimetype.startsWith("video/")) {
+  } else if (mimeType.startsWith("video/")) {
     folder = "messages/videos";
     resourceType = "video";
   }
 
   try {
     // Convert file buffer to base64
-    const base64File = `data:${file.mimetype};base64,${file.buffer.toString("base64")}`;
+    const resolvedMime = mimeType || "audio/m4a";
+    const base64File = `data:${resolvedMime};base64,${file.buffer.toString("base64")}`;
 
     // Upload to Cloudinary
     const uploadResponse = await cloudinary.uploader.upload(base64File, {

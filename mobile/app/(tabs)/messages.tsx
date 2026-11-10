@@ -789,8 +789,18 @@ const MessageScreen = () => {
   };
 
   const handleSendMessage = () => {
+    const textToSend = messageText.trim();
+    if (!textToSend && !replyingToMessage) return;
+
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    sendMessage();
+    setMessageText("");
+
+    isTypingActiveRef.current = false;
+    if (typingTimerRef.current) {
+      clearTimeout(typingTimerRef.current);
+    }
+
+    sendMessage(textToSend);
     if (replyingToMessage) {
       setReplyingToMessage(null);
     }
@@ -1003,7 +1013,8 @@ const MessageScreen = () => {
           }}
           onSendVoice={async (attachments) => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            await sendMessage("", "voice", undefined, attachments);
+            const voiceUrl = attachments?.[0]?.url;
+            await sendMessage("", "voice", voiceUrl, attachments);
           }}
           onEmojiPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
