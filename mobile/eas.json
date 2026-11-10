@@ -1,3 +1,4 @@
+
 {
   "cli": {
     "version": ">= 20.5.1",
@@ -16,7 +17,17 @@
       "distribution": "internal"
     },
     "production": {
-      "autoIncrement": true
+      "distribution": "internal",
+      "environment": "production",
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_cHJvdWQtaW1wYWxhLTI3LmNsZXJrLmFjY291bnRzLmRldiQ",
+        "EXPO_PUBLIC_API_URL": "https://circlee-5r8z7qbbg-shreyashs-projects-4bb93d9b.vercel.app/",
+        "EXPO_PUBLIC_CONVEX_URL": "https://dependable-chinchilla-546.eu-west-1.convex.cloud"
+      },
+      "android": {
+        "buildType": "apk"
+      }
     }
   },
   "submit": {
