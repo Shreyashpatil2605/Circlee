@@ -6,7 +6,12 @@ import { getApiBaseUrl } from "@/config/api.config";
 import { useApiClient } from "@/utils/api";
 
 export const useConversations = () => {
-  const conversations = useQuery(api.messages.getConversations) ?? [];
+  const { isSignedIn } = useAuth();
+  const conversations =
+    useQuery(
+      api.messages.getConversations,
+      isSignedIn ? {} : "skip",
+    ) ?? [];
 
   const getOrCreateConversation = useMutation(
     api.messages.getOrCreateConversation,

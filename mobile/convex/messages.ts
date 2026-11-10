@@ -11,6 +11,9 @@ export const getOrCreateConversation = mutation({
 
   async handler(ctx, args) {
     const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Not authenticated");
+    }
 
     console.log("===== CREATE CONVERSATION =====");
     console.log("Current User:", userId);
