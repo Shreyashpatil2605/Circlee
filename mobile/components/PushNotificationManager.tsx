@@ -63,6 +63,8 @@ export default function PushNotificationManager() {
             "Backend returned 401 Unauthorized for push-token. Check that Vercel Deployment Protection is disabled and user is logged in.",
             error?.response?.data || error?.message
           );
+        } else if (error?.response?.status === 404) {
+          console.warn("Backend user not synced yet for push token registration. Will retry once sync completes.");
         } else {
           console.error("Failed to register push token with backend:", error);
         }

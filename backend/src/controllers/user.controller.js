@@ -136,7 +136,7 @@ export const syncUser = asyncHandler(async (req, res) => {
     const userData = {
       clerkId: userId,
       email,
-      firstName: clerkUser.firstName || "",
+      firstName: clerkUser.firstName || clerkUser.username || baseUsername || "User",
       lastName: clerkUser.lastName || "",
       username,
       profilePicture: clerkUser.imageUrl || "",

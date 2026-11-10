@@ -29,36 +29,37 @@ export const sendPushNotification = async (receiver, sender, notification, conte
     }
 
     // Determine title and body based on notification type
-    let title = "Circleee";
+    let title = "Circlee";
     let body = "";
+    const senderName = [sender.firstName, sender.lastName].filter(Boolean).join(" ") || sender.username || "Someone";
 
     switch (notification.type) {
       case "LIKE":
-        body = `${sender.firstName} ${sender.lastName} liked your post`;
+        body = `${senderName} liked your post`;
         break;
       case "COMMENT":
-        body = `${sender.firstName} ${sender.lastName} commented on your post`;
+        body = `${senderName} commented on your post`;
         break;
       case "FOLLOW":
-        body = `${sender.firstName} ${sender.lastName} started following you`;
+        body = `${senderName} started following you`;
         break;
       case "MESSAGE":
         title = "New Message";
-        body = `${sender.firstName}: ${contentText || "sent you a message"}`;
+        body = `${senderName}: ${contentText || "sent you a message"}`;
         break;
       case "VOICE_MESSAGE":
         title = "New Voice Message";
-        body = `${sender.firstName} sent you a voice message`;
+        body = `${senderName} sent you a voice message`;
         break;
       case "RESHARE":
-        body = `${sender.firstName} ${sender.lastName} reshared your post`;
+        body = `${senderName} reshared your post`;
         break;
       case "REACTION":
         title = "New Message Reaction";
-        body = `${sender.firstName} reacted ${notification.content || contentText || "❤️"} to your message`;
+        body = `${senderName} reacted ${notification.content || contentText || "❤️"} to your message`;
         break;
       default:
-        body = `New activity from ${sender.firstName}`;
+        body = `New activity from ${senderName}`;
     }
 
     // Build the payload required for routing
