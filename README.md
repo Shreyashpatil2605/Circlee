@@ -1,3 +1,11 @@
+
+
+
+
+https://github.com/user-attachments/assets/1d7e5fa7-9900-4110-977a-793af13d9c79
+
+
+
 # Circlee 
 
 A real-time, cross-platform social media application built with React Native, inspired by X (formerly Twitter). 
